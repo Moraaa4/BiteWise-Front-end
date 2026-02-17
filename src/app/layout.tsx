@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "BiteWise Landing Page",
-  description: "Cocina fácil sin pensar. Ahorra tiempo, dinero y reduce el desperdicio de comida con nuestro asistente culinario inteligente.",
+  title: "BiteWise - Cocina Inteligente",
+  description: "Ahorra tiempo y reduce el desperdicio de comida",
 };
 
 export default function RootLayout({
@@ -18,10 +12,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="light">
-      <body
-        className={`${inter.variable} font-display bg-background-light dark:bg-background-dark text-[#111811] dark:text-white transition-colors duration-300`}
-      >
+    <html lang="es">
+      <head>
+        {/* Importación de Material Symbols Outlined */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        />
+      </head>
+      <body>
         {children}
       </body>
     </html>
