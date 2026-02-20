@@ -13,15 +13,12 @@ const Navbar = () => (
       
       <nav aria-label="Navegación principal" className="hidden md:flex items-center gap-10">
         <Link href="#how-it-works" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Cómo funciona</Link>
-        <Link href="/recetas" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Recetas</Link>
-        <Link href="/impacto" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Impacto</Link>
+        <Link href="#tu-cocina" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Recetas</Link>
+        <Link href="#impacto" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Impacto</Link>
       </nav>
 
       <div className="flex items-center gap-4">
         <button className="hidden sm:block text-sm font-bold px-4 py-2 hover:text-emerald-500 transition-all">Iniciar sesión</button>
-        <button className="bg-emerald-500 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-200 dark:shadow-none hover:scale-105 transition-transform uppercase">
-          Empezar gratis
-        </button>
       </div>
     </div>
   </header>
@@ -34,8 +31,8 @@ export default function LandingPage() {
 
       <main>
         {/* HERO SECTION */}
-        <section className="relative px-6 pt-20 pb-12 lg:pt-28 lg:pb-24 max-w-7xl mx-auto lg:px-20 grid lg:grid-cols-2 gap-16 items-center">
-          <article className="space-y-8">
+        <section className="relative px-6 pt-12 pb-12 lg:pt-20 lg:pb-24 max-w-7xl mx-auto lg:px-20 grid lg:grid-cols-2 gap-16 items-start">
+          <article className="space-y-8 -mt-4 lg:-mt-6">
             <header className="space-y-4">
               <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wider">
                 Para estudiantes, independientes y encargados de hogar
@@ -58,15 +55,15 @@ export default function LandingPage() {
             </ul>
 
             <button className="bg-emerald-500 text-white text-lg font-bold px-10 py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none flex items-center gap-2 hover:bg-emerald-600 transition-all">
-              EMPEZAR GRATIS
+              REGISTRATE
               <span className="material-symbols-outlined">arrow_forward</span>
             </button>
           </article>
 
-          <figure className="relative">
+          <figure className="relative self-start -mt-4 lg:-mt-6">
             <div className="aspect-[4/5] relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white dark:border-zinc-900">
               <Image 
-                src="/hero-chef.jpg" 
+                src="/kitchen.png" 
                 alt="Persona cocinando de forma organizada"
                 fill
                 className="object-cover"
@@ -86,7 +83,7 @@ export default function LandingPage() {
         </section>
 
         {/* DASHBOARD PREVIEW */}
-        <section className="py-20 bg-white dark:bg-zinc-900/50">
+        <section id="tu-cocina" className="py-20 bg-white dark:bg-zinc-900/50">
           <div className="max-w-7xl mx-auto px-6 lg:px-20">
             <header className="text-center mb-16 space-y-4">
               <h2 className="text-4xl font-black">Tu cocina bajo control</h2>
@@ -122,9 +119,9 @@ export default function LandingPage() {
                   <p className="text-zinc-500">Recetas personalizadas basadas en lo que tienes hoy.</p>
                 </div>
                 <div className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-4 border border-zinc-100 dark:border-zinc-700 shadow-sm">
-                  <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center">
-                     <span className="material-symbols-outlined text-emerald-500">lunch_dining</span>
-                  </div>
+                   <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center overflow-hidden">
+                     <Image src="/chiken.png" alt="Pollo" width={70} height={60} className="object-cover" />
+                   </div>
                   <div>
                     <p className="text-lg font-bold">Pollo con Tomate</p>
                     <p className="text-sm text-zinc-500 font-medium italic">15 min • Dificultad Baja</p>
@@ -160,9 +157,16 @@ export default function LandingPage() {
         </section>
 
         {/* Impact Stats */}
-        <section className="py-20 px-6">
-          <div className="max-w-5xl mx-auto bg-emerald-50 dark:bg-emerald-950/30 rounded-[3rem] p-12 lg:p-20 text-center space-y-8 border border-emerald-100 dark:border-emerald-900/50">
-            <span className="material-symbols-outlined text-emerald-500 text-6xl opacity-50">warning</span>
+        <section id="impacto" className="py-20 px-6">
+          <div
+            className="max-w-5xl mx-auto bg-emerald-50 dark:bg-emerald-950/30 rounded-[3rem] p-12 lg:p-20 text-center space-y-8 border border-emerald-100 dark:border-emerald-900/50"
+            style={{
+              backgroundImage: "url('/desperdicio.png')",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundSize: 'cover',
+            }}
+          >
             <h2 className="text-4xl lg:text-6xl font-black leading-tight">
               <span className="text-emerald-500">60%</span> del desperdicio de comida ocurre en casa*
             </h2>
