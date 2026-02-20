@@ -41,10 +41,10 @@ export default function LandingPage() {
                 Para estudiantes, independientes y encargados de hogar
               </span>
               <h1 className="text-5xl lg:text-7xl font-black leading-tight tracking-tight">
-                Cocina tranquilo con <span className="text-emerald-500">BiteWise</span>
+                Cocina con <span className="text-emerald-500">BiteWise</span>
               </h1>
               <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-lg">
-                Cocina fácil sin pensar. Ahorra tiempo, dinero y reduce el desperdicio de comida con nuestro asistente culinario inteligente.
+                Cocina fácil sin pensar. Ahorra tiempo, organiza costos y reduce el desperdicio de comida con nuestro asistente culinario.
               </p>
             </header>
 
@@ -78,8 +78,8 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined">restaurant</span>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Ahorro Mensual</p>
-                <p className="text-xl font-black">$35.00+</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Ahorro Semanal</p>
+                <p className="text-xl font-black">$35.00</p>
               </div>
             </figcaption>
           </figure>
@@ -101,7 +101,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-bold text-2xl">Gestión de Inventario</h3>
-                  <p className="text-zinc-500">Visualiza tus productos actuales y su frescura de forma instantánea.</p>
+                  <p className="text-zinc-500">Visualiza tus ingredientes actuales de forma instantánea.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-2">
                   {['Tomate', 'Pollo', 'Cebolla', 'Ajo', 'Pimentón', '+4 más'].map(tag => (
@@ -119,7 +119,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-bold text-2xl">Sugerencias de recetas</h3>
-                  <p className="text-zinc-500">Recetas personalizadas basadas estrictamente en lo que tienes hoy.</p>
+                  <p className="text-zinc-500">Recetas personalizadas basadas en lo que tienes hoy.</p>
                 </div>
                 <div className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-4 border border-zinc-100 dark:border-zinc-700 shadow-sm">
                   <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -140,9 +140,9 @@ export default function LandingPage() {
           <h2 className="text-4xl font-black mb-16 tracking-tight">En 3 simples pasos</h2>
           <div className="grid md:grid-cols-3 gap-12">
             {[
-              { n: 1, t: "Registra", d: "Escanea tu ticket o registra rápidamente lo que hay en tu nevera." },
+              { n: 1, t: "Registra", d: "Registra rápidamente lo que hay en tu nevera." },
               { n: 2, t: "Descubre", d: "Te mostramos qué puedes cocinar ahora mismo sin salir de casa." },
-              { n: 3, t: "Disfruta", d: "Sigue instrucciones fáciles y disfruta de tu comida saludable." }
+              { n: 3, t: "Disfruta", d: "Sigue instrucciones y disfruta de tu comida saludable." }
             ].map(step => (
               <div key={step.n} className="space-y-6 group">
                 <div className="size-20 mx-auto bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center text-3xl font-black text-emerald-500 shadow-xl border border-zinc-100 dark:border-zinc-800 group-hover:scale-110 transition-transform">
