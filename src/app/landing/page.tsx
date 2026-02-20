@@ -34,7 +34,7 @@ export default function LandingPage() {
 
       <main>
         {/* HERO SECTION */}
-        <section className="relative px-6 py-12 lg:py-24 max-w-7xl mx-auto lg:px-20 grid lg:grid-cols-2 gap-16 items-center">
+        <section className="relative px-6 pt-20 pb-12 lg:pt-28 lg:pb-24 max-w-7xl mx-auto lg:px-20 grid lg:grid-cols-2 gap-16 items-center">
           <article className="space-y-8">
             <header className="space-y-4">
               <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wider">
