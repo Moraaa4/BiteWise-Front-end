@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Logo from '@/components/icons/Logo';
 import { register } from '@/services/auth';
 
 export default function RegisterPage() {
@@ -48,7 +47,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex items-center gap-3 mb-12">
           <div className="p-2 bg-primary rounded-lg text-white">
-            <Logo className="size-6" />
+            <Image src="/icon.png" alt="BiteWise" width={24} height={24} />
           </div>
           <h2 className="text-[#111811] dark:text-white text-2xl font-black tracking-tight">
             BiteWise
