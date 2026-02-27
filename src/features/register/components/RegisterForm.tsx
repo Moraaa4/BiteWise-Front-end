@@ -33,7 +33,7 @@ export default function RegisterForm() {
     <div className="w-full max-w-[520px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-primary rounded-lg text-white">
-          <Image src="/public/icon.svg" alt="BiteWise" width={28} height={28} />
+          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} />
         </div>
         <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
       </div>

@@ -23,7 +23,6 @@ export default function LoginForm() {
     setLoading(false);
 
     if (res.ok) {
-      // Simulated success
       window.location.href = '/';
     } else {
       setError(res.message || 'Error de inicio de sesión');
@@ -34,7 +33,7 @@ export default function LoginForm() {
     <div className="w-full max-w-[480px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-primary rounded-lg text-white">
-          <Image src="/public/icon.svg" alt="BiteWise" width={28} height={28} />
+          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} />
         </div>
         <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
       </div>
