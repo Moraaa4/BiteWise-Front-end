@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { RegisterPayload } from '../types';
-import { register } from '../service';
 
 export default function RegisterForm() {
   const [name, setName] = useState('');
@@ -20,13 +19,13 @@ export default function RegisterForm() {
     setLoading(true);
 
     const payload: RegisterPayload = { name, email, password };
-    const res = await register(payload);
-    setLoading(false);
-    if (res.ok) {
+    console.log('Register Payload Data:', payload);
+
+    // Simulate UI delay for ux only
+    setTimeout(() => {
+      setLoading(false);
       window.location.href = '/login';
-    } else {
-      setError(res.message || 'Error en el registro');
-    }
+    }, 500);
   };
 
   return (

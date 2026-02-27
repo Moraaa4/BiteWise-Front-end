@@ -1,15 +1,21 @@
 import React from 'react';
-import { fetchIngredients, fetchSuggestedRecipes } from '../service';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { IngredientList } from './IngredientList';
 import { RecipeGrid } from './RecipeGrid';
 
-export default async function Dashboard() {
-  const [ingredients, recipes] = await Promise.all([
-    fetchIngredients(),
-    fetchSuggestedRecipes()
-  ]);
+export default function Dashboard() {
+  const ingredients = [
+    { id: 'i1', name: 'Jitomate', qty: 4 },
+    { id: 'i2', name: 'Pechuga pollo', qty: 2 },
+    { id: 'i3', name: 'Cebolla', qty: 3 },
+  ];
+
+  const recipes = [
+    { id: 'r1', title: 'Pollo en salsa jitomate', time: '15min', img: '' },
+    { id: 'r2', title: 'Arroz con verduras', time: '20min', img: '' },
+    { id: 'r3', title: 'Tacos rápidos', time: '12min', img: '' },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden">

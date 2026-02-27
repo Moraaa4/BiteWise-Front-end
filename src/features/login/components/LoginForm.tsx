@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { LoginPayload } from '../types';
-import { login } from '../service';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -19,14 +18,13 @@ export default function LoginForm() {
     setLoading(true);
 
     const payload: LoginPayload = { email, password };
-    const res = await login(payload);
-    setLoading(false);
+    console.log('Login Payload Data:', payload);
 
-    if (res.ok) {
-      window.location.href = '/';
-    } else {
-      setError(res.message || 'Error de inicio de sesión');
-    }
+    // Simulate UI delay for ux only
+    setTimeout(() => {
+      setLoading(false);
+      window.location.href = '/dashboard';
+    }, 500);
   };
 
   return (
