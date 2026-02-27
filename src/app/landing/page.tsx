@@ -30,7 +30,6 @@ export default function LandingPage() {
       <Navbar />
 
       <main>
-        {/* HERO SECTION */}
         <section className="relative px-6 pt-12 pb-12 lg:pt-20 lg:pb-24 max-w-7xl mx-auto lg:px-20 grid lg:grid-cols-2 gap-16 items-start">
           <article className="space-y-8 -mt-4 lg:-mt-6">
             <header className="space-y-4">
@@ -82,7 +81,6 @@ export default function LandingPage() {
           </figure>
         </section>
 
-        {/* DASHBOARD PREVIEW */}
         <section id="tu-cocina" className="py-20 bg-white dark:bg-zinc-900/50">
           <div className="max-w-7xl mx-auto px-6 lg:px-20">
             <header className="text-center mb-16 space-y-4">
@@ -91,7 +89,7 @@ export default function LandingPage() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Card 1: Ingredientes */}
+              
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
                   <span className="material-symbols-outlined text-emerald-500 text-3xl">inventory_2</span>
@@ -109,7 +107,7 @@ export default function LandingPage() {
                 </div>
               </article>
 
-              {/* Card 2: Receta */}
+              
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
                   <span className="material-symbols-outlined text-emerald-500 text-3xl">skillet</span>
@@ -132,7 +130,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* PASOS */}
         <section id="how-it-works" className="py-24 max-w-7xl mx-auto px-6 lg:px-20 text-center">
           <h2 className="text-4xl font-black mb-16 tracking-tight">En 3 simples pasos</h2>
           <div className="grid md:grid-cols-3 gap-12">
@@ -156,7 +153,6 @@ export default function LandingPage() {
           </button>
         </section>
 
-        {/* Impact Stats */}
         <section id="impacto" className="py-20 px-6">
           <div
             className="max-w-5xl mx-auto bg-emerald-50 dark:bg-emerald-950/30 rounded-[3rem] p-12 lg:p-20 text-center space-y-8 border border-emerald-100 dark:border-emerald-900/50"
