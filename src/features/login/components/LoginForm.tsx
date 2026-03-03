@@ -20,7 +20,6 @@ export default function LoginForm() {
     const payload: LoginPayload = { email, password };
     console.log('Login Payload Data:', payload);
 
-    // Simulate UI delay for ux only
     setTimeout(() => {
       setLoading(false);
       window.location.href = '/dashboard';
@@ -81,7 +80,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-primary text-white py-3 rounded-lg font-bold shadow-md hover:bg-[#3d8c40] transition-colors disabled:opacity-50"
+          className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold shadow-md hover:bg-emerald-600 transition-all disabled:opacity-50"
         >
           {loading ? 'Ingresando...' : 'INICIAR SESIÓN'}
         </button>

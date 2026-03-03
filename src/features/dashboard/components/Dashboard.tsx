@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <Sidebar activeTab="inicio" />
 
       <main className="flex-1 flex flex-col overflow-y-auto">
         <Header />
@@ -31,13 +31,17 @@ export default function Dashboard() {
               <input className="w-full pl-12 pr-4 py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" placeholder="Buscar recetas, ingredientes o tipos de comida..." type="text" />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <button className="px-5 py-2 bg-primary text-white rounded-full text-sm font-semibold shadow-sm">Todos</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Desayuno</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Almuerzo</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Cena</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Snacks</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Vegetariano</button>
-              <button className="px-5 py-2 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors">Saludable</button>
+              {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
+                <button
+                  key={cat}
+                  className={`px-5 py-2 rounded-full text-sm font-bold shadow-sm transition-all ${cat === 'Todos'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-[#6c7f6d] border border-[#f1f3f1] hover:bg-primary hover:border-primary hover:text-white'
+                    }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           </section>
 

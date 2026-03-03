@@ -10,7 +10,7 @@ const Navbar = () => (
         </div>
         <span className="text-xl font-bold tracking-tight text-emerald-600">BiteWise</span>
       </Link>
-      
+
       <nav aria-label="Navegación principal" className="hidden md:flex items-center gap-10">
         <Link href="#how-it-works" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Cómo funciona</Link>
         <Link href="#tu-cocina" className="text-sm font-semibold hover:text-emerald-500 transition-colors">Recetas</Link>
@@ -18,7 +18,7 @@ const Navbar = () => (
       </nav>
 
       <div className="flex items-center gap-4">
-        <button className="hidden sm:block text-sm font-bold px-4 py-2 hover:text-emerald-500 transition-all">Iniciar sesión</button>
+        <Link href="/login" className="hidden sm:block text-sm font-bold px-4 py-2 hover:text-emerald-500 transition-all">Iniciar sesión</Link>
       </div>
     </div>
   </header>
@@ -53,16 +53,16 @@ export default function LandingPage() {
               ))}
             </ul>
 
-            <button className="bg-emerald-500 text-white text-lg font-bold px-10 py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none flex items-center gap-2 hover:bg-emerald-600 transition-all">
+            <Link href="/register" className="bg-emerald-500 text-white text-lg font-bold px-10 py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none flex items-center gap-2 hover:bg-emerald-600 transition-all">
               REGISTRATE
               <span className="material-symbols-outlined">arrow_forward</span>
-            </button>
+            </Link>
           </article>
 
           <figure className="relative self-start -mt-4 lg:-mt-6">
             <div className="aspect-[4/5] relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white dark:border-zinc-900">
-              <Image 
-                src="/kitchen.png" 
+              <Image
+                src="/kitchen.png"
                 alt="Persona cocinando de forma organizada"
                 fill
                 className="object-cover"
@@ -74,8 +74,8 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined">restaurant</span>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Ahorro Semanal</p>
-                <p className="text-xl font-black">$35.00</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gasto Semanal</p>
+                <p className="text-xl font-black">$135.00</p>
               </div>
             </figcaption>
           </figure>
@@ -89,7 +89,7 @@ export default function LandingPage() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              
+
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
                   <span className="material-symbols-outlined text-emerald-500 text-3xl">inventory_2</span>
@@ -107,7 +107,7 @@ export default function LandingPage() {
                 </div>
               </article>
 
-              
+
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
                   <span className="material-symbols-outlined text-emerald-500 text-3xl">skillet</span>
@@ -117,9 +117,9 @@ export default function LandingPage() {
                   <p className="text-zinc-500">Recetas personalizadas basadas en lo que tienes hoy.</p>
                 </div>
                 <div className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-4 border border-zinc-100 dark:border-zinc-700 shadow-sm">
-                   <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center overflow-hidden">
-                     <Image src="/chiken.png" alt="Pollo" width={70} height={60} className="object-cover" />
-                   </div>
+                  <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center overflow-hidden">
+                    <Image src="/chiken.png" alt="Pollo" width={70} height={60} className="object-cover" />
+                  </div>
                   <div>
                     <p className="text-lg font-bold">Pollo con Tomate</p>
                     <p className="text-sm text-zinc-500 font-medium italic">15 min • Dificultad Baja</p>
@@ -147,10 +147,10 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <button className="mt-20 group inline-flex items-center gap-4 text-emerald-600 font-black text-2xl hover:gap-6 transition-all underline decoration-4 underline-offset-8 decoration-emerald-200">
+          <Link href="/register" className="mt-20 group inline-flex items-center gap-4 text-emerald-600 font-black text-2xl hover:gap-6 transition-all underline decoration-4 underline-offset-8 decoration-emerald-200">
             DEJA DE DESPERDICIAR COMIDA AHORA
             <span className="material-symbols-outlined">arrow_forward</span>
-          </button>
+          </Link>
         </section>
 
         <section id="impacto" className="py-20 px-6">
@@ -183,8 +183,8 @@ export default function LandingPage() {
           </div>
           <p className="text-sm text-zinc-500 font-medium">© 2025 BiteWise. Salvando tu despensa y el planeta.</p>
           <div className="flex gap-6">
-             <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">share</span>
-             <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">mail</span>
+            <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">share</span>
+            <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">mail</span>
           </div>
         </div>
       </footer>
