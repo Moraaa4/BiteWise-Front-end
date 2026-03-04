@@ -24,17 +24,17 @@ export default function Dashboard() {
       <main className="flex-1 flex flex-col overflow-y-auto">
         <Header />
 
-        <div className="p-8 max-w-[1200px] mx-auto w-full space-y-8">
+        <div className="p-4 pt-16 md:p-8 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
           <section className="space-y-6">
             <div className="relative max-w-2xl mx-auto">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d]">search</span>
-              <input className="w-full pl-12 pr-4 py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" placeholder="Buscar recetas, ingredientes o tipos de comida..." type="text" />
+              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm" placeholder="Buscar recetas, ingredientes..." type="text" />
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
                 <button
                   key={cat}
-                  className={`px-5 py-2 rounded-full text-sm font-bold shadow-sm transition-all ${cat === 'Todos'
+                  className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
                     ? 'bg-primary text-white'
                     : 'bg-white text-[#6c7f6d] border border-[#f1f3f1] hover:bg-primary hover:border-primary hover:text-white'
                     }`}
@@ -45,7 +45,7 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <section className="lg:col-span-1 flex flex-col h-full">
               <IngredientList ingredients={ingredients} />
             </section>
@@ -54,7 +54,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <footer className="mt-auto p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
+        <footer className="mt-auto p-6 md:p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
           <p className="text-xs text-[#6c7f6d] dark:text-gray-400">© 2024 BiteWise. Come mejor, desperdicia menos.</p>
         </footer>
       </main>
