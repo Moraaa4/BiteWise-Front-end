@@ -13,7 +13,7 @@ const navItems = [
     { key: 'inventario', label: 'Inventario', icon: 'inventory_2', href: '/inventory' },
     { key: 'recetas', label: 'Recetas', icon: 'menu_book', href: '/dashboard' },
     { key: 'lista', label: 'Lista de Compras', icon: 'shopping_cart', href: '/dashboard' },
-    { key: 'cocina', label: 'Cocina', icon: 'star', href: '/cocina' },
+    { key: 'cocina', label: 'Cocina', icon: 'star', href: '/dashboard' },
 ];
 
 export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
@@ -66,7 +66,6 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                onClick={() => setIsOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-full font-medium transition-colors ${activeTab === item.key
                                     ? 'bg-emerald-500 text-white'
                                     : 'text-[#131613] hover:bg-primary/10'
