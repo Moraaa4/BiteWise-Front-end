@@ -1,6 +1,13 @@
 import React from 'react';
 
-export function RecipeGrid({ recipes }: { recipes: any[] }) {
+export interface DashboardRecipe {
+    id: string;
+    img?: string;
+    time: string;
+    title: string;
+}
+
+export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
     return (
         <section className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between px-2">
@@ -12,7 +19,7 @@ export function RecipeGrid({ recipes }: { recipes: any[] }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {recipes.map((r: any) => (
+                {recipes.map((r: DashboardRecipe) => (
                     <div key={r.id} className="bg-white dark:bg-white/5 rounded-xl border border-[#f1f3f1] dark:border-white/10 overflow-hidden shadow-sm group">
                         <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url(${r.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuBFv-MES7YvygZWrWusWM5dyb4MeACmKE9omZ6IHT5EGIhAmqM5UX5Vaku9d6zZhHhooMQDILjJZ8tL4XDxCW68EttQBGEIyJIO9W2qi66oH59Elbe4yHz2aF4NWGW79_Re19OKvpnDSmTM5vfivJXria5R1-cCkwUWec6duUOtgffvPHs6jRSnNINiDDEayJ1PVxiD-EtgbzMKg-K5aAYzA0puArLoiks3XB9VtSmJ1IuM1z8wxkabL6XpUe-lHzw71CHN0dWllYv6"})` }}>
                             <div className="p-3">

@@ -1,6 +1,12 @@
 import React from 'react';
 
-export function IngredientList({ ingredients }: { ingredients: any[] }) {
+export interface DashboardIngredient {
+    id: string;
+    name: string;
+    qty: number | string;
+}
+
+export function IngredientList({ ingredients }: { ingredients: DashboardIngredient[] }) {
     return (
         <div className="bg-white dark:bg-white/5 rounded-xl border border-[#f1f3f1] dark:border-white/10 shadow-sm flex flex-col h-full">
             <div className="p-6 border-b border-[#f1f3f1] dark:border-white/10 flex justify-between items-center">
@@ -8,7 +14,7 @@ export function IngredientList({ ingredients }: { ingredients: any[] }) {
                 <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">{ingredients.length} items</span>
             </div>
             <div className="flex-1 overflow-y-auto">
-                {ingredients.map((it: any) => (
+                {ingredients.map((it: DashboardIngredient) => (
                     <div key={it.id} className="flex items-center gap-4 bg-white dark:bg-transparent px-6 py-4 border-b border-[#f1f3f1] dark:border-white/5 hover:bg-background-light dark:hover:bg-white/5 transition-colors group">
                         <div className="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-10">
                             <span className="material-symbols-outlined text-xl">{it.name === 'Pechuga pollo' ? 'restaurant' : it.name === 'Jitomate' ? 'nutrition' : 'cooking'}</span>
