@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from 'next-themes';
+import ThemeSwitch from '@/components/ThemeSwitch';
 
 export const metadata: Metadata = {
   title: "BiteWise - Cocina Inteligente",
@@ -20,7 +22,10 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {children}
+        <ThemeProvider attribute="class">
+          {children}
+          <ThemeSwitch />
+        </ThemeProvider>
       </body>
     </html>
   );
