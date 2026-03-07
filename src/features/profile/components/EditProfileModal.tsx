@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, User, Mail, Sparkles } from "lucide-react";
+import { X, User, Mail } from "lucide-react";
 import type { UserProfile } from "@/features/profile/perfilTypes";
 
 interface EditProfileModalProps {
@@ -17,7 +17,6 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
     const [name, setName] = useState(currentProfile.name);
     const [email, setEmail] = useState(currentProfile.email);
-    const [plan, setPlan] = useState(currentProfile.plan);
 
     const handleSave = () => {
         if (!name.trim() || !email.trim()) return;
@@ -29,7 +28,7 @@ export default function EditProfileModal({
             initials = ((match[1] || "") + (match[2] || "")).toUpperCase();
         }
 
-        onSave({ name, email, plan, initials });
+        onSave({ name, email, initials });
         onClose();
     };
 
@@ -86,26 +85,7 @@ export default function EditProfileModal({
                         </div>
                     </div>
 
-                    {/* Plan */}
-                    <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
-                            Plan Actual
-                        </label>
-                        <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
-                            <span className="px-3 py-2.5 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-white/5 border-r border-gray-200 dark:border-white/10">
-                                <Sparkles size={16} />
-                            </span>
-                            <select
-                                value={plan}
-                                onChange={(e) => setPlan(e.target.value)}
-                                className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-background-dark appearance-none shrink-0"
-                            >
-                                <option value="Básico">Básico</option>
-                                <option value="Premium">Premium</option>
-                                <option value="Familiar">Familiar</option>
-                            </select>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-white/5">

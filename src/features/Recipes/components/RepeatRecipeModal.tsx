@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, ShoppingCart, CalendarPlus, CheckCircle2 } from "lucide-react";
+import { X, ShoppingCart, CheckCircle2 } from "lucide-react";
 import type { HistoryRecipe } from "@/features/Recipes/recetasData";
 
 interface RepeatRecipeModalProps {
@@ -95,18 +95,7 @@ export default function RepeatRecipeModal({ recipe, onClose }: RepeatRecipeModal
                         </div>
                     </button>
 
-                    <button
-                        onClick={handleAction}
-                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-white/10 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-500/5 transition-all group text-left"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                            <CalendarPlus size={18} />
-                        </div>
-                        <div className="flex-1">
-                            <h5 className="text-sm font-bold text-gray-900 dark:text-white mb-0.5">Programar para la semana</h5>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Agrégala a tu plan de comidas semanal.</p>
-                        </div>
-                    </button>
+
                 </div>
             </div>
         </div>
