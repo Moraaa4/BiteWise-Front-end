@@ -1,8 +1,8 @@
-@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
+:root {
   --color-primary: #4cae4f;
   --color-background-light: #f6f7f6;
   --color-background-dark: #151d15;
@@ -10,6 +10,12 @@
   --radius: 0.5rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+}
+
+.dark {
+  --color-primary: #4cae4f;
+  --color-background-light: #151d15;
+  --color-background-dark: #151d15;
 }
 
 @layer base {

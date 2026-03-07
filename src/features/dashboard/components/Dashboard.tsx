@@ -15,18 +15,12 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
 
-  const recipes = [
-    { id: 'r1', title: 'Pollo en salsa jitomate', time: '15min', img: '' },
-    { id: 'r2', title: 'Arroz con verduras', time: '20min', img: '' },
-    { id: 'r3', title: 'Tacos rápidos', time: '12min', img: '' },
-  ];
-
   const handleAddIngredient = () => {
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditIngredient = (id: string, currentName: string) => {
+  const handleEditIngredient = (id: string) => {
     const itemToEdit = ingredients.find(ing => ing.id === id);
     if (itemToEdit) {
       setEditingItem({
@@ -66,13 +60,13 @@ export default function Dashboard() {
       <main className="flex-1 flex flex-col overflow-y-auto">
         <Header />
 
-        <div className="p-4 pt-16 md:p-8 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
+        <div className="p-3 sm:p-4 md:p-8 pt-16 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
           <section className="space-y-6">
             <div className="relative max-w-2xl mx-auto">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d] dark:text-gray-400">search</span>
-              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400" placeholder="Buscar recetas, ingredientes..." type="text" />
+              <input className="w-full pl-12 pr-4 py-2 sm:py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400" placeholder="Buscar recetas, ingredientes..." type="text" />
             </div>
-            <div className="flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
                 <button
                   key={cat}
@@ -88,7 +82,7 @@ export default function Dashboard() {
           </section>
 
           <div className="grid grid-cols-1 lg:max-w-4xl lg:mx-auto gap-6 md:gap-8">
-            <section className="flex flex-col h-[500px]">
+            <section className="flex flex-col h-[400px] sm:h-[500px]">
               <IngredientList
                 ingredients={ingredients}
                 onAdd={handleAddIngredient}

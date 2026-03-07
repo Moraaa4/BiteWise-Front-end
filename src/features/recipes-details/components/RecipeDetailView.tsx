@@ -51,7 +51,7 @@ export default function RecipeDetailView() {
 
                 <main className="flex-1 overflow-y-auto">
                     {/* Hero image area */}
-                    <div className="relative h-56 bg-gray-200 dark:bg-white/5 overflow-hidden">
+                    <div className="relative h-48 sm:h-56 bg-gray-200 dark:bg-white/5 overflow-hidden">
                         {/* Image placeholder — swap for <Image> when backend is connected */}
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-white/5 dark:to-white/10 border-b border-white/10">
                             <span className="text-gray-400 dark:text-white/20 text-5xl">🍽️</span>
@@ -109,23 +109,23 @@ export default function RecipeDetailView() {
                 </main>
 
                 {/* Bottom action bar */}
-                <div className="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
+                <div className="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-white/10 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 font-medium">
                         <Clock size={13} className="text-gray-500 dark:text-gray-400" />
                         Tiempo aproximado: {recipe.timeMinutes} min
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                         <button
                             onClick={handleBuyIngredients}
-                            className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+                            className="flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold px-5 py-2.5 rounded-xl transition-colors w-full sm:w-auto"
                         >
                             <ShoppingBag size={15} />
                             Comprar Ingredientes
                         </button>
                         <button
                             onClick={() => alert("¡Vamos a empezar a cocinar!")}
-                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-emerald-200 dark:shadow-none"
+                            className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-emerald-200 dark:shadow-none w-full sm:w-auto"
                         >
                             <PlayCircle size={15} />
                             ¡Empezar a cocinar!

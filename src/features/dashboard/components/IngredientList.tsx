@@ -9,7 +9,7 @@ export interface DashboardIngredient {
 interface IngredientListProps {
     ingredients: DashboardIngredient[];
     onAdd: () => void;
-    onEdit: (id: string, name: string) => void;
+    onEdit: (id: string) => void;
     onDelete: (id: string) => void;
 }
 
@@ -31,7 +31,7 @@ export function IngredientList({ ingredients, onAdd, onEdit, onDelete }: Ingredi
                             <p className="text-[#6c7f6d] dark:text-gray-400 text-sm font-normal">Cantidad: x{it.qty}</p>
                         </div>
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => onEdit(it.id, it.name)} className="p-1.5 hover:text-primary transition-colors"><span className="material-symbols-outlined text-xl">edit</span></button>
+                            <button onClick={() => onEdit(it.id)} className="p-1.5 hover:text-primary transition-colors"><span className="material-symbols-outlined text-xl">edit</span></button>
                             <button onClick={() => onDelete(it.id)} className="p-1.5 hover:text-red-500 transition-colors"><span className="material-symbols-outlined text-xl">delete</span></button>
                         </div>
                     </div>

@@ -44,7 +44,7 @@ export default function Inventory() {
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="inventario" />
             <main className="flex-1 flex flex-col overflow-y-auto">
-                <div className="p-4 pt-16 md:p-8 max-w-[1200px] mx-auto w-full flex-1 flex flex-col">
+                <div className="p-3 sm:p-4 md:p-8 pt-16 max-w-[1200px] mx-auto w-full flex-1 flex flex-col">
                     {/* Top Header Area */}
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 md:mb-8">
                         <div>
@@ -80,13 +80,13 @@ export default function Inventory() {
                     {/* Table Shell */}
                     <div className="flex-1 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl flex flex-col overflow-hidden shadow-sm">
                         <div className="overflow-x-auto flex-1 flex flex-col">
-                            <div className="min-w-[700px] flex-1 flex flex-col">
+                            <div className="flex-1 flex flex-col">
                                 {/* Table Headers */}
-                                <div className="grid grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-bold text-gray-400 tracking-wider">
+                                <div className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-bold text-gray-400 tracking-wider">
                                     <div>INGREDIENTE</div>
                                     <div>CATEGORÍA</div>
                                     <div>CANTIDAD</div>
-                                    <div className="text-right">ACCIONES</div>
+                                    <div className="text-left sm:text-right">ACCIONES</div>
                                 </div>
 
                                 {/* Body */}
@@ -97,13 +97,20 @@ export default function Inventory() {
                                         </div>
                                     ) : (
                                         ingredients.map(ing => (
-                                            <div key={ing.id} className="grid grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors">
-                                                <div className="font-medium text-gray-900 dark:text-gray-100">{ing.name}</div>
-                                                <div className="text-gray-500 dark:text-gray-400">
+                                            <div key={ing.id} className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-start sm:items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors gap-2 sm:gap-0">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100 sm:col-span-1">
+                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Ingrediente:</span>
+                                                    {ing.name}
+                                                </div>
+                                                <div className="text-gray-500 dark:text-gray-400 sm:col-span-1">
+                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Categoría:</span>
                                                     <span className="bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-xs font-medium">{ing.category}</span>
                                                 </div>
-                                                <div className="text-gray-900 dark:text-gray-100 font-medium">{ing.quantity}</div>
-                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="text-gray-900 dark:text-gray-100 font-medium sm:col-span-1">
+                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Cantidad:</span>
+                                                    {ing.quantity}
+                                                </div>
+                                                <div className="flex justify-start sm:justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity sm:col-span-1">
                                                     <button onClick={() => handleEdit(ing.id, ing.name)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Editar">
                                                         <span className="material-symbols-outlined text-[18px]">edit</span>
                                                     </button>

@@ -44,13 +44,12 @@ export default function ListaDetalleView() {
             <div className="flex-1 flex flex-col overflow-y-auto">
                 <Header title="Detalles de Lista" />
 
-                {/* Main content */}
-                <main className="flex-1 flex items-start justify-center pt-12 px-8 pb-8">
-                    <div className="w-full max-w-md">
+                <main className="flex-1 flex items-start justify-center pt-12 px-4 sm:px-8 pb-8">
+                    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg">
                         {/* List card */}
                         <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
                             {/* Card header */}
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
+                            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-white/10">
                                 <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
                                     {MOCK_LIST_DETAIL.name}
                                 </h2>
@@ -60,14 +59,14 @@ export default function ListaDetalleView() {
                             </div>
 
                             {/* Items */}
-                            <div className="px-6 py-2">
+                            <div className="px-4 sm:px-6 py-2">
                                 {items.map((item) => (
                                     <ShoppingItemRow key={item.id} item={item} onToggle={handleToggle} />
                                 ))}
                             </div>
 
                             {/* Add item input */}
-                            <div className="px-6 pb-4 pt-2">
+                            <div className="px-4 sm:px-6 pb-4 pt-2">
                                 <div className="flex items-center gap-2 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all bg-white dark:bg-white/5">
                                     <Search size={13} className="text-gray-400 shrink-0" />
                                     <input
@@ -82,11 +81,11 @@ export default function ListaDetalleView() {
                             </div>
 
                             {/* CTA Button */}
-                            <div className="px-6 pb-4">
+                            <div className="px-4 sm:px-6 pb-4">
                                 <button
                                     onClick={handleMarkAll}
                                     disabled={allChecked}
-                                    className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 ${allChecked
+                                    className={`w-full py-3 rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 transition-all duration-200 ${allChecked
                                         ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 cursor-default"
                                         : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                                         }`}

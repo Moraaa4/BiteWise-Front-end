@@ -136,7 +136,7 @@ export default function ProfileView() {
                             </div>
 
                             {/* Stats */}
-                            <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-white/10 px-2 py-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 divide-x divide-gray-100 dark:divide-white/10 px-2 py-4">
                                 <div className="flex flex-col items-center gap-0.5 px-4">
                                     <span className="text-lg font-bold text-gray-900 dark:text-white">
                                         {profile.stats.recipes || "—"}

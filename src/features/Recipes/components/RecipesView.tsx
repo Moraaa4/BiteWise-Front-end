@@ -63,7 +63,7 @@ export default function RecetasView() {
                 <Header title="Recetas Disponibles" />
 
                 {/* Content */}
-                <main className="flex-1 px-4 md:px-8 py-7 flex flex-col gap-8 w-full max-w-7xl mx-auto">
+                <main className="flex-1 px-3 sm:px-4 md:px-8 py-7 flex flex-col gap-8 w-full max-w-7xl mx-auto">
 
                     {/* Available Recipes */}
                     <section>
@@ -76,7 +76,7 @@ export default function RecetasView() {
                                 >
                                     + Agregar Receta
                                 </button>
-                                <button className="text-xs text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
+                                <button className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
                                     Ver todos →
                                 </button>
                             </div>
@@ -84,7 +84,7 @@ export default function RecetasView() {
                         <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
                             Basado en lo que tienes en tu despensa ahora mismo.
                         </p>
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {recipes.length === 0 ? (
                                 <div className="col-span-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
                                     No hay recetas disponibles. ¡Agrega la primera!
