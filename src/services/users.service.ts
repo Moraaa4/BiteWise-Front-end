@@ -30,36 +30,35 @@ export interface AuthResponse {
   user: UserProfile;
 }
 
-// Cliente HTTP para el servicio de usuarios
-const userClient = createHttpClient(process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:3002');
+const userClient = createHttpClient(process.env.NEXT_PUBLIC_USERS_API_URL || 'http://localhost:3001');
 
 export const usersService = {
   async register(userData: UserRegisterRequest) {
-    const response = await userClient.post<AuthResponse>('/register', userData);
+    const response = await userClient.post<AuthResponse>('/api/users/register', userData);
     return response;
   },
 
   async login(credentials: UserLoginRequest) {
-    const response = await userClient.post<AuthResponse>('/login', credentials);
+    const response = await userClient.post<AuthResponse>('/api/users/login', credentials);
     return response;
   },
 
   async getProfile(userId: string, token: string) {
-    const response = await userClient.get<UserProfile>(`/${userId}`, {
+    const response = await userClient.get<UserProfile>(`/api/users/${userId}`, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async updateProfile(userId: string, userData: Partial<UserProfile>, token: string) {
-    const response = await userClient.put<UserProfile>(`/${userId}`, userData, {
+    const response = await userClient.put<UserProfile>(`/api/users/${userId}`, userData, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async getStats(token: string) {
-    const response = await userClient.get<UserStats>('/stats', {
+    const response = await userClient.get<UserStats>('/api/users/stats', {
       Authorization: `Bearer ${token}`,
     });
     return response;
