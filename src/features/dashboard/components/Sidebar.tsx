@@ -11,7 +11,7 @@ interface SidebarProps {
 const navItems = [
     { key: 'inicio', label: 'Inicio', icon: 'home', href: '/dashboard' },
     { key: 'inventario', label: 'Inventario', icon: 'inventory_2', href: '/inventory' },
-    { key: 'recetas', label: 'Recetas', icon: 'menu_book', href: '/dashboard' },
+    { key: 'recetas', label: 'Recetas', icon: 'menu_book', href: '/Recipes' },
     { key: 'lista', label: 'Lista de Compras', icon: 'shopping_cart', href: '/shopping-list' },
     { key: 'cocina', label: 'Cocina', icon: 'star', href: '/kitchen' },
 ];
