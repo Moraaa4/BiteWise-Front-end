@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, User, Search, CheckCircle2 } from "lucide-react";
-import Sidebar from "@/features/shopping-list-detail/components/Sidebar";
+import { Search, CheckCircle2 } from "lucide-react";
+import { Sidebar } from "@/features/dashboard/components/Sidebar";
+import { Header } from "@/features/dashboard/components/Header";
 import ShoppingItemRow from "@/features/shopping-list-detail/components/ShoppingItemRow";
 import { MOCK_LIST_DETAIL, type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 
 export default function ListaDetalleView() {
-    const [activeNav, setActiveNav] = useState("Lista de Compras");
     const [items, setItems] = useState<ShoppingItem[]>(MOCK_LIST_DETAIL.items);
     const [newItemName, setNewItemName] = useState("");
 
@@ -38,39 +38,23 @@ export default function ListaDetalleView() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
+        <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
+            <Sidebar activeTab="lista" />
 
-            <div className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                        <button className="text-gray-500 hover:text-gray-800 transition-colors">
-                            <ArrowLeft size={18} />
-                        </button>
-                        <h1 className="text-base font-bold text-gray-900 tracking-wide uppercase">
-                            Lista de Compras
-                        </h1>
-                    </div>
-                    <button className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900 transition-colors font-medium">
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                            <User size={14} className="text-gray-500" />
-                        </div>
-                        Mi Perfil
-                    </button>
-                </header>
+            <div className="flex-1 flex flex-col overflow-y-auto">
+                <Header />
 
                 {/* Main content */}
                 <main className="flex-1 flex items-start justify-center pt-12 px-8 pb-8">
                     <div className="w-full max-w-md">
                         {/* List card */}
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
                             {/* Card header */}
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-800">
+                                <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
                                     {MOCK_LIST_DETAIL.name}
                                 </h2>
-                                <span className="text-[11px] text-green-600 font-semibold">
+                                <span className="text-[11px] text-emerald-500 font-semibold">
                                     {checkedCount}/{items.length} productos
                                 </span>
                             </div>
@@ -84,7 +68,7 @@ export default function ListaDetalleView() {
 
                             {/* Add item input */}
                             <div className="px-6 pb-4 pt-2">
-                                <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-green-400 focus-within:border-transparent transition-all">
+                                <div className="flex items-center gap-2 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all bg-white dark:bg-zinc-800">
                                     <Search size={13} className="text-gray-400 shrink-0" />
                                     <input
                                         type="text"
@@ -92,7 +76,7 @@ export default function ListaDetalleView() {
                                         value={newItemName}
                                         onChange={(e) => setNewItemName(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-                                        className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+                                        className="flex-1 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none bg-transparent"
                                     />
                                 </div>
                             </div>
@@ -103,14 +87,14 @@ export default function ListaDetalleView() {
                                     onClick={handleMarkAll}
                                     disabled={allChecked}
                                     className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 ${allChecked
-                                        ? "bg-green-100 text-green-600 cursor-default"
-                                        : "bg-green-500 hover:bg-green-600 text-white shadow-sm shadow-green-200"
+                                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 cursor-default"
+                                        : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                                         }`}
                                 >
                                     <CheckCircle2 size={16} />
                                     {allChecked ? "¡Todo completado!" : "TODO COMPRADO"}
                                 </button>
-                                <p className="text-[10px] text-gray-400 text-center mt-2">
+                                <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-2">
                                     LOS ARTÍCULOS MARCADOS SE TRANSFERIRÁN A TU INVENTARIO
                                 </p>
                             </div>

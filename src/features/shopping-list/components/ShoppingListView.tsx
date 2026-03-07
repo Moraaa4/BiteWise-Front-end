@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { User } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
@@ -9,6 +10,8 @@ import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
 
 export default function ListaDeComprasView() {
     const [lists, setLists] = useState<ShoppingList[]>(SHOPPING_LISTS);
+
+    const router = useRouter();
 
     const handleCreate = () => {
         const newListName = prompt("Nombre de la nueva lista:");
@@ -22,11 +25,12 @@ export default function ListaDeComprasView() {
                 total: 5
             };
             setLists([...lists, newList]);
+            router.push(`/shopping-list-detail`);
         }
     };
 
     const handleViewDetails = (list: ShoppingList) => {
-        alert(`Ver detalles de: ${list.name}`);
+        router.push(`/shopping-list-detail`);
     };
 
     const handleDelete = (id: string) => {

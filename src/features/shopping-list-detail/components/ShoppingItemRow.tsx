@@ -11,7 +11,7 @@ interface ShoppingItemRowProps {
 export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps) {
     return (
         <label
-            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 last:border-0 cursor-pointer group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
+            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-zinc-800 last:border-0 cursor-pointer group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
                 }`}
         >
             <div className="flex items-center gap-3">
@@ -24,8 +24,8 @@ export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps
                     />
                     <div
                         className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${item.checked
-                            ? "bg-green-500 border-green-500"
-                            : "border-gray-300 group-hover:border-green-400"
+                            ? "bg-emerald-500 border-emerald-500"
+                            : "border-gray-300 dark:border-gray-500 group-hover:border-emerald-400"
                             }`}
                     >
                         {item.checked && (
@@ -42,13 +42,13 @@ export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps
                     </div>
                 </div>
                 <span
-                    className={`text-sm text-gray-800 transition-all duration-150 ${item.checked ? "line-through text-gray-400" : ""
+                    className={`text-sm text-gray-800 dark:text-gray-200 transition-all duration-150 ${item.checked ? "line-through text-gray-400 dark:text-gray-500" : ""
                         }`}
                 >
                     {item.name}
                 </span>
             </div>
-            <span className="text-xs text-gray-400 font-medium">{item.quantity}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{item.quantity}</span>
         </label>
     );
 }
