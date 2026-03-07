@@ -11,9 +11,9 @@ interface SidebarProps {
 const navItems = [
     { key: 'inicio', label: 'Inicio', icon: 'home', href: '/dashboard' },
     { key: 'inventario', label: 'Inventario', icon: 'inventory_2', href: '/inventory' },
-    { key: 'recetas', label: 'Recetas', icon: 'menu_book', href: '/dashboard' },
-    { key: 'lista', label: 'Lista de Compras', icon: 'shopping_cart', href: '/dashboard' },
-    { key: 'cocina', label: 'Cocina', icon: 'star', href: '/cocina' },
+    { key: 'recetas', label: 'Recetas', icon: 'menu_book', href: '/Recipes' },
+    { key: 'lista', label: 'Lista de Compras', icon: 'shopping_cart', href: '/shopping-list' },
+    { key: 'cocina', label: 'Cocina', icon: 'star', href: '/kitchen' },
 ];
 
 export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
@@ -24,7 +24,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
             {/* Botón menú móvil flotante */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="md:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-zinc-900 rounded-lg shadow-md border border-gray-100 dark:border-zinc-800 text-gray-700 dark:text-gray-300"
+                className="md:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-background-dark rounded-lg shadow-md border border-gray-100 dark:border-white/10 text-gray-700 dark:text-gray-300"
             >
                 <span className="material-symbols-outlined">menu</span>
             </button>
@@ -51,12 +51,12 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                                 <Image src="/icon.svg" alt="BiteWise" width={40} height={40} />
                             </div>
                             <div className="flex flex-col">
-                                <h1 className="text-[#131613] text-lg font-bold leading-none">BiteWise</h1>
-                                <p className="text-[#6c7f6d] text-xs">Cocina Inteligente</p>
+                                <h1 className="text-[#131613] dark:text-white text-lg font-bold leading-none">BiteWise</h1>
+                                <p className="text-[#6c7f6d] dark:text-gray-400 text-xs">Cocina Inteligente</p>
                             </div>
                         </div>
                         {/* Botón cerrar en móvil */}
-                        <button onClick={() => setIsOpen(false)} className="md:hidden text-gray-500 hover:bg-gray-100 p-1 rounded-md">
+                        <button onClick={() => setIsOpen(false)} className="md:hidden text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 p-1 rounded-md">
                             <span className="material-symbols-outlined">close</span>
                         </button>
                     </div>
@@ -66,10 +66,9 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                onClick={() => setIsOpen(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-full font-medium transition-colors ${activeTab === item.key
                                     ? 'bg-emerald-500 text-white'
-                                    : 'text-[#131613] hover:bg-primary/10'
+                                    : 'text-[#131613] dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-white/5'
                                     }`}
                             >
                                 <span className="material-symbols-outlined">{item.icon}</span>

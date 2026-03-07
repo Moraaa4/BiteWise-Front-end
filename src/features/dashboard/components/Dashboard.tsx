@@ -1,15 +1,19 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { IngredientList } from './IngredientList';
-import { RecipeGrid } from './RecipeGrid';
+import { IngredientList, DashboardIngredient } from './IngredientList';
+import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
 
 export default function Dashboard() {
-  const ingredients = [
+  const [ingredients, setIngredients] = useState<DashboardIngredient[]>([
     { id: 'i1', name: 'Jitomate', qty: 4 },
     { id: 'i2', name: 'Pechuga pollo', qty: 2 },
     { id: 'i3', name: 'Cebolla', qty: 3 },
-  ];
+  ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
 
   const recipes = [
     { id: 'r1', title: 'Pollo en salsa jitomate', time: '15min', img: '' },
@@ -17,8 +21,46 @@ export default function Dashboard() {
     { id: 'r3', title: 'Tacos rápidos', time: '12min', img: '' },
   ];
 
+  const handleAddIngredient = () => {
+    setEditingItem(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEditIngredient = (id: string, currentName: string) => {
+    const itemToEdit = ingredients.find(ing => ing.id === id);
+    if (itemToEdit) {
+      setEditingItem({
+        id: itemToEdit.id,
+        name: itemToEdit.name,
+        category: 'General', // Dashboard doesn't track this, default it
+        quantity: itemToEdit.qty.toString()
+      });
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleSaveIngredient = (savedItem: InventoryItem) => {
+    const dashboardIngredient: DashboardIngredient = {
+      id: savedItem.id,
+      name: savedItem.name,
+      qty: savedItem.quantity
+    };
+
+    if (editingItem) {
+      setIngredients(ingredients.map(ing => ing.id === savedItem.id ? dashboardIngredient : ing));
+    } else {
+      setIngredients([...ingredients, dashboardIngredient]);
+    }
+  };
+
+  const handleDeleteIngredient = (id: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
+      setIngredients(ingredients.filter(ing => ing.id !== id));
+    }
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
       <Sidebar activeTab="inicio" />
 
       <main className="flex-1 flex flex-col overflow-y-auto">
@@ -27,16 +69,16 @@ export default function Dashboard() {
         <div className="p-4 pt-16 md:p-8 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
           <section className="space-y-6">
             <div className="relative max-w-2xl mx-auto">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d]">search</span>
-              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm" placeholder="Buscar recetas, ingredientes..." type="text" />
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d] dark:text-gray-400">search</span>
+              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400" placeholder="Buscar recetas, ingredientes..." type="text" />
             </div>
             <div className="flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
                 <button
                   key={cat}
                   className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
-                    ? 'bg-primary text-white'
-                    : 'bg-white text-[#6c7f6d] border border-[#f1f3f1] hover:bg-primary hover:border-primary hover:text-white'
+                    ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
+                    : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
                     }`}
                 >
                   {cat}
@@ -45,18 +87,29 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            <section className="lg:col-span-1 flex flex-col h-full">
-              <IngredientList ingredients={ingredients} />
+          <div className="grid grid-cols-1 lg:max-w-4xl lg:mx-auto gap-6 md:gap-8">
+            <section className="flex flex-col h-[500px]">
+              <IngredientList
+                ingredients={ingredients}
+                onAdd={handleAddIngredient}
+                onEdit={handleEditIngredient}
+                onDelete={handleDeleteIngredient}
+              />
             </section>
-
-            <RecipeGrid recipes={recipes} />
           </div>
         </div>
 
         <footer className="mt-auto p-6 md:p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
           <p className="text-xs text-[#6c7f6d] dark:text-gray-400">© 2024 BiteWise. Come mejor, desperdicia menos.</p>
         </footer>
+
+        {isModalOpen && (
+          <InventoryModal
+            initialData={editingItem}
+            onSave={handleSaveIngredient}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
       </main>
     </div>
   );
