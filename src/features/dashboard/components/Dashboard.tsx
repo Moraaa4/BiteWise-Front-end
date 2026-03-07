@@ -57,8 +57,8 @@ export default function Dashboard() {
                 <button
                   key={cat}
                   className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
-                    ? 'bg-emerald-500 text-white border border-emerald-500'
-                    : 'bg-white dark:bg-zinc-900 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-zinc-800 hover:bg-emerald-500 hover:border-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white'
+                    ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
+                    : 'bg-white dark:bg-zinc-900 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-zinc-800 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
                     }`}
                 >
                   {cat}
