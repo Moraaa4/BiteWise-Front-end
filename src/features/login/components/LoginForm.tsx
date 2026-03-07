@@ -18,7 +18,6 @@ export default function LoginForm() {
     setLoading(true);
 
     const payload: LoginPayload = { email, password };
-    console.log('Login Payload Data:', payload);
 
     setTimeout(() => {
       setLoading(false);

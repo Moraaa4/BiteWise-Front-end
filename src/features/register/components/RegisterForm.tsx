@@ -19,7 +19,6 @@ export default function RegisterForm() {
     setLoading(true);
 
     const payload: RegisterPayload = { name, email, password };
-    console.log('Register Payload Data:', payload);
 
     setTimeout(() => {
       setLoading(false);
