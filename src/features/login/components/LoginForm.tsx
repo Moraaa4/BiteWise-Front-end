@@ -86,16 +86,7 @@ export default function LoginForm() {
         </button>
       </form>
 
-      <div className="my-6 flex items-center">
-        <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
-        <div className="px-4 text-sm text-gray-400 dark:text-gray-500">O continúa con</div>
-        <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
-      </div>
 
-      <button type="button" className="w-full flex items-center justify-center gap-3 py-3 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors rounded-lg dark:text-white">
-        <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
-        <span className="font-semibold">Google</span>
-      </button>
 
       <div className="mt-6 text-center">
         <p className="text-gray-500 dark:text-gray-400">¿No tienes cuenta? <Link href="/register" className="text-primary font-bold">Regístrate gratis</Link></p>
