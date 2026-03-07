@@ -32,17 +32,17 @@ export default function LoginForm() {
         <div className="p-2 bg-primary rounded-lg text-white">
           <Image src="/icon.svg" alt="BiteWise" width={28} height={28} />
         </div>
-        <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
+        <h2 className="text-2xl font-bold text-[#111811] dark:text-white">BiteWise</h2>
       </div>
 
-      <h1 className="text-3xl font-extrabold mb-2 text-[#111811]">¡Hola de nuevo!</h1>
-      <p className="text-[#608562] mb-6">Entra para seguir reduciendo el desperdicio de comida.</p>
+      <h1 className="text-3xl font-extrabold mb-2 text-[#111811] dark:text-white">¡Hola de nuevo!</h1>
+      <p className="text-[#608562] dark:text-gray-300 mb-6">Entra para seguir reduciendo el desperdicio de comida.</p>
 
       {error && <div className="mb-4 text-red-600">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-sm font-semibold block mb-2">Correo electrónico</label>
+          <label className="text-sm font-semibold block mb-2 dark:text-white">Correo electrónico</label>
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -55,7 +55,7 @@ export default function LoginForm() {
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-semibold">Contraseña</label>
+            <label className="text-sm font-semibold dark:text-white">Contraseña</label>
             <Link href="#" className="text-sm text-primary">¿Olvidaste tu contraseña?</Link>
           </div>
           <div className="relative">
@@ -87,18 +87,18 @@ export default function LoginForm() {
       </form>
 
       <div className="my-6 flex items-center">
-        <div className="flex-grow border-t border-gray-200"></div>
-        <div className="px-4 text-sm text-gray-400">O continúa con</div>
-        <div className="flex-grow border-t border-gray-200"></div>
+        <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
+        <div className="px-4 text-sm text-gray-400 dark:text-gray-500">O continúa con</div>
+        <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
       </div>
 
-      <button className="w-full flex items-center justify-center gap-3 py-3 border rounded-lg">
+      <button type="button" className="w-full flex items-center justify-center gap-3 py-3 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors rounded-lg dark:text-white">
         <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
         <span className="font-semibold">Google</span>
       </button>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-500">¿No tienes cuenta? <Link href="/register" className="text-primary font-bold">Regístrate gratis</Link></p>
+        <p className="text-gray-500 dark:text-gray-400">¿No tienes cuenta? <Link href="/register" className="text-primary font-bold">Regístrate gratis</Link></p>
       </div>
     </div>
   );

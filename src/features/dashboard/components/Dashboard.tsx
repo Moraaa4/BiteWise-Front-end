@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { IngredientList, DashboardIngredient } from './IngredientList';
-import { RecipeGrid } from './RecipeGrid';
+import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
 
 export default function Dashboard() {
   const [ingredients, setIngredients] = useState<DashboardIngredient[]>([
@@ -12,6 +12,8 @@ export default function Dashboard() {
     { id: 'i2', name: 'Pechuga pollo', qty: 2 },
     { id: 'i3', name: 'Cebolla', qty: 3 },
   ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
 
   const recipes = [
     { id: 'r1', title: 'Pollo en salsa jitomate', time: '15min', img: '' },
@@ -20,16 +22,34 @@ export default function Dashboard() {
   ];
 
   const handleAddIngredient = () => {
-    const name = prompt("Nombre del ingrediente:");
-    if (name) {
-      setIngredients([...ingredients, { id: Date.now().toString(), name, qty: 1 }]);
-    }
+    setEditingItem(undefined);
+    setIsModalOpen(true);
   };
 
   const handleEditIngredient = (id: string, currentName: string) => {
-    const newName = prompt(`Editar nombre para ${currentName}:`, currentName);
-    if (newName) {
-      setIngredients(ingredients.map(ing => ing.id === id ? { ...ing, name: newName } : ing));
+    const itemToEdit = ingredients.find(ing => ing.id === id);
+    if (itemToEdit) {
+      setEditingItem({
+        id: itemToEdit.id,
+        name: itemToEdit.name,
+        category: 'General', // Dashboard doesn't track this, default it
+        quantity: itemToEdit.qty.toString()
+      });
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleSaveIngredient = (savedItem: InventoryItem) => {
+    const dashboardIngredient: DashboardIngredient = {
+      id: savedItem.id,
+      name: savedItem.name,
+      qty: savedItem.quantity
+    };
+
+    if (editingItem) {
+      setIngredients(ingredients.map(ing => ing.id === savedItem.id ? dashboardIngredient : ing));
+    } else {
+      setIngredients([...ingredients, dashboardIngredient]);
     }
   };
 
@@ -82,6 +102,14 @@ export default function Dashboard() {
         <footer className="mt-auto p-6 md:p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
           <p className="text-xs text-[#6c7f6d] dark:text-gray-400">© 2024 BiteWise. Come mejor, desperdicia menos.</p>
         </footer>
+
+        {isModalOpen && (
+          <InventoryModal
+            initialData={editingItem}
+            onSave={handleSaveIngredient}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
       </main>
     </div>
   );

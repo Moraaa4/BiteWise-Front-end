@@ -42,7 +42,7 @@ export default function ListaDetalleView() {
             <Sidebar activeTab="lista" />
 
             <div className="flex-1 flex flex-col overflow-y-auto">
-                <Header />
+                <Header title="Detalles de Lista" />
 
                 {/* Main content */}
                 <main className="flex-1 flex items-start justify-center pt-12 px-8 pb-8">

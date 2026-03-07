@@ -10,20 +10,43 @@ import { MOCK_RECIPE_DETAIL } from "@/features/recipes-details/recetaDetalleData
 export default function RecipeDetailView() {
     const recipe = MOCK_RECIPE_DETAIL;
 
+    const handleBuyIngredients = () => {
+        const saved = localStorage.getItem("biteWise_shoppingLists");
+        let lists = [];
+        if (saved) {
+            lists = JSON.parse(saved);
+        }
+
+        const missingIngredients = recipe.ingredients.filter((i) => !i.inInventory);
+        const totalItems = missingIngredients.length > 0 ? missingIngredients.length : recipe.ingredients.length;
+
+        const newList = {
+            id: `list-${Date.now()}`,
+            name: `Faltantes: ${recipe.name}`,
+            status: "incomplete",
+            createdLabel: "Justo ahora",
+            progress: 0,
+            total: totalItems
+        };
+        lists.push(newList);
+        localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
+        alert("¡Ingredientes agregados a tu lista de compras!");
+    };
+
     return (
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="recetas" />
 
             <div className="flex-1 flex flex-col overflow-y-auto">
-                <Header />
+                <Header title="Detalles de la Receta" />
                 {/* Breadcrumb header */}
                 <header className="bg-white dark:bg-background-dark border-b border-gray-200 dark:border-white/10 px-6 py-3 flex items-center gap-2 shrink-0">
                     <button className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
                         <ArrowLeft size={16} />
                     </button>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">Recetas</span>
-                    <span className="text-xs text-gray-300 dark:text-white/30">/</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-300 font-medium truncate">{recipe.name}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-400">Recetas</span>
+                    <span className="text-xs text-gray-300 dark:text-gray-500">/</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-200 font-medium truncate">{recipe.name}</span>
                 </header>
 
                 <main className="flex-1 overflow-y-auto">
@@ -66,13 +89,13 @@ export default function RecipeDetailView() {
                                 <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200">
                                     Ingredientes (en inventario)
                                 </h2>
-                                <span className="text-xs text-gray-400 dark:text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                     {recipe.inventoryCount}/{recipe.totalCount} ITEMS
                                 </span>
                             </div>
                             <div className="px-5 py-1">
                                 {recipe.ingredients.length === 0 ? (
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
                                         Cargando ingredientes...
                                     </p>
                                 ) : (
@@ -87,17 +110,23 @@ export default function RecipeDetailView() {
 
                 {/* Bottom action bar */}
                 <div className="bg-white dark:bg-background-dark border-t border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        <Clock size={13} className="text-gray-400 dark:text-gray-500" />
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 font-medium">
+                        <Clock size={13} className="text-gray-500 dark:text-gray-400" />
                         Tiempo aproximado: {recipe.timeMinutes} min
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold px-5 py-2.5 rounded-xl transition-colors">
+                        <button
+                            onClick={handleBuyIngredients}
+                            className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+                        >
                             <ShoppingBag size={15} />
                             Comprar Ingredientes
                         </button>
-                        <button className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-emerald-200 dark:shadow-none">
+                        <button
+                            onClick={() => alert("¡Vamos a empezar a cocinar!")}
+                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-emerald-200 dark:shadow-none"
+                        >
                             <PlayCircle size={15} />
                             ¡Empezar a cocinar!
                         </button>

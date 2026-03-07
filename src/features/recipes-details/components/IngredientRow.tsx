@@ -16,7 +16,7 @@ export default function IngredientRow({ ingredient }: IngredientRowProps) {
             )}
             <div className="flex-1 min-w-0">
                 <p
-                    className={`text-sm font-medium ${ingredient.inInventory ? "text-gray-800 dark:text-gray-200" : "text-gray-500 dark:text-gray-500"
+                    className={`text-sm font-medium ${ingredient.inInventory ? "text-gray-800 dark:text-gray-200" : "text-gray-500 dark:text-gray-400"
                         }`}
                 >
                     {ingredient.name}

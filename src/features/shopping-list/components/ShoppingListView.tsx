@@ -1,15 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
+import { Header } from "@/features/dashboard/components/Header";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
 import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
 
 export default function ListaDeComprasView() {
-    const [lists, setLists] = useState<ShoppingList[]>(SHOPPING_LISTS);
+    const [lists, setLists] = useState<ShoppingList[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem("biteWise_shoppingLists");
+        if (saved) {
+            setLists(JSON.parse(saved));
+        } else {
+            setLists(SHOPPING_LISTS);
+        }
+        setIsLoaded(true);
+    }, []);
+
+    useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
+        }
+    }, [lists, isLoaded]);
 
     const router = useRouter();
 
@@ -24,7 +42,9 @@ export default function ListaDeComprasView() {
                 progress: 0,
                 total: 5
             };
-            setLists([...lists, newList]);
+            const updatedLists = [...lists, newList];
+            setLists(updatedLists);
+            localStorage.setItem("biteWise_shoppingLists", JSON.stringify(updatedLists));
             router.push(`/shopping-list-detail`);
         }
     };
@@ -51,18 +71,7 @@ export default function ListaDeComprasView() {
             <Sidebar activeTab="lista" />
 
             <div className="flex-1 flex flex-col overflow-y-auto">
-                {/* Header */}
-                <header className="bg-white dark:bg-background-dark border-b border-gray-200 dark:border-white/10 px-8 py-4 flex items-center justify-between shrink-0">
-                    <h1 className="text-2xl md:text-3xl font-black text-[#131613] dark:text-white">
-                        Listas de Compras
-                    </h1>
-                    <button className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">
-                            U
-                        </div>
-                        Mi Perfil
-                    </button>
-                </header>
+                <Header title="Listas de Compras" />
 
                 {/* Grid */}
                 <main className="flex-1 p-4 md:p-8">

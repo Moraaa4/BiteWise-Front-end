@@ -2,31 +2,41 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
+import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
 
 export default function Inventory() {
-    const [ingredients, setIngredients] = useState([
+    const [ingredients, setIngredients] = useState<InventoryItem[]>([
         { id: '1', name: 'Jitomate', category: 'Verduras', quantity: '4 piezas' },
         { id: '2', name: 'Pechuga de pollo', category: 'Carnes', quantity: '1 kg' },
         { id: '3', name: 'Cebolla', category: 'Verduras', quantity: '2 piezas' }
     ]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
 
     const handleAdd = () => {
-        const name = prompt("Nombre del ingrediente:");
-        if (name) {
-            setIngredients([...ingredients, { id: Date.now().toString(), name, category: 'General', quantity: '1' }]);
-        }
+        setEditingItem(undefined);
+        setIsModalOpen(true);
     };
 
     const handleEdit = (id: string, currentName: string) => {
-        const newName = prompt(`Editar nombre para ${currentName}:`, currentName);
-        if (newName) {
-            setIngredients(ingredients.map(ing => ing.id === id ? { ...ing, name: newName } : ing));
+        const itemToEdit = ingredients.find(ing => ing.id === id);
+        if (itemToEdit) {
+            setEditingItem(itemToEdit);
+            setIsModalOpen(true);
         }
     };
 
     const handleDelete = (id: string) => {
         if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
             setIngredients(ingredients.filter(ing => ing.id !== id));
+        }
+    };
+
+    const handleSaveItem = (savedItem: InventoryItem) => {
+        if (editingItem) {
+            setIngredients(ingredients.map(ing => ing.id === savedItem.id ? savedItem : ing));
+        } else {
+            setIngredients([...ingredients, savedItem]);
         }
     };
 
@@ -118,6 +128,14 @@ export default function Inventory() {
                         </div>
                     </div>
                 </div>
+
+                {isModalOpen && (
+                    <InventoryModal
+                        initialData={editingItem}
+                        onSave={handleSaveItem}
+                        onClose={() => setIsModalOpen(false)}
+                    />
+                )}
             </main>
         </div>
     );
