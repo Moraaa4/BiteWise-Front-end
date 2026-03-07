@@ -29,7 +29,7 @@ export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
                             </div>
                         </div>
                         <div className="p-4 flex flex-col gap-3">
-                            <h4 className="font-bold text-base leading-tight">{r.title}</h4>
+                            <h4 className="font-bold text-base leading-tight dark:text-white">{r.title}</h4>
                             <button className="w-full py-2 bg-primary/10 text-primary rounded-full text-sm font-bold hover:bg-primary hover:text-white transition-all">Ver receta</button>
                         </div>
                     </div>
@@ -37,7 +37,7 @@ export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
             </div>
 
             <div className="pt-4 flex justify-center">
-                <button className="flex items-center gap-2 px-6 py-2.5 bg-background-light dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-bold hover:bg-[#eceeec] transition-colors">
+                <button className="flex items-center gap-2 px-6 py-2.5 bg-background-light dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-bold text-gray-800 dark:text-gray-200 hover:bg-[#eceeec] dark:hover:bg-white/10 transition-colors">
                     <span className="material-symbols-outlined text-[18px]">refresh</span>
                     <span>ACTUALIZAR SUGERENCIAS</span>
                 </button>

@@ -48,9 +48,9 @@ export default function ListaDetalleView() {
                 <main className="flex-1 flex items-start justify-center pt-12 px-8 pb-8">
                     <div className="w-full max-w-md">
                         {/* List card */}
-                        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
                             {/* Card header */}
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-800">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
                                 <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
                                     {MOCK_LIST_DETAIL.name}
                                 </h2>
@@ -68,7 +68,7 @@ export default function ListaDetalleView() {
 
                             {/* Add item input */}
                             <div className="px-6 pb-4 pt-2">
-                                <div className="flex items-center gap-2 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all bg-white dark:bg-zinc-800">
+                                <div className="flex items-center gap-2 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all bg-white dark:bg-white/5">
                                     <Search size={13} className="text-gray-400 shrink-0" />
                                     <input
                                         type="text"

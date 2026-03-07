@@ -12,10 +12,13 @@ import {
     type HistoryRecipe,
 } from "@/features/Recipes/recetasData";
 
+import { useRouter } from "next/navigation";
+
 export default function RecetasView() {
+    const router = useRouter();
+
     const handleRecipeClick = (recipe: AvailableRecipe) => {
-        // Navigate to recipe detail — to be implemented
-        console.log("Ver receta:", recipe.id);
+        router.push("/recipes-details");
     };
 
     const handleRepeat = (recipe: HistoryRecipe) => {

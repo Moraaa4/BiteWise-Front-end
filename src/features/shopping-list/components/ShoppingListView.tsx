@@ -52,11 +52,11 @@ export default function ListaDeComprasView() {
 
             <div className="flex-1 flex flex-col overflow-y-auto">
                 {/* Header */}
-                <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0">
-                    <h1 className="text-2xl md:text-3xl font-black text-[#131613]">
+                <header className="bg-white dark:bg-background-dark border-b border-gray-200 dark:border-white/10 px-8 py-4 flex items-center justify-between shrink-0">
+                    <h1 className="text-2xl md:text-3xl font-black text-[#131613] dark:text-white">
                         Listas de Compras
                     </h1>
-                    <button className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900 transition-colors font-medium">
+                    <button className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">
                         <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">
                             U
                         </div>

@@ -11,7 +11,7 @@ interface ShoppingItemRowProps {
 export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps) {
     return (
         <label
-            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-zinc-800 last:border-0 cursor-pointer group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
+            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-white/10 last:border-0 cursor-pointer group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
                 }`}
         >
             <div className="flex items-center gap-3">

@@ -18,9 +18,9 @@ const DIFFICULTY_STYLES: Record<Difficulty, string> = {
 
 export default function HistoryTable({ recipes, onRepeat }: HistoryTableProps) {
     return (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-3 border-b border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/50">
+            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
                 {["RECETA", "FECHA", "DIFICULTAD", "VALORACIÓN", "ACCIÓN"].map((col) => (
                     <span key={col} className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wider uppercase">
                         {col}
@@ -32,13 +32,13 @@ export default function HistoryTable({ recipes, onRepeat }: HistoryTableProps) {
             {recipes.map((recipe, idx) => (
                 <div
                     key={recipe.id}
-                    className={`grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-4 items-center ${idx < recipes.length - 1 ? "border-b border-gray-100 dark:border-zinc-800" : ""
-                        } hover:bg-gray-50/60 dark:hover:bg-zinc-800/30 transition-colors`}
+                    className={`grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-4 items-center ${idx < recipes.length - 1 ? "border-b border-gray-100 dark:border-white/10" : ""
+                        } hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors`}
                 >
                     {/* Recipe name + avatar placeholder */}
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                            <span className="text-gray-300 dark:text-zinc-600 text-base">🍽️</span>
+                        <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                            <span className="text-gray-300 dark:text-white/30 text-base">🍽️</span>
                         </div>
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{recipe.name}</span>
                     </div>

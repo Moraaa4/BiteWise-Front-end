@@ -40,7 +40,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
       <Sidebar activeTab="inicio" />
 
       <main className="flex-1 flex flex-col overflow-y-auto">
@@ -49,8 +49,8 @@ export default function Dashboard() {
         <div className="p-4 pt-16 md:p-8 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
           <section className="space-y-6">
             <div className="relative max-w-2xl mx-auto">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d]">search</span>
-              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm" placeholder="Buscar recetas, ingredientes..." type="text" />
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d] dark:text-gray-400">search</span>
+              <input className="w-full pl-12 pr-4 py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400" placeholder="Buscar recetas, ingredientes..." type="text" />
             </div>
             <div className="flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
@@ -58,7 +58,7 @@ export default function Dashboard() {
                   key={cat}
                   className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
                     ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
-                    : 'bg-white dark:bg-zinc-900 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-zinc-800 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
+                    : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
                     }`}
                 >
                   {cat}
