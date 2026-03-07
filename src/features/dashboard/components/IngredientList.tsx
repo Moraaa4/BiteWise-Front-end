@@ -6,7 +6,14 @@ export interface DashboardIngredient {
     qty: number | string;
 }
 
-export function IngredientList({ ingredients }: { ingredients: DashboardIngredient[] }) {
+interface IngredientListProps {
+    ingredients: DashboardIngredient[];
+    onAdd: () => void;
+    onEdit: (id: string, name: string) => void;
+    onDelete: (id: string) => void;
+}
+
+export function IngredientList({ ingredients, onAdd, onEdit, onDelete }: IngredientListProps) {
     return (
         <div className="bg-white dark:bg-white/5 rounded-xl border border-[#f1f3f1] dark:border-white/10 shadow-sm flex flex-col h-full">
             <div className="p-6 border-b border-[#f1f3f1] dark:border-white/10 flex justify-between items-center">
@@ -24,14 +31,14 @@ export function IngredientList({ ingredients }: { ingredients: DashboardIngredie
                             <p className="text-[#6c7f6d] dark:text-gray-400 text-sm font-normal">Cantidad: x{it.qty}</p>
                         </div>
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="p-1.5 hover:text-primary transition-colors"><span className="material-symbols-outlined text-xl">edit</span></button>
-                            <button className="p-1.5 hover:text-red-500 transition-colors"><span className="material-symbols-outlined text-xl">delete</span></button>
+                            <button onClick={() => onEdit(it.id, it.name)} className="p-1.5 hover:text-primary transition-colors"><span className="material-symbols-outlined text-xl">edit</span></button>
+                            <button onClick={() => onDelete(it.id)} className="p-1.5 hover:text-red-500 transition-colors"><span className="material-symbols-outlined text-xl">delete</span></button>
                         </div>
                     </div>
                 ))}
             </div>
             <div className="p-6">
-                <button className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-full font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                <button onClick={onAdd} className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-full font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
                     <span className="material-symbols-outlined">add</span>
                     <span>AGREGAR COMPRA</span>
                 </button>

@@ -14,11 +14,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             {/* Hero */}
             <div className="relative h-52 overflow-hidden">
                 <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                        backgroundImage:
-                            "url('https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&q=80')",
-                    }}
+                    className="absolute inset-0 bg-gray-200 bg-cover bg-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 

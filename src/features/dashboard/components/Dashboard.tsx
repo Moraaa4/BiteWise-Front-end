@@ -1,21 +1,43 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { IngredientList } from './IngredientList';
+import { IngredientList, DashboardIngredient } from './IngredientList';
 import { RecipeGrid } from './RecipeGrid';
 
 export default function Dashboard() {
-  const ingredients = [
+  const [ingredients, setIngredients] = useState<DashboardIngredient[]>([
     { id: 'i1', name: 'Jitomate', qty: 4 },
     { id: 'i2', name: 'Pechuga pollo', qty: 2 },
     { id: 'i3', name: 'Cebolla', qty: 3 },
-  ];
+  ]);
 
   const recipes = [
     { id: 'r1', title: 'Pollo en salsa jitomate', time: '15min', img: '' },
     { id: 'r2', title: 'Arroz con verduras', time: '20min', img: '' },
     { id: 'r3', title: 'Tacos rápidos', time: '12min', img: '' },
   ];
+
+  const handleAddIngredient = () => {
+    const name = prompt("Nombre del ingrediente:");
+    if (name) {
+      setIngredients([...ingredients, { id: Date.now().toString(), name, qty: 1 }]);
+    }
+  };
+
+  const handleEditIngredient = (id: string, currentName: string) => {
+    const newName = prompt(`Editar nombre para ${currentName}:`, currentName);
+    if (newName) {
+      setIngredients(ingredients.map(ing => ing.id === id ? { ...ing, name: newName } : ing));
+    }
+  };
+
+  const handleDeleteIngredient = (id: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
+      setIngredients(ingredients.filter(ing => ing.id !== id));
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -35,8 +57,8 @@ export default function Dashboard() {
                 <button
                   key={cat}
                   className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
-                    ? 'bg-primary text-white'
-                    : 'bg-white text-[#6c7f6d] border border-[#f1f3f1] hover:bg-primary hover:border-primary hover:text-white'
+                    ? 'bg-emerald-500 text-white border border-emerald-500'
+                    : 'bg-white dark:bg-zinc-900 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-zinc-800 hover:bg-emerald-500 hover:border-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white'
                     }`}
                 >
                   {cat}
@@ -45,12 +67,15 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-            <section className="lg:col-span-1 flex flex-col h-full">
-              <IngredientList ingredients={ingredients} />
+          <div className="grid grid-cols-1 lg:max-w-4xl lg:mx-auto gap-6 md:gap-8">
+            <section className="flex flex-col h-[500px]">
+              <IngredientList
+                ingredients={ingredients}
+                onAdd={handleAddIngredient}
+                onEdit={handleEditIngredient}
+                onDelete={handleDeleteIngredient}
+              />
             </section>
-
-            <RecipeGrid recipes={recipes} />
           </div>
         </div>
 

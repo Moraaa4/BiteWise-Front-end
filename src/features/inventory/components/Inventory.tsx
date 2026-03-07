@@ -1,7 +1,35 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
 
 export default function Inventory() {
+    const [ingredients, setIngredients] = useState([
+        { id: '1', name: 'Jitomate', category: 'Verduras', quantity: '4 piezas' },
+        { id: '2', name: 'Pechuga de pollo', category: 'Carnes', quantity: '1 kg' },
+        { id: '3', name: 'Cebolla', category: 'Verduras', quantity: '2 piezas' }
+    ]);
+
+    const handleAdd = () => {
+        const name = prompt("Nombre del ingrediente:");
+        if (name) {
+            setIngredients([...ingredients, { id: Date.now().toString(), name, category: 'General', quantity: '1' }]);
+        }
+    };
+
+    const handleEdit = (id: string, currentName: string) => {
+        const newName = prompt(`Editar nombre para ${currentName}:`, currentName);
+        if (newName) {
+            setIngredients(ingredients.map(ing => ing.id === id ? { ...ing, name: newName } : ing));
+        }
+    };
+
+    const handleDelete = (id: string) => {
+        if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
+            setIngredients(ingredients.filter(ing => ing.id !== id));
+        }
+    };
+
     return (
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="inventario" />
@@ -32,39 +60,60 @@ export default function Inventory() {
                             </button>
 
                             {/* Add Button */}
-                            <button className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-bold shadow-md transition-colors">
+                            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-bold shadow-md transition-colors">
                                 <span className="material-symbols-outlined text-[18px]">add</span>
                                 <span className="hidden sm:inline">Agregar</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Table Shell (Cascarón sin datos) */}
+                    {/* Table Shell */}
                     <div className="flex-1 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl flex flex-col overflow-hidden shadow-sm">
                         <div className="overflow-x-auto flex-1 flex flex-col">
-                            <div className="min-w-[500px] flex-1 flex flex-col">
+                            <div className="min-w-[700px] flex-1 flex flex-col">
                                 {/* Table Headers */}
-                                <div className="grid grid-cols-3 px-6 md:px-8 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-bold text-gray-400 tracking-wider">
+                                <div className="grid grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-bold text-gray-400 tracking-wider">
                                     <div>INGREDIENTE</div>
                                     <div>CATEGORÍA</div>
                                     <div>CANTIDAD</div>
+                                    <div className="text-right">ACCIONES</div>
                                 </div>
 
-                                {/* Empty Body for API Mapping */}
-                                <div className="flex-1 overflow-y-auto flex items-center justify-center p-8 text-center">
-                                    <p className="text-gray-400 text-sm"> {/* Placeholder para cuando añadas el mapeo de la API */}
-                                        Los ingredientes se cargarán desde la API...
-                                    </p>
+                                {/* Body */}
+                                <div className="flex-1 overflow-y-auto flex flex-col">
+                                    {ingredients.length === 0 ? (
+                                        <div className="flex-1 flex items-center justify-center p-8 text-center">
+                                            <p className="text-gray-400 text-sm">No hay ingredientes en el inventario.</p>
+                                        </div>
+                                    ) : (
+                                        ingredients.map(ing => (
+                                            <div key={ing.id} className="grid grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">{ing.name}</div>
+                                                <div className="text-gray-500 dark:text-gray-400">
+                                                    <span className="bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-xs font-medium">{ing.category}</span>
+                                                </div>
+                                                <div className="text-gray-900 dark:text-gray-100 font-medium">{ing.quantity}</div>
+                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleEdit(ing.id, ing.name)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Editar">
+                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                    </button>
+                                                    <button onClick={() => handleDelete(ing.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
+                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Pagination Footer */}
                         <div className="px-4 md:px-8 py-4 border-t border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-4 justify-between items-center text-sm">
-                            <span className="text-gray-500 font-medium">Mostrando 0 ingredientes</span>
+                            <span className="text-gray-500 font-medium">Mostrando {ingredients.length} ingredientes</span>
                             <div className="flex gap-2 w-full sm:w-auto">
-                                <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 cursor-not-allowed text-center">Anterior</button>
-                                <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 cursor-not-allowed text-center">Siguiente</button>
+                                <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 hover:bg-gray-50 transition-colors text-center disabled:opacity-50" disabled>Anterior</button>
+                                <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 hover:bg-gray-50 transition-colors text-center disabled:opacity-50" disabled>Siguiente</button>
                             </div>
                         </div>
                     </div>

@@ -48,7 +48,7 @@ export default function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             type="email"
-            className="w-full rounded-lg border border-[#d6e1d6] py-3 px-4"
+            className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
             placeholder="ejemplo@correo.com"
           />
         </div>
@@ -64,7 +64,7 @@ export default function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               type={showPassword ? 'text' : 'password'}
-              className="w-full rounded-lg border border-[#d6e1d6] py-3 px-4"
+              className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
               placeholder="••••••••"
             />
             <button

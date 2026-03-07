@@ -47,63 +47,15 @@ export default function CocinaView() {
                 </header>
 
                 {/* Body */}
-                <div className="flex-1 flex gap-5 p-6 overflow-hidden">
-                    {/* Recipe List */}
-                    <div className="w-72 flex flex-col gap-4 overflow-y-auto shrink-0">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-50">
-                                <div className="flex items-center gap-2">
-                                    <span>✅</span>
-                                    <h2 className="text-sm font-bold text-gray-800">Listas para cocinar</h2>
-                                </div>
-                                <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                                    {READY_RECIPES.length} recetas
-                                </span>
-                            </div>
-                            <div className="py-1">
-                                {READY_RECIPES.map((recipe) => (
-                                    <RecipeCard
-                                        key={recipe.id}
-                                        recipe={recipe}
-                                        isSelected={selectedRecipe?.id === recipe.id}
-                                        onSelect={setSelectedRecipe}
-                                    />
-                                ))}
-                            </div>
+                <div className="flex-1 p-6 overflow-hidden">
+                    <div className="w-full h-full bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-4xl mb-4">🍳</div>
+                            <h3 className="text-lg font-bold text-gray-900">Tu cocina está vacía</h3>
+                            <p className="text-sm text-gray-500 mt-2 max-w-sm">
+                                Pronto conectaremos con el servidor para sugerirte las mejores recetas basadas en tu inventario.
+                            </p>
                         </div>
-
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-50">
-                                <div className="flex items-center gap-2">
-                                    <span>🕐</span>
-                                    <h2 className="text-sm font-bold text-gray-800">Casi listas</h2>
-                                </div>
-                                <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                                    Faltan 1-2
-                                </span>
-                            </div>
-                            <div className="py-1">
-                                {ALMOST_READY_RECIPES.map((recipe) => (
-                                    <RecipeCard
-                                        key={recipe.id}
-                                        recipe={recipe}
-                                        isSelected={selectedRecipe?.id === recipe.id}
-                                        onSelect={setSelectedRecipe}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Detail Panel */}
-                    <div className="flex-1 flex overflow-hidden">
-                        {selectedRecipe ? (
-                            <RecipeDetail recipe={selectedRecipe} />
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-                                Selecciona una receta para ver los detalles
-                            </div>
-                        )}
                     </div>
                 </div>
             </main>
