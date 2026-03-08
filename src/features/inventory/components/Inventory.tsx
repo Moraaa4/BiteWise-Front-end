@@ -10,6 +10,7 @@ export default function Inventory() {
     const [ingredients, setIngredients] = useState<InventoryItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+    const [searchQuery, setSearchQuery] = useState('');
 
     const loadInventory = async () => {
         const token = localStorage.getItem('token');
@@ -18,13 +19,21 @@ export default function Inventory() {
             const res = await inventoryService.getInventory(token);
             if (res.ok && res.data && Array.isArray(res.data.items)) {
                 // Map both original format and possible backend format just in case
-                const mapped = res.data.items.map((item: any) => ({
-                    id: item.id?.toString() || item.ingredient_id?.toString() || Math.random().toString(),
-                    ingredientId: item.ingredient_id?.toString(),
-                    name: item.ingredients?.name || item.name || 'Desconocido',
-                    category: item.ingredients?.category || item.category || 'General',
-                    quantity: `${item.current_quantity ?? item.quantity ?? 0} g/ml/oz`
-                }));
+                const weightPerUnit = (i: any) => Number(i.ingredients?.weight_per_unit ?? 1) || 1;
+                const mapped = res.data.items.map((item: any) => {
+                    const rawQty = Number(item.current_quantity ?? item.quantity ?? 0);
+                    const wpu = weightPerUnit(item);
+                    const unitQty = wpu > 1 ? rawQty / wpu : rawQty;
+                    const unitLabel = wpu > 1 ? 'unidades' : (item.ingredients?.unit_default || 'g');
+                    return {
+                        id: item.id?.toString() || item.ingredient_id?.toString() || Math.random().toString(),
+                        ingredientId: item.ingredient_id?.toString(),
+                        name: item.ingredients?.name || item.name || 'Desconocido',
+                        category: item.ingredients?.category || item.category || 'General',
+                        quantity: `${unitQty % 1 === 0 ? unitQty : unitQty.toFixed(1)} ${unitLabel}`,
+                        weightPerUnit: wpu
+                    };
+                });
                 setIngredients(mapped);
             }
         } catch (e) { console.error("Error loading inventory:", e) }
@@ -52,17 +61,27 @@ export default function Inventory() {
             const token = localStorage.getItem('token');
             if (!token) return;
             try {
-                // Find the item to know its current quantity
                 const itemToRemove = ingredients.find(ing => ing.id === id);
-                const numericQuantity = parseFloat(itemToRemove?.quantity || "999999"); // Send a huge number to clear it out if parsing fails (backend caps at available balance via error, but we'll try to get exact)
+                if (!itemToRemove) return;
 
-                const res = await inventoryService.deleteInventoryItem(Number(id), numericQuantity, token);
+                const catalogId = Number(itemToRemove.ingredientId);
+                const numericQuantity = parseFloat(itemToRemove.quantity) || 0;
+
+                // If quantity is 0 or ingredientId is invalid, just remove from local state
+                if (numericQuantity <= 0 || isNaN(catalogId) || catalogId <= 0) {
+                    setIngredients(prev => prev.filter(ing => ing.id !== id));
+                    return;
+                }
+
+                const res = await inventoryService.deleteInventoryItem(catalogId, numericQuantity, token);
                 if (res.ok) {
                     await loadInventory();
+                } else {
+                    alert(res.error || "No se pudo eliminar el ingrediente.");
                 }
             } catch (error) {
                 console.error("Error deleting item:", error);
-                alert("No se pudo eliminar el ingrediente. Probablemente ya está vacío.");
+                alert("No se pudo eliminar el ingrediente.");
             }
         }
     };
@@ -73,31 +92,73 @@ export default function Inventory() {
 
         try {
             const numericQuantity = parseFloat(savedItem.quantity) || 1;
+            const wpu = savedItem.weightPerUnit || 1;
             let ingredientId = Number(savedItem.id);
 
-            // If it's a new item or arbitrarily passed, we must resolve it to a Catalog Ingredient ID
+            // 1. Resolve or Create in Catalog
             if (editingItem && savedItem.ingredientId) {
-                // Use the stored ingredient_id directly 
                 ingredientId = Number(savedItem.ingredientId);
+
+                // IMPORTANT: If we're changing the weight, we MUST delete from inventory FIRST
+                // because the backend calculates removal grams based on the CURRENT weight in catalog.
+                // If we update the weight to 250g first, then try to delete "1 unit", 
+                // it tries to remove 250g, but we might only have 1g in DB!
+                if (wpu !== editingItem.weightPerUnit) {
+                    const currentQty = parseFloat(editingItem.quantity) || 0;
+                    if (currentQty > 0) {
+                        try {
+                            await inventoryService.deleteInventoryItem(ingredientId, currentQty, token);
+                        } catch (e) {
+                            console.warn("Could not delete previous inventory (likely insufficient mass for new weight calculations), ignoring to proceed with update.");
+                            // If it fails, it's likely already in a weird state; we'll force the new quantity later.
+                        }
+                    }
+
+                    // Now update the catalog with FULL data
+                    const allIngredientsRes = await catalogService.getIngredients(token);
+                    if (allIngredientsRes.ok && Array.isArray(allIngredientsRes.data)) {
+                        const currentIng = allIngredientsRes.data.find((i: any) => i.id === ingredientId);
+                        if (currentIng) {
+                            await catalogService.updateIngredient(ingredientId, {
+                                name: currentIng.name,
+                                category: currentIng.category,
+                                purchase_price: Number(currentIng.purchase_price) || 0.01,
+                                purchase_quantity: Number(currentIng.purchase_quantity) || 1,
+                                unit_default: currentIng.unit_default || 'g',
+                                weight_per_unit: wpu
+                            }, token);
+                        }
+                    }
+                }
             } else if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
-                // Try to create it in the catalog first
+                // ... same logic for creating new ingredients ...
                 const catRes = await catalogService.createIngredient({
                     name: savedItem.name,
                     category: savedItem.category,
-                    weight_per_unit: 1
+                    purchase_price: 0.05,
+                    purchase_quantity: 1,
+                    unit_default: 'g',
+                    weight_per_unit: wpu
                 }, token);
 
                 if (catRes.ok && catRes.data && catRes.data.ingredient) {
                     ingredientId = catRes.data.ingredient.id;
                 } else {
-                    // It probably already exists! Let's find it.
                     const allRes = await catalogService.getIngredients(token);
-                    if (allRes.ok && allRes.data) {
+                    if (allRes.ok && allRes.data && Array.isArray(allRes.data)) {
                         const found = allRes.data.find((i: any) => i.name.toLowerCase() === savedItem.name.toLowerCase());
                         if (found) {
                             ingredientId = found.id;
+                            await catalogService.updateIngredient(ingredientId, {
+                                name: found.name,
+                                category: found.category,
+                                purchase_price: Number(found.purchase_price) || 0.01,
+                                purchase_quantity: Number(found.purchase_quantity) || 1,
+                                unit_default: found.unit_default || 'g',
+                                weight_per_unit: wpu
+                            }, token);
                         } else {
-                            throw new Error("No pudimos crear ni encontrar el ingrediente en el catálogo.");
+                            throw new Error("No pudimos crear ni encontrar el ingrediente.");
                         }
                     } else {
                         throw new Error("Error al consultar el catálogo.");
@@ -105,43 +166,13 @@ export default function Inventory() {
                 }
             }
 
-            let res;
-            if (editingItem && savedItem.ingredientId) {
-                // Backend has no "set quantity" endpoint, only add/remove.
-                // To SET quantity: remove all current, then add the new amount.
-                const currentQty = parseFloat(editingItem.quantity) || 0;
-
-                // Step 1: Remove all current quantity
-                if (currentQty > 0) {
-                    await inventoryService.deleteInventoryItem(
-                        Number(savedItem.ingredientId),
-                        currentQty,
-                        token
-                    );
-                }
-
-                // Step 2: Add the new desired quantity
-                if (numericQuantity > 0) {
-                    res = await inventoryService.createInventoryItem(
-                        {
-                            ingredient_id: Number(savedItem.ingredientId),
-                            quantity: numericQuantity,
-                        },
-                        token
-                    );
-                } else {
-                    res = { ok: true };
-                }
-            } else {
-                // New item: just add the quantity
-                res = await inventoryService.createInventoryItem(
-                    {
-                        ingredient_id: ingredientId,
-                        quantity: numericQuantity,
-                    },
-                    token
-                );
-            }
+            // 2. Finally, add the new quantity to inventory
+            // Note: Since we (optionally) deleted it above if the weight changed, 
+            // this createInventoryItem will now set the correct grams based on the NEW weight.
+            const res = await inventoryService.createInventoryItem({
+                ingredient_id: ingredientId,
+                quantity: numericQuantity
+            }, token);
 
             if (res.ok) {
                 await loadInventory();
@@ -174,15 +205,11 @@ export default function Inventory() {
                                 <input
                                     type="text"
                                     placeholder="Buscar ingrediente..."
-                                    className="pl-11 pr-4 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-11 pr-4 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full transition-all bg-white dark:bg-transparent text-gray-900 dark:text-white"
                                 />
                             </div>
-
-                            {/* Filters */}
-                            <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-sm font-semibold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-                                <span translate="no" className="material-symbols-outlined notranslate text-[18px]">tune</span>
-                                <span className="hidden sm:inline">Filtros</span>
-                            </button>
 
                             {/* Add Button */}
                             <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-bold shadow-md transition-colors">
@@ -211,30 +238,36 @@ export default function Inventory() {
                                             <p className="text-gray-400 text-sm">No hay ingredientes en el inventario.</p>
                                         </div>
                                     ) : (
-                                        ingredients.map((ing) => (
-                                            <div key={ing.id} className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-start sm:items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors gap-2 sm:gap-0">
-                                                <div className="font-medium text-gray-900 dark:text-gray-100 sm:col-span-1">
-                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Ingrediente:</span>
-                                                    {ing.name}
+                                        ingredients
+                                            .filter(ing => {
+                                                if (!searchQuery.trim()) return true;
+                                                const q = searchQuery.toLowerCase();
+                                                return ing.name.toLowerCase().includes(q) || ing.category.toLowerCase().includes(q);
+                                            })
+                                            .map((ing) => (
+                                                <div key={ing.id} className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-start sm:items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors gap-2 sm:gap-0">
+                                                    <div className="font-medium text-gray-900 dark:text-gray-100 sm:col-span-1">
+                                                        <span className="sm:hidden font-bold text-gray-500 mr-2">Ingrediente:</span>
+                                                        {ing.name}
+                                                    </div>
+                                                    <div className="text-gray-500 dark:text-gray-400 sm:col-span-1">
+                                                        <span className="sm:hidden font-bold text-gray-500 mr-2">Categoría:</span>
+                                                        <span className="bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-xs font-medium">{ing.category}</span>
+                                                    </div>
+                                                    <div className="text-gray-900 dark:text-gray-100 font-medium sm:col-span-1">
+                                                        <span className="sm:hidden font-bold text-gray-500 mr-2">Cantidad:</span>
+                                                        {ing.quantity}
+                                                    </div>
+                                                    <div className="flex justify-start sm:justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity sm:col-span-1">
+                                                        <button onClick={() => handleEdit(ing.id, ing.name)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Editar">
+                                                            <span translate="no" className="material-symbols-outlined notranslate text-[18px]">edit</span>
+                                                        </button>
+                                                        <button onClick={() => handleDelete(ing.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
+                                                            <span translate="no" className="material-symbols-outlined notranslate text-[18px]">delete</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className="text-gray-500 dark:text-gray-400 sm:col-span-1">
-                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Categoría:</span>
-                                                    <span className="bg-gray-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-xs font-medium">{ing.category}</span>
-                                                </div>
-                                                <div className="text-gray-900 dark:text-gray-100 font-medium sm:col-span-1">
-                                                    <span className="sm:hidden font-bold text-gray-500 mr-2">Cantidad:</span>
-                                                    {ing.quantity}
-                                                </div>
-                                                <div className="flex justify-start sm:justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity sm:col-span-1">
-                                                    <button onClick={() => handleEdit(ing.id, ing.name)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Editar">
-                                                        <span translate="no" className="material-symbols-outlined notranslate text-[18px]">edit</span>
-                                                    </button>
-                                                    <button onClick={() => handleDelete(ing.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
-                                                        <span translate="no" className="material-symbols-outlined notranslate text-[18px]">delete</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
+                                            ))
                                     )}
                                 </div>
                             </div>
@@ -242,7 +275,7 @@ export default function Inventory() {
 
                         {/* Pagination Footer */}
                         <div className="px-4 md:px-8 py-4 border-t border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-4 justify-between items-center text-sm">
-                            <span className="text-gray-500 font-medium">Mostrando {ingredients.length} ingredientes</span>
+                            <span className="text-gray-500 font-medium">Mostrando {searchQuery.trim() ? ingredients.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()) || i.category.toLowerCase().includes(searchQuery.toLowerCase())).length : ingredients.length} ingredientes</span>
                             <div className="flex gap-2 w-full sm:w-auto">
                                 <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 hover:bg-gray-50 transition-colors text-center disabled:opacity-50" disabled>Anterior</button>
                                 <button className="flex-1 sm:flex-none px-4 py-1.5 border border-gray-200 dark:border-zinc-700 rounded-md font-medium text-gray-400 hover:bg-gray-50 transition-colors text-center disabled:opacity-50" disabled>Siguiente</button>

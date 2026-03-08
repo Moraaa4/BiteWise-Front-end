@@ -86,12 +86,12 @@ export default function RecipeDetailView() {
                 const r = res.data.recipe;
                 const rawIngredients = r.ingredients || [];
                 const mappedIngredients = rawIngredients.map((ing: any) => {
-                    const name = ing.name || '';
+                    const name = ing.ingredient?.name || ing.name || '';
                     const inInventory = inventoryNames.has(name.toLowerCase().trim());
                     return {
-                        id: (ing.ingredient_id || '').toString(),
+                        id: (ing.ingredient_id || ing.id || '').toString(),
                         name,
-                        amount: `${ing.quantity || ''} ${ing.unit || ''}`.trim(),
+                        amount: `${ing.required_quantity || ing.quantity || ''} ${ing.ingredient?.unit_default || ing.unit || ''}`.trim(),
                         inInventory
                     };
                 });
@@ -120,19 +120,34 @@ export default function RecipeDetailView() {
         }
 
         const missingIngredients = recipe.ingredients.filter((i: any) => !i.inInventory);
-        const totalItems = missingIngredients.length > 0 ? missingIngredients.length : recipe.ingredients.length;
+        const toBuy = missingIngredients.length > 0 ? missingIngredients : recipe.ingredients;
 
+        const items = toBuy.map((ing: any, idx: number) => ({
+            id: `ing-${Date.now()}-${idx}`,
+            name: ing.name,
+            quantity: ing.amount || '1',
+            checked: false
+        }));
+
+        const listId = Date.now().toString();
         const newList = {
-            id: `list-${Date.now()}`,
+            id: listId,
             name: `Faltantes: ${recipe.name}`,
             status: "incomplete",
             createdLabel: "Justo ahora",
             progress: 0,
-            total: totalItems
+            total: items.length
         };
         lists.push(newList);
         localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
-        alert("¡Ingredientes agregados a tu lista de compras!");
+
+        // Save items to the list's storage key
+        localStorage.setItem(`biteWise_list_items_${listId}`, JSON.stringify(items));
+        // Also save as pending items (backup)
+        localStorage.setItem('biteWise_pendingItems', JSON.stringify(items));
+
+        alert(`✅ Se creó la lista "${newList.name}" con ${items.length} ingredientes.`);
+        router.push(`/shopping-list-detail?id=${listId}`);
     };
 
     return (

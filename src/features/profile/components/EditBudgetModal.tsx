@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 interface EditBudgetModalProps {
     currentBudget: number;
     currency: string;
-    onSave: (newBudget: number) => void;
+    onSave: (newBudget: number) => void | Promise<void>;
     onClose: () => void;
 }
 

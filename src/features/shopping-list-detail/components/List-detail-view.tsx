@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Search, CheckCircle2, Trash2 } from "lucide-react";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
@@ -14,9 +14,9 @@ export default function ListaDetalleView() {
 
     const [items, setItems] = useState<ShoppingItem[]>([]);
     const [newItemName, setNewItemName] = useState("");
-    const [isLoaded, setIsLoaded] = useState(false);
     const [listName, setListName] = useState("Mi Lista de Compras");
     const [activeListId, setActiveListId] = useState<string>("default");
+    const hasInitialized = useRef(false);
 
     // Initialize list and merge any pending items sent from Recipe Detail
     React.useEffect(() => {
@@ -37,7 +37,7 @@ export default function ListaDetalleView() {
                 activeId = "default";
             }
         } else {
-            const found = parsedLists.find(l => l.id === activeId);
+            const found = parsedLists.find((l: any) => l.id === activeId);
             if (found) {
                 setListName(found.name);
             }
@@ -46,15 +46,17 @@ export default function ListaDetalleView() {
         setActiveListId(activeId);
 
         let currentItems: ShoppingItem[] = [];
-        let shouldSaveImmediately = false;
 
         // 1. Try to load existing active list items
         const storageKey = `biteWise_list_items_${activeId}`;
         const savedList = localStorage.getItem(storageKey);
 
-        if (savedList && savedList !== '[]') {
+        if (savedList) {
             try {
-                currentItems = JSON.parse(savedList);
+                const parsed = JSON.parse(savedList);
+                if (Array.isArray(parsed)) {
+                    currentItems = parsed;
+                }
             } catch (e) {
                 console.error("Error parsing saved list", e);
             }
@@ -71,7 +73,6 @@ export default function ListaDetalleView() {
 
                     if (newItems.length > 0) {
                         currentItems = [...newItems, ...currentItems];
-                        shouldSaveImmediately = true;
                     }
                 }
             } catch (e) {
@@ -80,20 +81,21 @@ export default function ListaDetalleView() {
             localStorage.removeItem('biteWise_pendingItems');
         }
 
-        if (shouldSaveImmediately) {
-            localStorage.setItem(storageKey, JSON.stringify(currentItems));
-        }
+        // Save items immediately if we loaded any
+        localStorage.setItem(storageKey, JSON.stringify(currentItems));
 
         setItems(currentItems);
-        setIsLoaded(true);
+
+        // Mark as initialized AFTER React commits the state
+        setTimeout(() => { hasInitialized.current = true; }, 0);
     }, [urlListId]);
 
-    // Save changes to localStorage whenever items change
+    // Save changes to localStorage whenever items change — only AFTER initialization
     React.useEffect(() => {
-        if (isLoaded) {
+        if (hasInitialized.current) {
             localStorage.setItem(`biteWise_list_items_${activeListId}`, JSON.stringify(items));
         }
-    }, [items, isLoaded, activeListId]);
+    }, [items, activeListId]);
 
     const checkedCount = items.filter((i) => i.checked).length;
     const allChecked = checkedCount === items.length && items.length > 0;
@@ -136,49 +138,52 @@ export default function ListaDetalleView() {
             return;
         }
 
-        const CATALOG_URL = 'http://localhost:3002';
-        const INVENTORY_URL = 'http://localhost:3003';
+        // Use services instead of manual fetch
+        const { catalogService } = await import("@/services/catalog.service");
+        const { inventoryService } = await import("@/services/inventory.service");
 
         let successCount = 0;
         let errorCount = 0;
 
         for (const item of allCheckedItems) {
             try {
-                // 1. Find or create ingredient in catalog by name
-                const searchRes = await fetch(`${CATALOG_URL}/api/ingredients`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                let ingredient_id: number | null = null;
+                // Parse quantity and check for units
+                const qtyStr = item.quantity.toLowerCase();
+                const numericMatch = qtyStr.match(/(\d+(\.\d+)?)/);
+                const numericQty = numericMatch ? parseFloat(numericMatch[0]) : 1;
 
-                if (searchRes.ok) {
-                    const searchData = await searchRes.json();
-                    const allIngredients: any[] = searchData || [];
-                    const found = allIngredients.find(
+                // If it doesn't mention 'g', 'ml', 'kg', 'l', assume it's 'units'
+                const isMass = qtyStr.includes('g') || qtyStr.includes('ml') || qtyStr.includes('kg') || qtyStr.includes('l');
+                const defaultWPU = isMass ? 1 : 250; // Use 250g as a better guess for a "unit" of something if not specified
+
+                // 1. Find or create ingredient in catalog
+                const ingredientsRes = await catalogService.getIngredients(token);
+                let ingredient_id: number | null = null;
+                let weight_per_unit = defaultWPU;
+
+                if (ingredientsRes.ok && Array.isArray(ingredientsRes.data)) {
+                    const found = ingredientsRes.data.find(
                         (ing: any) => ing.name?.toLowerCase().trim() === item.name.toLowerCase().trim()
                     );
                     if (found) {
                         ingredient_id = found.id;
+                        weight_per_unit = Number(found.weight_per_unit) || 1;
                     }
                 }
 
-                // 2. If not found, create it in catalog
+                // 2. If not found, create it with guessed weight
                 if (!ingredient_id) {
-                    const createRes = await fetch(`${CATALOG_URL}/api/ingredients`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            name: item.name,
-                            category: 'Importado',
-                            purchase_price: 0.05,
-                            weight_per_unit: 1
-                        })
-                    });
-                    if (createRes.ok) {
-                        const createData = await createRes.json();
-                        ingredient_id = createData.ingredient?.id ?? null;
+                    const createRes = await catalogService.createIngredient({
+                        name: item.name,
+                        category: 'Importado',
+                        purchase_price: 0.05,
+                        purchase_quantity: 1,
+                        unit_default: isMass && qtyStr.includes('ml') ? 'ml' : 'g',
+                        weight_per_unit: defaultWPU
+                    }, token);
+
+                    if (createRes.ok && createRes.data?.ingredient) {
+                        ingredient_id = createRes.data.ingredient.id;
                     }
                 }
 
@@ -187,23 +192,22 @@ export default function ListaDetalleView() {
                     continue;
                 }
 
-                // 3. Add to user inventory
-                const invRes = await fetch(`${INVENTORY_URL}/api/inventory`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ ingredient_id, quantity: 1 })
-                });
+                // 3. Add to user inventory with correctly parsed quantity
+                // If the user bought 500g, and wpu is 1, we add 500 units.
+                // If the user bought 2 pieces, and wpu is 250, we add 2 units.
+                const invRes = await inventoryService.createInventoryItem({
+                    ingredient_id,
+                    quantity: numericQty
+                }, token);
 
                 if (invRes.ok) {
                     successCount++;
                 } else {
+                    console.error(`Failed to add ${item.name} to inventory:`, invRes.error);
                     errorCount++;
                 }
             } catch (e) {
-                console.error(`Error adding ${item.name} to inventory`, e);
+                console.error(`Error processing ${item.name}:`, e);
                 errorCount++;
             }
         }
@@ -211,7 +215,7 @@ export default function ListaDetalleView() {
         if (successCount > 0) {
             alert(`✅ ${successCount} ingrediente(s) añadidos a tu inventario.${errorCount > 0 ? ` (${errorCount} no se pudieron procesar.)` : ''}`);
         } else if (errorCount > 0) {
-            alert(`❌ No se pudieron añadir algunos ingredientes al inventario. Verifica que los servicios estén corriendo.`);
+            alert(`❌ No se pudieron añadir los ingredientes al inventario. Por favor, revisa la consola para más detalles.`);
         }
     };
 

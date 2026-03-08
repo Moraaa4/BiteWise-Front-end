@@ -55,12 +55,6 @@ export default function AvailableRecipeCard({ recipe, onClick, onEdit, onDelete 
                         </button>
                     )}
                 </div>
-
-                {/* Time */}
-                <span className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
-                    <Clock size={9} />
-                    {recipe.timeMinutes} min
-                </span>
             </div>
 
             <div className="p-3 flex flex-col gap-1 bg-white dark:bg-background-dark group-hover:bg-emerald-50/50 dark:group-hover:bg-white/5 transition-colors">

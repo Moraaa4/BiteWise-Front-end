@@ -9,6 +9,8 @@ export interface InventoryItem {
     name: string;
     category: string;
     quantity: string;
+    weightPerUnit?: number;
+    unitType?: 'mass' | 'unit';
 }
 
 interface InventoryModalProps {
@@ -35,7 +37,9 @@ export default function InventoryModal({
     const isEditing = !!initialData;
     const [name, setName] = useState(initialData?.name || "");
     const [category, setCategory] = useState(initialData?.category || "General");
-    const [quantity, setQuantity] = useState(initialData?.quantity || "1");
+    const [quantity, setQuantity] = useState(initialData?.quantity?.split(' ')[0] || "1");
+    const [unitType, setUnitType] = useState<'mass' | 'unit'>(initialData?.weightPerUnit && initialData.weightPerUnit > 1 ? 'unit' : 'mass');
+    const [weightPerUnit, setWeightPerUnit] = useState(initialData?.weightPerUnit?.toString() || "100");
 
     const handleSave = () => {
         if (!name.trim() || !quantity.trim()) return;
@@ -45,7 +49,9 @@ export default function InventoryModal({
             ingredientId: initialData?.ingredientId,
             name,
             category,
-            quantity,
+            quantity: quantity,
+            weightPerUnit: unitType === 'unit' ? parseFloat(weightPerUnit) : 1,
+            unitType,
         };
 
         onSave(inventoryData);
@@ -88,6 +94,61 @@ export default function InventoryModal({
                         </div>
                     </div>
 
+                    {/* Unit Type Toggle */}
+                    <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
+                        <button
+                            onClick={() => setUnitType('mass')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'mass' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                        >
+                            Gramos / ML
+                        </button>
+                        <button
+                            onClick={() => setUnitType('unit')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'unit' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                        >
+                            Unidades / Piezas
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Quantity */}
+                        <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
+                                {unitType === 'unit' ? 'Cuántas unidades' : 'Cantidad total'}
+                            </label>
+                            <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
+                                <input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(e.target.value)}
+                                    className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent"
+                                    placeholder="0"
+                                />
+                                <span className="px-3 text-xs text-gray-400 dark:text-gray-500 font-bold">
+                                    {unitType === 'unit' ? 'uds' : 'g/ml'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Weight per Unit (only if unitType is 'unit') */}
+                        {unitType === 'unit' && (
+                            <div>
+                                <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
+                                    Peso x Unidad (g)
+                                </label>
+                                <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
+                                    <input
+                                        type="number"
+                                        value={weightPerUnit}
+                                        onChange={(e) => setWeightPerUnit(e.target.value)}
+                                        className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent"
+                                        placeholder="100"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Category */}
                     <div>
                         <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
@@ -106,25 +167,6 @@ export default function InventoryModal({
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
-                        </div>
-                    </div>
-
-                    {/* Quantity */}
-                    <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
-                            Cantidad
-                        </label>
-                        <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
-                            <span className="px-3 py-2.5 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-white/5 border-r border-gray-200 dark:border-white/10">
-                                <Hash size={16} />
-                            </span>
-                            <input
-                                type="text"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                placeholder="Ej. 1 kg, 3 piezas"
-                            />
                         </div>
                     </div>
                 </div>

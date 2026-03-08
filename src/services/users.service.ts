@@ -4,6 +4,7 @@ export interface UserRegisterRequest {
   name: string;
   email: string;
   password: string;
+  weekly_budget?: number;
 }
 
 export interface UserLoginRequest {
@@ -13,28 +14,35 @@ export interface UserLoginRequest {
 
 export interface UserProfile {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  createdAt: string;
-  updatedAt: string;
+  role?: string;
+  weekly_budget?: number | string;
+  created_at?: string;
 }
 
 export interface UserStats {
-  totalUsers: number;
-  activeUsers: number;
-  newUsersThisMonth: number;
+  total_clientes: number;
+  listas_generadas: number;
+  dinero_gestionado_mxn: number;
 }
 
 export interface AuthResponse {
+  message?: string;
   token: string;
   user: UserProfile;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  weekly_budget?: number;
 }
 
 const userClient = createHttpClient(process.env.NEXT_PUBLIC_USERS_API_URL || 'http://localhost:3001');
 
 export const usersService = {
   async register(userData: UserRegisterRequest) {
-    const response = await userClient.post<AuthResponse>('/api/users/register', userData);
+    const response = await userClient.post<{ message: string; user: UserProfile }>('/api/users/register', userData);
     return response;
   },
 
@@ -44,21 +52,21 @@ export const usersService = {
   },
 
   async getProfile(userId: string, token: string) {
-    const response = await userClient.get<UserProfile>(`/api/users/${userId}`, {
+    const response = await userClient.get<{ message: string; user: UserProfile }>(`/api/users/${userId}`, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
-  async updateProfile(userId: string, userData: Partial<UserProfile>, token: string) {
-    const response = await userClient.put<UserProfile>(`/api/users/${userId}`, userData, {
+  async updateProfile(userId: string, data: UpdateProfileRequest, token: string) {
+    const response = await userClient.put<{ message: string; user: UserProfile }>(`/api/users/${userId}`, data, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async getStats(token: string) {
-    const response = await userClient.get<UserStats>('/api/users/stats', {
+    const response = await userClient.get<{ message: string; stats: UserStats }>('/api/users/stats', {
       Authorization: `Bearer ${token}`,
     });
     return response;

@@ -73,9 +73,41 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             // Use the local ID if we just saved it, otherwise use the recipe's ID
             const recipeId = savedLocalId ?? Number(recipe.id);
             const res = await inventoryService.cookRecipe(recipeId, token);
+
             if (res.ok) {
-                alert(`¡Éxito! Ingredientes descontados. ¡A cocinar!`);
-                setActiveTab('instructions');
+                // 1. Update history
+                const historyEntry = {
+                    id: `h-${Date.now()}`,
+                    name: recipe.name,
+                    date: new Date().toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                    difficulty: recipe.difficulty || 'MEDIO',
+                    rating: 0,
+                    imageUrl: recipe.imageUrl || '',
+                };
+
+                try {
+                    const existingHistory = JSON.parse(localStorage.getItem('biteWise_cookHistory') || '[]');
+                    existingHistory.unshift(historyEntry);
+                    localStorage.setItem('biteWise_cookHistory', JSON.stringify(existingHistory.slice(0, 50)));
+                } catch {
+                    localStorage.setItem('biteWise_cookHistory', JSON.stringify([historyEntry]));
+                }
+
+                // 2. Prepare steps data
+                const stepData = {
+                    recipeId: String(recipeId),
+                    name: recipe.name,
+                    instructions: recipe.instructions || 'Preparar los ingredientes y seguir los pasos básicos de cocción.',
+                    imageUrl: recipe.imageUrl || '',
+                };
+
+                // 3. Persist and Redirect
+                localStorage.setItem('biteWise_stepByStep', JSON.stringify(stepData));
+
+                // Small timeout to ensure localStorage is flushed in some browsers/architectures
+                setTimeout(() => {
+                    router.push(`/step-by-step-kitchen?recipeId=${recipeId}&name=${encodeURIComponent(recipe.name)}`);
+                }, 100);
             } else {
                 const errorMessage = res.error || 'No se pudo cocinar la receta (posiblemente falta inventario).';
                 alert(`Hubo un problema:\n\n${errorMessage}`);
@@ -261,10 +293,33 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                             checked: false
                         }));
 
-                        if (items.length > 0) {
-                            localStorage.setItem('biteWise_pendingItems', JSON.stringify(items));
-                        }
-                        router.push('/shopping-list-detail');
+                        // Create a proper shopping list entry
+                        const listId = Date.now().toString();
+                        const newList = {
+                            id: listId,
+                            name: `Faltantes: ${recipe.name}`,
+                            status: "incomplete",
+                            createdLabel: "Justo ahora",
+                            progress: 0,
+                            total: items.length
+                        };
+
+                        // Load existing lists and add the new one
+                        let existingLists: any[] = [];
+                        try {
+                            const saved = localStorage.getItem('biteWise_shoppingLists');
+                            if (saved) existingLists = JSON.parse(saved);
+                        } catch { }
+                        existingLists.push(newList);
+                        localStorage.setItem('biteWise_shoppingLists', JSON.stringify(existingLists));
+
+                        // Save items directly to the list's storage key
+                        localStorage.setItem(`biteWise_list_items_${listId}`, JSON.stringify(items));
+                        // Also save as pending items (backup — detail view checks this too)
+                        localStorage.setItem('biteWise_pendingItems', JSON.stringify(items));
+
+                        alert(`✅ Se creó la lista "${newList.name}" con ${items.length} ingredientes.`);
+                        router.push(`/shopping-list-detail?id=${listId}`);
                     }}
                     className="flex items-center gap-2 bg-white dark:bg-transparent border-2 border-green-500 text-green-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-all">
                     <ShoppingBag size={15} />
@@ -275,17 +330,10 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                     disabled={cooking || (isExternal && !savedLocalId)}
                     title={isExternal && !savedLocalId ? "Guarda primero la receta para poder cocinarla" : undefined}
                     className="flex justify-center items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 transition-all shadow-sm shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
-                    {cooking ? (
-                        <span className="flex items-center gap-2">
-                            <Loader2 size={15} className="animate-spin" />
-                            Cocinando...
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-2">
-                            <PlayCircle size={15} />
-                            {isExternal && !savedLocalId ? "Guarda primero" : "Cocinar Ahora"}
-                        </span>
-                    )}
+                    <span className="flex items-center gap-2">
+                        {cooking ? <Loader2 size={15} className="animate-spin" /> : <PlayCircle size={15} />}
+                        {cooking ? "Cocinando..." : isExternal && !savedLocalId ? "Guarda primero" : "Cocinar Ahora"}
+                    </span>
                 </button>
             </div>
         </div>

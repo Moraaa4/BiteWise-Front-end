@@ -5,13 +5,13 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useRouter } from 'next/navigation';
 
-const CATEGORY_MAP: Record<string, string> = {
-  'Desayuno': 'Breakfast',
-  'Almuerzo': 'Lunch',
-  'Cena': 'Dinner',
-  'Snacks': 'Snack',
-  'Vegetariano': 'Vegetarian',
-  'Saludable': 'Miscellaneous',
+const CATEGORY_MAP: Record<string, string[]> = {
+  'Desayuno': ['breakfast'],
+  'Almuerzo': ['lunch', 'beef', 'chicken', 'pork', 'lamb', 'seafood', 'pasta', 'goat'],
+  'Cena': ['dinner', 'side', 'starter'],
+  'Snacks': ['snack', 'dessert'],
+  'Vegetariano': ['vegetarian', 'vegan'],
+  'Saludable': ['miscellaneous', 'healthy'],
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -94,10 +94,11 @@ export default function Dashboard() {
     let result = [...recipes];
 
     if (activeCategory !== 'Todos') {
-      const englishCat = CATEGORY_MAP[activeCategory]?.toLowerCase() ?? activeCategory.toLowerCase();
-      result = result.filter(r =>
-        (r.category ?? r.title ?? '').toLowerCase().includes(englishCat)
-      );
+      const allowedCats = CATEGORY_MAP[activeCategory] || [activeCategory.toLowerCase()];
+      result = result.filter(r => {
+        const recipeCat = (r.category || r.title || '').toLowerCase();
+        return allowedCats.some(cat => recipeCat.includes(cat));
+      });
     }
 
     if (searchQuery.trim()) {
@@ -141,8 +142,8 @@ export default function Dashboard() {
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === activeCategory
-                      ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
-                      : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
+                    ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
+                    : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
                     }`}
                 >
                   {cat}
@@ -173,8 +174,12 @@ export default function Dashboard() {
                   ) : (
                     inventoryItems.map((item: any) => {
                       const name = item.ingredients?.name ?? item.name ?? 'Sin nombre';
-                      const qty = Math.round(Number(item.current_quantity) * 10) / 10;
-                      const unit = item.ingredients?.unit_default ?? 'g';
+                      const wpu = Number(item.ingredients?.weight_per_unit || 1);
+                      const rawQty = Number(item.current_quantity || 0);
+                      const displayQty = wpu > 1 ? rawQty / wpu : rawQty;
+                      const finalQty = Math.round(displayQty * 10) / 10;
+                      const unit = wpu > 1 ? 'unidades' : (item.ingredients?.unit_default || 'g');
+
                       return (
                         <div key={item.id} className="flex items-center gap-3 px-5 py-3 hover:bg-background-light dark:hover:bg-white/5 transition-colors">
                           <div className="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9 text-lg">
@@ -182,7 +187,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex flex-col flex-1 min-w-0">
                             <p className="text-[#131613] dark:text-white text-sm font-semibold truncate">{name}</p>
-                            <p className="text-[#6c7f6d] dark:text-gray-400 text-xs">{qty} {unit}</p>
+                            <p className="text-[#6c7f6d] dark:text-gray-400 text-xs">{finalQty} {unit}</p>
                           </div>
                         </div>
                       );

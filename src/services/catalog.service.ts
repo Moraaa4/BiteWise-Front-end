@@ -16,16 +16,18 @@ export interface Ingredient {
 export interface CreateIngredientRequest {
   name: string;
   category: string;
-  purchase_price?: number;
-  purchase_quantity?: number;
+  purchase_price: number;
+  purchase_quantity: number;
+  unit_default: string;
   weight_per_unit?: number;
 }
 
 export interface UpdateIngredientRequest {
-  name?: string;
-  category?: string;
-  purchase_price?: number;
-  purchase_quantity?: number;
+  name: string;
+  category: string;
+  purchase_price: number;
+  purchase_quantity: number;
+  unit_default: string;
   weight_per_unit?: number;
 }
 

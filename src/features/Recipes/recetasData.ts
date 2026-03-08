@@ -5,8 +5,16 @@ export interface AvailableRecipe {
     name: string;
     description: string;
     timeMinutes: number;
-    ingredientsBadge: string; // e.g. "100% INGREDIENTES"
-    imageUrl?: string; // optional: connected when backend is ready
+    ingredientsBadge: string;
+    imageUrl?: string;
+    instructions?: string;
+    servings?: string;
+    ingredients?: Array<{
+        ingredient_id: number;
+        name: string;
+        required_quantity: number;
+        unit: string;
+    }>;
 }
 
 export interface HistoryRecipe {
@@ -14,7 +22,6 @@ export interface HistoryRecipe {
     name: string;
     date: string;
     difficulty: Difficulty;
-    rating: number; // 1-5
     imageUrl?: string;
 }
 
@@ -55,20 +62,17 @@ export const HISTORY_RECIPES: HistoryRecipe[] = [
         name: "Ramen Tonkotsu Casero",
         date: "Hoy, 14:32",
         difficulty: "MEDIO",
-        rating: 5,
     },
     {
         id: "h2",
         name: "Costillas BBQ al Horno",
         date: "Ayer, 20:15",
         difficulty: "DIFÍCIL",
-        rating: 4,
     },
     {
         id: "h3",
         name: "Hamburguesa Clásica",
         date: "12 Oct, 13:08",
         difficulty: "FÁCIL",
-        rating: 4,
     },
 ];

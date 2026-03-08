@@ -2,7 +2,6 @@
 
 import React from "react";
 import { RefreshCw } from "lucide-react";
-import StarRating from "@/features/Recipes/components/StarRating";
 import type { HistoryRecipe, Difficulty } from "@/features/Recipes/recetasData";
 
 interface HistoryTableProps {
@@ -20,8 +19,8 @@ export default function HistoryTable({ recipes, onRepeat }: HistoryTableProps) {
     return (
         <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
             {/* Table header */}
-            <div className="flex flex-col sm:grid sm:grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
-                {["RECETA", "FECHA", "DIFICULTAD", "VALORACIÓN", "ACCIÓN"].map((col) => (
+            <div className="flex flex-col sm:grid sm:grid-cols-[2fr_1.5fr_1fr_auto] gap-4 px-6 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                {["RECETA", "FECHA", "DIFICULTAD", "ACCIÓN"].map((col) => (
                     <span key={col} className="text-[10px] sm:text-xs font-bold text-gray-400 dark:text-gray-500 tracking-wider uppercase">
                         {col}
                     </span>
@@ -32,7 +31,7 @@ export default function HistoryTable({ recipes, onRepeat }: HistoryTableProps) {
             {recipes.map((recipe, idx) => (
                 <div
                     key={recipe.id}
-                    className={`flex flex-col sm:grid sm:grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-4 px-6 py-4 items-start sm:items-center ${idx < recipes.length - 1 ? "border-b border-gray-100 dark:border-white/10" : ""
+                    className={`flex flex-col sm:grid sm:grid-cols-[2fr_1.5fr_1fr_auto] gap-4 px-6 py-4 items-start sm:items-center ${idx < recipes.length - 1 ? "border-b border-gray-100 dark:border-white/10" : ""
                         } hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors`}
                 >
                     {/* Recipe name + avatar placeholder */}
@@ -53,9 +52,6 @@ export default function HistoryTable({ recipes, onRepeat }: HistoryTableProps) {
                     >
                         {recipe.difficulty}
                     </span>
-
-                    {/* Rating */}
-                    <StarRating rating={recipe.rating} />
 
                     {/* Action */}
                     <button

@@ -19,9 +19,12 @@ import { useRouter } from "next/navigation";
 export default function RecetasView() {
     const router = useRouter();
     const [recipes, setRecipes] = useState<AvailableRecipe[]>([]);
+    const [cookHistory, setCookHistory] = useState<HistoryRecipe[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRecipe, setEditingRecipe] = useState<AvailableRecipe | undefined>();
     const [repeatRecipe, setRepeatRecipe] = useState<HistoryRecipe | undefined>();
+    const [showAll, setShowAll] = useState(false);
+    const [loadingExternal, setLoadingExternal] = useState(true);
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -45,27 +48,62 @@ export default function RecetasView() {
                 setRecipes([...currentRecipes]); // Render immediately
             }
 
-            // 2. Fetch slow external recipes in the background to avoid freezing the screen
-            catalogService.getRegionalRecipes(token).then((resExternal) => {
-                if (resExternal.ok && resExternal.data && resExternal.data.recipes) {
-                    const mappedExternal = resExternal.data.recipes.map((r: any) => ({
-                        id: `ext-${r.id}`,
-                        name: r.title,
-                        description: `${r.category || 'Platillo'} | ${r.region || 'Global'}`,
-                        timeMinutes: 45,
-                        ingredientsBadge: "THEMEALDB",
-                        imageUrl: r.image_url
-                    }));
-                    // Append and re-render only when ready, avoiding duplicates in Strict Mode
-                    setRecipes(prev => {
-                        const existingIds = new Set(prev.map(p => p.id));
-                        const uniqueNew = mappedExternal.filter((m: any) => !existingIds.has(m.id));
-                        return [...prev, ...uniqueNew];
+            // 2. Fetch BOTH regional and random in parallel for more recipes
+            const fetchExternal = async () => {
+                setLoadingExternal(true);
+                try {
+                    const [resRegional, resRandom] = await Promise.allSettled([
+                        catalogService.getRegionalRecipes(token!),
+                        catalogService.getRandomExternalRecipes(token!),
+                    ]);
+
+                    let allExternal: any[] = [];
+                    if (resRegional.status === 'fulfilled' && resRegional.value.ok && resRegional.value.data) {
+                        allExternal.push(...(resRegional.value.data.recipes || []));
+                    }
+                    if (resRandom.status === 'fulfilled' && resRandom.value.ok && resRandom.value.data) {
+                        allExternal.push(...(resRandom.value.data.recipes || []));
+                    }
+
+                    // Deduplicate by id
+                    const seen = new Set<string>();
+                    const deduped = allExternal.filter((r: any) => {
+                        const key = r.id || r.idMeal;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
                     });
+
+                    if (deduped.length > 0) {
+                        const mappedExternal = deduped.map((r: any) => ({
+                            id: `ext-${r.id || r.idMeal}`,
+                            name: r.title || r.strMeal,
+                            description: r.category ? `${r.category} | ${r.region || 'Global'}` : (r.strCategory || 'Platillo'),
+                            timeMinutes: 45,
+                            ingredientsBadge: "THEMEALDB",
+                            imageUrl: r.image_url || r.strMealThumb
+                        }));
+                        setRecipes(prev => {
+                            const existingIds = new Set(prev.map(p => p.id));
+                            const uniqueNew = mappedExternal.filter((m: any) => !existingIds.has(m.id));
+                            return [...prev, ...uniqueNew];
+                        });
+                    }
+                } catch (err) {
+                    console.error("Error fetching external recipes:", err);
+                } finally {
+                    setLoadingExternal(false);
                 }
-            }).catch(console.error);
+            };
+            fetchExternal();
         };
         fetchRecipes();
+
+        // Load cooking history from localStorage
+        try {
+            const saved = localStorage.getItem('biteWise_cookHistory');
+            if (saved) setCookHistory(JSON.parse(saved));
+        } catch (e) { console.error('Error loading cook history:', e); }
     }, []);
 
     const handleRecipeClick = (recipe: AvailableRecipe) => {
@@ -82,17 +120,96 @@ export default function RecetasView() {
         setIsModalOpen(true);
     };
 
-    const handleDelete = (recipeToDelete: AvailableRecipe) => {
+    const handleDelete = async (recipeToDelete: AvailableRecipe) => {
+        if (recipeToDelete.ingredientsBadge !== "LOCAL") {
+            alert("Solo puedes eliminar recetas locales creadas por ti.");
+            return;
+        }
+
         if (confirm(`¿Estás seguro de que quieres eliminar la receta "${recipeToDelete.name}"?`)) {
-            setRecipes(recipes.filter((r: AvailableRecipe) => r.id !== recipeToDelete.id));
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const res = await catalogService.deleteRecipe(Number(recipeToDelete.id), token);
+                if (res.ok) {
+                    setRecipes(recipes.filter((r: AvailableRecipe) => r.id !== recipeToDelete.id));
+                } else {
+                    alert("Error al eliminar la receta del servidor.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Ocurrió un error al intentar eliminar la receta.");
+            }
         }
     };
 
-    const handleSaveRecipe = (savedRecipe: AvailableRecipe) => {
-        if (editingRecipe) {
-            setRecipes(recipes.map((r: AvailableRecipe) => r.id === savedRecipe.id ? savedRecipe : r));
-        } else {
-            setRecipes([savedRecipe, ...recipes]);
+    const handleSaveRecipe = async (savedRecipe: AvailableRecipe) => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            if (editingRecipe) {
+                // Update logic if needed, but for now we focus on Create as requested
+                const payload = {
+                    title: savedRecipe.name,
+                    instructions: savedRecipe.instructions || "",
+                    image_url: savedRecipe.imageUrl,
+                    ingredients: savedRecipe.ingredients?.map(ing => ({
+                        ingredient_id: ing.ingredient_id,
+                        required_quantity: ing.required_quantity
+                    })) || []
+                };
+                const res = await catalogService.updateRecipe(Number(savedRecipe.id), payload, token);
+                if (res.ok) {
+                    // Update local state or re-fetch
+                    setRecipes(recipes.map((r: AvailableRecipe) => r.id === savedRecipe.id ? savedRecipe : r));
+                }
+            } else {
+                const payload = {
+                    title: savedRecipe.name,
+                    instructions: savedRecipe.instructions || "",
+                    image_url: savedRecipe.imageUrl,
+                    ingredients: savedRecipe.ingredients?.map(ing => ({
+                        ingredient_id: ing.ingredient_id,
+                        required_quantity: ing.required_quantity
+                    })) || []
+                };
+
+                const res = await catalogService.createRecipe(payload, token);
+                if (res.ok && res.data) {
+                    // Success! Let's re-fetch to get the real ID and calculated badges
+                    const resLocal = await catalogService.getRecipes(token);
+                    if (resLocal.ok && resLocal.data && resLocal.data.recipes) {
+                        const mappedLocal = resLocal.data.recipes.map((r: any) => ({
+                            id: r.id.toString(),
+                            name: r.title,
+                            description: r.instructions?.substring(0, 100) + "...",
+                            timeMinutes: 30,
+                            ingredientsBadge: "LOCAL",
+                            imageUrl: r.image_url,
+                            instructions: r.instructions,
+                            ingredients: r.ingredients?.map((ri: any) => ({
+                                ingredient_id: ri.ingredient_id,
+                                name: ri.name,
+                                required_quantity: ri.quantity,
+                                unit: ri.unit
+                            }))
+                        }));
+
+                        // Merge with external recipes already in state
+                        setRecipes(prev => {
+                            const external = prev.filter(p => p.ingredientsBadge === "THEMEALDB");
+                            return [...mappedLocal, ...external];
+                        });
+                    }
+                } else {
+                    alert("Error al guardar la receta en el servidor.");
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión al guardar la receta.");
         }
     };
 
@@ -121,8 +238,11 @@ export default function RecetasView() {
                                 >
                                     + Agregar Receta
                                 </button>
-                                <button className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
-                                    Ver todos →
+                                <button
+                                    onClick={() => setShowAll(!showAll)}
+                                    className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                                >
+                                    {showAll ? 'Ver menos ←' : 'Ver todos →'}
                                 </button>
                             </div>
                         </div>
@@ -130,12 +250,12 @@ export default function RecetasView() {
                             Basado en lo que tienes en tu despensa ahora mismo.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {recipes.length === 0 ? (
+                            {recipes.length === 0 && !loadingExternal ? (
                                 <div className="col-span-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
                                     No hay recetas disponibles. ¡Agrega la primera!
                                 </div>
                             ) : (
-                                recipes.map((recipe: AvailableRecipe) => (
+                                (showAll ? recipes : recipes.slice(0, 4)).map((recipe: AvailableRecipe) => (
                                     <AvailableRecipeCard
                                         key={recipe.id}
                                         recipe={recipe}
@@ -144,6 +264,12 @@ export default function RecetasView() {
                                         onDelete={handleDelete}
                                     />
                                 ))
+                            )}
+                            {loadingExternal && (
+                                <div className="col-span-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-2">
+                                    <span className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
+                                    Cargando recetas externas...
+                                </div>
                             )}
                         </div>
                     </section>
@@ -154,7 +280,7 @@ export default function RecetasView() {
                         <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
                             Tus creaciones recientes. ¿Quieres repetir alguna?
                         </p>
-                        <HistoryTable recipes={[]} onRepeat={handleRepeat} />
+                        <HistoryTable recipes={cookHistory} onRepeat={handleRepeat} />
                     </section>
                 </main>
 

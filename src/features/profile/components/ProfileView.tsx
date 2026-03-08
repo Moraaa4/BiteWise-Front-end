@@ -1,46 +1,215 @@
 "use client";
 
-import React, { useState } from "react";
-import { Mail, Wallet, Calendar, Pencil, PencilLine } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Mail, Wallet, Calendar, Pencil, PencilLine, Loader2 } from "lucide-react";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import EditBudgetModal from "@/features/profile/components/EditBudgetModal";
 import EditProfileModal from "@/features/profile/components/EditProfileModal";
 import type { UserProfile } from "@/features/profile/perfilTypes";
+import { usersService } from "@/services/users.service";
 
-// Empty profile — data will be provided by the user / backend
-const EMPTY_PROFILE: UserProfile = {
-    name: "John Doe",
-    initials: "JD",
-    plan: "Premium",
-    email: "john.doe@example.com",
-    weeklyBudget: 1500,
-    currency: "MXN",
-    memberSince: "12 Oct, 2023",
-    stats: {
-        recipes: 0,
-        lists: 0,
-        savings: 0,
-    },
-};
+function getInitials(name: string): string {
+    if (!name) return "?";
+    return name.split(' ')
+        .map(n => n[0])
+        .filter(c => !!c)
+        .join('')
+        .substring(0, 2)
+        .toUpperCase() || "?";
+}
+
+function formatDate(isoDate: string): string {
+    try {
+        const date = new Date(isoDate);
+        return date.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+    } catch {
+        return isoDate;
+    }
+}
 
 export default function ProfileView() {
-    const [profile, setProfile] = useState<UserProfile>(EMPTY_PROFILE);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [showBudgetModal, setShowBudgetModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
 
-    const handleSaveBudget = (newBudget: number) => {
-        setProfile((prev) => ({ ...prev, weeklyBudget: newBudget }));
+    const fetchProfile = async () => {
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("userId");
+        if (!token || !userId) {
+            setError("No se encontró sesión activa. Inicia sesión de nuevo.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const res = await usersService.getProfile(userId, token);
+            if (res.ok && res.data && res.data.user) {
+                const u = res.data.user;
+                const budgetNum = u.weekly_budget !== undefined && u.weekly_budget !== null
+                    ? Number(u.weekly_budget)
+                    : 0;
+
+                // Load stats from localStorage with multiple possible keys for robustness
+                let recipeCount = 0;
+                let listCount = 0;
+                let savingsPercent = 0;
+
+                try {
+                    const cookHistory = JSON.parse(localStorage.getItem('biteWise_cookHistory') || '[]');
+                    recipeCount = Array.isArray(cookHistory) ? cookHistory.length : 0;
+                } catch (e) { console.error("Error parsing cookHistory", e); }
+
+                try {
+                    const sessionsRaw = localStorage.getItem('biteWise_cookingSessions');
+                    if (sessionsRaw) {
+                        const sessions = JSON.parse(sessionsRaw);
+                        const sessionValues = Object.values(sessions);
+                        const sessionsStarted = sessionValues.length;
+                        const sessionsDone = sessionValues.filter((s: any) => s.isCompleted).length;
+                        // We use whichever is higher between the history and started sessions
+                        recipeCount = Math.max(recipeCount, sessionsStarted, sessionsDone);
+                    }
+                } catch (e) { console.error("Error parsing cookingSessions", e); }
+
+                try {
+                    const lists = JSON.parse(localStorage.getItem('biteWise_shoppingLists') || '[]');
+                    listCount = Array.isArray(lists) ? lists.length : 0;
+                } catch (e) { console.error("Error parsing shoppingLists", e); }
+
+                // Basic savings logic
+                if (recipeCount > 0) {
+                    savingsPercent = Math.min(45, 12 + (recipeCount * 2));
+                }
+
+                setProfile({
+                    id: u.id,
+                    name: u.name,
+                    initials: getInitials(u.name),
+                    plan: u.role === "admin" ? "Admin" : "Cliente",
+                    role: u.role,
+                    email: u.email,
+                    weeklyBudget: budgetNum,
+                    currency: "MXN",
+                    memberSince: u.created_at ? formatDate(u.created_at) : "—",
+                    stats: {
+                        recipes: recipeCount,
+                        lists: listCount,
+                        savings: savingsPercent,
+                    },
+                });
+            } else {
+                setError(res.error || "No se pudo obtener el perfil.");
+            }
+        } catch (e) {
+            console.error("Error fetching profile:", e);
+            setError("Error de conexión al obtener el perfil.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSaveProfile = (updates: Partial<UserProfile>) => {
-        setProfile((prev) => ({ ...prev, ...updates }));
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const handleSaveBudget = async (newBudget: number) => {
+        const token = localStorage.getItem("token");
+        const userId = profile?.id;
+        if (!token || !userId) return;
+
+        try {
+            const res = await usersService.updateProfile(userId, { weekly_budget: newBudget }, token);
+            if (res.ok) {
+                setProfile((prev) => prev ? { ...prev, weeklyBudget: newBudget } : prev);
+            } else {
+                alert(res.error || "No se pudo actualizar el presupuesto.");
+            }
+        } catch {
+            alert("Error de conexión al actualizar el presupuesto.");
+        }
+    };
+
+    const handleSaveProfile = async (updates: Partial<UserProfile>) => {
+        const token = localStorage.getItem("token");
+        const userId = profile?.id;
+        if (!token || !userId) return;
+
+        try {
+            const res = await usersService.updateProfile(userId, { name: updates.name }, token);
+            if (res.ok) {
+                setProfile((prev) => {
+                    if (!prev) return prev;
+                    const newName = updates.name || prev.name;
+                    return {
+                        ...prev,
+                        ...updates,
+                        name: newName,
+                        initials: getInitials(newName),
+                    };
+                });
+                // Update localStorage too
+                const stored = localStorage.getItem("user");
+                if (stored) {
+                    const user = JSON.parse(stored);
+                    user.name = updates.name || user.name;
+                    localStorage.setItem("user", JSON.stringify(user));
+                }
+            } else {
+                alert(res.error || "No se pudo actualizar el perfil.");
+            }
+        } catch {
+            alert("Error de conexión al actualizar el perfil.");
+        }
     };
 
     const formatBudget = (amount: number) =>
         amount > 0
-            ? `$${amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${profile.currency}`
+            ? `$${amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${profile?.currency || "MXN"}`
             : "—";
+
+    if (loading) {
+        return (
+            <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
+                <Sidebar activeTab="perfil" />
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                    <Header title="Mi Perfil" />
+                    <main className="flex-1 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                            <p className="text-sm text-gray-500">Cargando perfil...</p>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !profile) {
+        return (
+            <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
+                <Sidebar activeTab="perfil" />
+                <div className="flex-1 flex flex-col overflow-y-auto">
+                    <Header title="Mi Perfil" />
+                    <main className="flex-1 flex items-center justify-center p-4">
+                        <div className="text-center max-w-sm">
+                            <div className="text-4xl mb-4">⚠️</div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Error al cargar perfil</h3>
+                            <p className="text-sm text-gray-500 mb-4">{error || "No se pudieron obtener los datos."}</p>
+                            <button
+                                onClick={() => { setLoading(true); setError(""); fetchProfile(); }}
+                                className="px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-colors"
+                            >
+                                Reintentar
+                            </button>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
@@ -97,7 +266,7 @@ export default function ProfileView() {
                                     <Wallet size={15} className="text-gray-400 dark:text-gray-500 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">
-                                            Weekly Budget
+                                            Presupuesto Semanal
                                         </p>
                                         <p className="text-sm text-gray-700 dark:text-gray-300">{formatBudget(profile.weeklyBudget)}</p>
                                     </div>
@@ -167,7 +336,7 @@ export default function ProfileView() {
                 </main>
 
                 {/* Edit Budget Modal */}
-                {showBudgetModal && (
+                {showBudgetModal && profile && (
                     <EditBudgetModal
                         currentBudget={profile.weeklyBudget}
                         currency={profile.currency}
@@ -177,7 +346,7 @@ export default function ProfileView() {
                 )}
 
                 {/* Edit Profile Modal */}
-                {showProfileModal && (
+                {showProfileModal && profile && (
                     <EditProfileModal
                         currentProfile={profile}
                         onSave={handleSaveProfile}

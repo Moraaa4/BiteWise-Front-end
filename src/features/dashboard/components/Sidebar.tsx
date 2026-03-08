@@ -19,6 +19,19 @@ const navItems = [
 export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(false);
 
+    const handleLogout = () => {
+        // Clear all session and application-specific data
+        const keysToRemove = Object.keys(localStorage).filter(key =>
+            key.startsWith('biteWise_') ||
+            ['token', 'userId', 'user'].includes(key)
+        );
+
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // Final fallback: clear everything if needed or just redirect
+        // localStorage.clear(); // Uncomment if we want nuclear option
+    };
+
     return (
         <>
             {/* Botón menú móvil flotante */}
@@ -48,7 +61,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                                <Image src="/icon.svg" alt="BiteWise" width={40} height={40} />
+                                <Image src="/icon.svg" alt="BiteWise" width={40} height={40} style={{ width: 'auto', height: 'auto' }} />
                             </div>
                             <div className="flex flex-col">
                                 <h1 className="text-[#131613] dark:text-white text-lg font-bold leading-none">BiteWise</h1>
@@ -79,7 +92,13 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                 </div>
 
                 <div className="p-4 bg-primary/10 rounded-xl mt-8">
-                    <Link href="/landing" className="block w-full bg-emerald-500 text-white py-2 text-center hover:bg-emerald-600 transition-all rounded-full text-xs font-bold uppercase tracking-wider">Cerrar sesión</Link>
+                    <Link
+                        href="/landing"
+                        onClick={handleLogout}
+                        className="block w-full bg-emerald-500 text-white py-2 text-center hover:bg-emerald-600 transition-all rounded-full text-xs font-bold uppercase tracking-wider"
+                    >
+                        Cerrar sesión
+                    </Link>
                 </div>
             </aside>
         </>

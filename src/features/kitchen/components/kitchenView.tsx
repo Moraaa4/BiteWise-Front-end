@@ -9,7 +9,18 @@ import RecipeCard from "./RecipeCard";
 import RecipeDetail from "./RecipeDetail";
 import { catalogService } from "@/services/catalog.service";
 import { inventoryService } from "@/services/inventory.service";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+
+interface CookingSession {
+    recipeId: string;
+    recipeName: string;
+    imageUrl: string;
+    totalSteps: number;
+    completedStepIds: string[];
+    isCompleted: boolean;
+    lastUpdated: number;
+    instructions: string;
+}
 
 export default function CocinaView() {
     const searchParams = useSearchParams();
@@ -19,6 +30,21 @@ export default function CocinaView() {
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
+    const [cookingSessions, setCookingSessions] = useState<CookingSession[]>([]);
+    const router = useRouter();
+
+    // Load cooking sessions from localStorage
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('biteWise_cookingSessions');
+            if (raw) {
+                const sessions: Record<string, CookingSession> = JSON.parse(raw);
+                const list = Object.values(sessions)
+                    .sort((a, b) => b.lastUpdated - a.lastUpdated);
+                setCookingSessions(list);
+            }
+        } catch { /* ignore */ }
+    }, []);
 
     useEffect(() => {
         const fetchMatchingRecipes = async () => {
@@ -35,8 +61,8 @@ export default function CocinaView() {
 
             let finalRecipes: Recipe[] = [];
             const inventory = (invRes.ok && Array.isArray((invRes.data as any)?.items)) ? (invRes.data as any).items : [];
-            const inventoryMap = new Map(inventory.map((item: any) => [
-                item.ingredient_id || item.ingredients?.id || item.id,
+            const inventoryMap = new Map<number, number>(inventory.map((item: any) => [
+                Number(item.ingredient_id || item.ingredients?.id),
                 Number(item.current_quantity || item.quantity || 0)
             ]));
 
@@ -54,13 +80,14 @@ export default function CocinaView() {
                     missingIngredients: r.missingCount > 0 ? ["Faltan " + r.missingCount + " ingredientes"] : [],
                     imageUrl: r.image_url,
                     ingredients: r.ingredients?.map((i: any) => {
-                        const requiredQty = i.quantity || 1;
-                        const availableQty = inventoryMap.get(i.ingredient_id) || 0;
+                        const ingId = Number(i.ingredient_id);
+                        const requiredQty = Number(i.required_quantity || i.quantity || 1);
+                        const availableQty = Number(inventoryMap.get(ingId) || 0);
                         return {
-                            id: `i-${i.ingredient_id}`,
+                            id: `i-${ingId}`,
                             name: i.name || i.Ingredient?.name || 'Desconocido',
-                            amount: i.quantity,
-                            unit: i.unit,
+                            amount: requiredQty,
+                            unit: i.unit || i.ingredient?.unit_default || 'g',
                             available: availableQty >= requiredQty
                         };
                     }) || []
@@ -133,14 +160,14 @@ export default function CocinaView() {
                                     missingIngredients: ["Faltan ingredientes"],
                                     imageUrl: r.image_url,
                                     ingredients: rawIngredients.map((i: any) => {
-                                        const ingId = i.ingredient_id || i.id;
-                                        const requiredQty = i.quantity || 1;
-                                        const availableQty = inventoryMap.get(ingId) || 0;
+                                        const ingId = Number(i.ingredient_id || i.id);
+                                        const requiredQty = Number(i.required_quantity || i.quantity || 1);
+                                        const availableQty = Number(inventoryMap.get(ingId) || 0);
                                         return {
                                             id: `i-${ingId}`,
                                             name: i.name || i.Ingredient?.name || i.ingredient?.name || 'Desconocido',
-                                            amount: i.quantity || 1,
-                                            unit: i.unit || 'unidad',
+                                            amount: requiredQty,
+                                            unit: i.unit || i.ingredient?.unit_default || 'g',
                                             available: availableQty >= requiredQty
                                         };
                                     })
@@ -179,7 +206,7 @@ export default function CocinaView() {
                         <div className="w-full flex justify-center items-center">
                             <span className="text-gray-500">Buscando qué puedes cocinar...</span>
                         </div>
-                    ) : recipes.length === 0 ? (
+                    ) : recipes.length === 0 && cookingSessions.length === 0 ? (
                         <div className="w-full h-full bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm flex items-center justify-center">
                             <div className="text-center">
                                 <div className="text-4xl mb-4">🍳</div>
@@ -192,6 +219,57 @@ export default function CocinaView() {
                     ) : (
                         <>
                             <div className="w-full md:w-1/3 flex flex-col gap-4 overflow-y-auto">
+                                {/* Active cooking sessions */}
+                                {cookingSessions.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-1">
+                                            {cookingSessions.some(s => s.isCompleted) && cookingSessions.some(s => !s.isCompleted)
+                                                ? "Sesiones de cocina"
+                                                : cookingSessions.every(s => s.isCompleted)
+                                                    ? "Recetas completadas"
+                                                    : "Cocinando ahora"}
+                                        </p>
+                                        {cookingSessions.map(session => {
+                                            const progress = session.totalSteps > 0
+                                                ? Math.round((session.completedStepIds.length / session.totalSteps) * 100)
+                                                : 0;
+                                            return (
+                                                <button
+                                                    key={`session-${session.recipeId}`}
+                                                    onClick={() => router.push(`/step-by-step-kitchen?recipeId=${session.recipeId}&name=${encodeURIComponent(session.recipeName)}`)}
+                                                    className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 border ${session.isCompleted
+                                                        ? "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10"
+                                                        : "border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10"
+                                                        } hover:shadow-sm`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        {session.imageUrl ? (
+                                                            <img src={session.imageUrl} alt={session.recipeName} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-lg bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-lg">
+                                                                {session.isCompleted ? "✅" : "🍳"}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-semibold truncate text-gray-800 dark:text-gray-200">{session.recipeName}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <div className="flex-1 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                                                                    <div className={`h-full rounded-full transition-all ${session.isCompleted ? 'bg-green-500' : 'bg-orange-400'}`} style={{ width: `${progress}%` }} />
+                                                                </div>
+                                                                <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                                                                    {session.isCompleted ? "Hecha ✓" : `${session.completedStepIds.length}/${session.totalSteps}`}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+
+                                        <div className="border-b border-gray-100 dark:border-white/10 my-1" />
+                                    </div>
+                                )}
+
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input

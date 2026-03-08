@@ -6,7 +6,7 @@ import type { UserProfile } from "@/features/profile/perfilTypes";
 
 interface EditProfileModalProps {
     currentProfile: UserProfile;
-    onSave: (updatedProfile: Partial<UserProfile>) => void;
+    onSave: (updatedProfile: Partial<UserProfile>) => void | Promise<void>;
     onClose: () => void;
 }
 
@@ -19,16 +19,16 @@ export default function EditProfileModal({
     const [email, setEmail] = useState(currentProfile.email);
 
     const handleSave = () => {
-        if (!name.trim() || !email.trim()) return;
+        if (!name.trim()) return;
 
-        // Extract initials logic based on newly inputted name
-        const match = name.match(/(\w)\w*\s*(\w)?/);
-        let initials = "?";
-        if (match) {
-            initials = ((match[1] || "") + (match[2] || "")).toUpperCase();
-        }
+        // Use consistent 2-initials logic
+        const initialsStr = name.split(' ')
+            .map(n => n[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase() || "?";
 
-        onSave({ name, email, initials });
+        onSave({ name, email, initials: initialsStr });
         onClose();
     };
 
@@ -43,6 +43,15 @@ export default function EditProfileModal({
                     >
                         <X size={20} />
                     </button>
+                </div>
+
+                {/* Avatar Preview */}
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
+                        <span className="text-white text-2xl font-bold">
+                            {name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "?"}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="space-y-4 mb-6">

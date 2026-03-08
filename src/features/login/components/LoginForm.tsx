@@ -20,7 +20,16 @@ export default function LoginForm() {
     const response = await usersService.login({ email, password });
 
     if (response.ok && response.data) {
+      // Proactive cleanup before setting new user data
+      const keysToRemove = Object.keys(localStorage).filter(key =>
+        key.startsWith('biteWise_') ||
+        ['token', 'userId', 'user'].includes(key)
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.user.id);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       window.location.href = '/dashboard';
     } else {
       setError(response.error || 'Credenciales inválidas');
