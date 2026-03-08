@@ -20,6 +20,7 @@ export default function Inventory() {
                 // Map both original format and possible backend format just in case
                 const mapped = res.data.items.map((item: any) => ({
                     id: item.id?.toString() || item.ingredient_id?.toString() || Math.random().toString(),
+                    ingredientId: item.ingredient_id?.toString(),
                     name: item.ingredients?.name || item.name || 'Desconocido',
                     category: item.ingredients?.category || item.category || 'General',
                     quantity: `${item.current_quantity ?? item.quantity ?? 0} g/ml/oz`
@@ -75,7 +76,10 @@ export default function Inventory() {
             let ingredientId = Number(savedItem.id);
 
             // If it's a new item or arbitrarily passed, we must resolve it to a Catalog Ingredient ID
-            if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
+            if (editingItem && savedItem.ingredientId) {
+                // Use the stored ingredient_id directly 
+                ingredientId = Number(savedItem.ingredientId);
+            } else if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
                 // Try to create it in the catalog first
                 const catRes = await catalogService.createIngredient({
                     name: savedItem.name,
@@ -101,14 +105,43 @@ export default function Inventory() {
                 }
             }
 
-            // We have a solid ingredient_id, upsert it to Inventory
-            const res = await inventoryService.createInventoryItem(
-                {
-                    ingredient_id: ingredientId,
-                    quantity: numericQuantity,
-                },
-                token
-            );
+            let res;
+            if (editingItem && savedItem.ingredientId) {
+                // Backend has no "set quantity" endpoint, only add/remove.
+                // To SET quantity: remove all current, then add the new amount.
+                const currentQty = parseFloat(editingItem.quantity) || 0;
+
+                // Step 1: Remove all current quantity
+                if (currentQty > 0) {
+                    await inventoryService.deleteInventoryItem(
+                        Number(savedItem.ingredientId),
+                        currentQty,
+                        token
+                    );
+                }
+
+                // Step 2: Add the new desired quantity
+                if (numericQuantity > 0) {
+                    res = await inventoryService.createInventoryItem(
+                        {
+                            ingredient_id: Number(savedItem.ingredientId),
+                            quantity: numericQuantity,
+                        },
+                        token
+                    );
+                } else {
+                    res = { ok: true };
+                }
+            } else {
+                // New item: just add the quantity
+                res = await inventoryService.createInventoryItem(
+                    {
+                        ingredient_id: ingredientId,
+                        quantity: numericQuantity,
+                    },
+                    token
+                );
+            }
 
             if (res.ok) {
                 await loadInventory();
@@ -178,7 +211,7 @@ export default function Inventory() {
                                             <p className="text-gray-400 text-sm">No hay ingredientes en el inventario.</p>
                                         </div>
                                     ) : (
-                                        ingredients.map(ing => (
+                                        ingredients.map((ing) => (
                                             <div key={ing.id} className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-50 dark:border-zinc-800/50 items-start sm:items-center text-sm group hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors gap-2 sm:gap-0">
                                                 <div className="font-medium text-gray-900 dark:text-gray-100 sm:col-span-1">
                                                     <span className="sm:hidden font-bold text-gray-500 mr-2">Ingrediente:</span>

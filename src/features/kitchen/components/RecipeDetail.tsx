@@ -14,7 +14,12 @@ interface RecipeDetailProps {
 export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     const [cooking, setCooking] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [savedLocalId, setSavedLocalId] = useState<number | null>(null);
+    const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients');
+    const [savedLocalId, setSavedLocalId] = useState<number | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const saved = localStorage.getItem(`biteWise_saved_${recipe.id}`);
+        return saved ? Number(saved) : null;
+    });
     const router = useRouter();
 
     const isExternal = String(recipe.id).startsWith('ext-');
@@ -36,7 +41,9 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             const externalMeal: ExternalRecipe = recipe.externalMealData as ExternalRecipe;
             const res = await catalogService.importExternalRecipe(externalMeal, token);
             if (res.ok && res.data?.recipe?.id) {
-                setSavedLocalId(res.data.recipe.id);
+                const newId = res.data.recipe.id;
+                setSavedLocalId(newId);
+                localStorage.setItem(`biteWise_saved_${recipe.id}`, String(newId));
                 alert(`¡Receta guardada! Ahora puedes cocinar "${recipe.name}" desde tu catálogo.`);
             } else {
                 alert("No se pudo guardar la receta. Es posible que ya exista en tu catálogo.");
@@ -52,7 +59,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     const handleCook = async () => {
         // If external and not yet saved, block
         if (isExternal && !savedLocalId) {
-            alert("Primero guarda la receta en tu catálogo usando el botón \"Guardar Receta\" para poder cocinarla.");
+            alert('Primero guarda la receta en tu catálogo usando el botón "Guardar Receta" para poder cocinarla.');
             return;
         }
 
@@ -67,10 +74,11 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             const recipeId = savedLocalId ?? Number(recipe.id);
             const res = await inventoryService.cookRecipe(recipeId, token);
             if (res.ok) {
-                alert(`¡Éxito! ${res.data?.message || 'Ingredientes descontados.'}`);
-                window.location.href = '/inventory';
+                alert(`¡Éxito! Ingredientes descontados. ¡A cocinar!`);
+                setActiveTab('instructions');
             } else {
-                alert(`Hubo un problema: No se pudo cocinar la receta (posiblemente falta inventario en la BD).`);
+                const errorMessage = res.error || 'No se pudo cocinar la receta (posiblemente falta inventario).';
+                alert(`Hubo un problema:\n\n${errorMessage}`);
             }
         } catch (e) {
             console.error(e);
@@ -80,7 +88,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
         }
     };
     return (
-        <div className="flex-1 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
+        <div className="flex-1 bg-white dark:bg-transparent rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 flex flex-col">
             {/* Hero */}
             <div className="relative h-52 overflow-hidden">
                 <div
@@ -127,9 +135,8 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100">
+            <div className="grid grid-cols-2 divide-x divide-gray-100 dark:divide-white/10 border-b border-gray-100 dark:border-white/10">
                 {[
-                    { icon: Clock, label: "Tiempo", value: `${recipe.time} min` },
                     { icon: BarChart2, label: "Dificultad", value: recipe.difficulty },
                     { icon: Users, label: "Porciones", value: `${recipe.servings} personas` },
                 ].map(({ icon: Icon, label, value }) => (
@@ -138,44 +145,82 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                         <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
                             {label}
                         </span>
-                        <span className="text-sm font-bold text-gray-800">{value}</span>
+                        <span className="text-sm font-bold text-gray-800 dark:text-white">{value}</span>
                     </div>
                 ))}
             </div>
 
-            {/* Ingredients */}
-            <div className="flex-1 overflow-y-auto p-5">
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="text-base">📋</span>
-                    <h3 className="text-sm font-bold text-gray-800">Ingredientes Necesarios</h3>
-                </div>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-100 dark:border-white/10">
+                <button
+                    onClick={() => setActiveTab('ingredients')}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'ingredients' ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50 dark:bg-green-900/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                >
+                    Ingredientes
+                </button>
+                <button
+                    onClick={() => setActiveTab('instructions')}
+                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'instructions' ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50 dark:bg-green-900/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                >
+                    Preparación
+                </button>
+            </div>
 
-                <div className="space-y-3">
-                    {recipe.ingredients.map((ingredient) => (
-                        <div
-                            key={ingredient.id}
-                            className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                                    <Check size={11} className="text-green-600" strokeWidth={3} />
-                                </div>
-                                <span className="text-sm text-gray-700">{ingredient.name}</span>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-800">
-                                    {ingredient.amount}
-                                    {ingredient.unit}
-                                </p>
-                                <p className="text-[10px] text-green-600">Disponible en inventario</p>
-                            </div>
+            {/* Content body */}
+            <div className="flex-1 overflow-y-auto p-5">
+                {activeTab === 'ingredients' ? (
+                    <>
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-base">📋</span>
+                            <h3 className="text-sm font-bold text-gray-800 dark:text-white">Ingredientes Necesarios</h3>
                         </div>
-                    ))}
-                </div>
+
+                        <div className="space-y-3">
+                            {recipe.ingredients.map((ingredient) => (
+                                <div
+                                    key={ingredient.id}
+                                    className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-white/5 last:border-0"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${ingredient.available ? 'bg-green-100 dark:bg-green-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
+                                            {ingredient.available ? (
+                                                <Check size={11} className="text-green-600" strokeWidth={3} />
+                                            ) : (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">{ingredient.name}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                                            {ingredient.amount}
+                                            {ingredient.unit}
+                                        </p>
+                                        {ingredient.available ? (
+                                            <p className="text-[10px] text-green-600">Disponible en inventario</p>
+                                        ) : (
+                                            <p className="text-[10px] text-orange-500">Falta en inventario</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="text-base">👨‍🍳</span>
+                            <h3 className="text-sm font-bold text-gray-800 dark:text-white">Instrucciones de Preparación</h3>
+                        </div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+                            {recipe.instructions ? recipe.instructions : "No hay instrucciones detalladas para esta receta."}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Actions */}
-            <div className="p-5 pt-3 border-t border-gray-100 flex items-center gap-3 flex-wrap">
+            <div className="p-5 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center gap-3 flex-wrap">
                 {/* Save button for external recipes */}
                 {isExternal && !savedLocalId && (
                     <button
@@ -221,7 +266,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                         }
                         router.push('/shopping-list-detail');
                     }}
-                    className="flex items-center gap-2 bg-white border-2 border-green-500 text-green-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-50 transition-all">
+                    className="flex items-center gap-2 bg-white dark:bg-transparent border-2 border-green-500 text-green-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-all">
                     <ShoppingBag size={15} />
                     Conseguir ingredientes
                 </button>

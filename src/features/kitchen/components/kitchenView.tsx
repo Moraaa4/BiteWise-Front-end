@@ -8,6 +8,7 @@ import { Header } from "@/features/dashboard/components/Header";
 import RecipeCard from "./RecipeCard";
 import RecipeDetail from "./RecipeDetail";
 import { catalogService } from "@/services/catalog.service";
+import { inventoryService } from "@/services/inventory.service";
 import { useSearchParams } from "next/navigation";
 
 export default function CocinaView() {
@@ -26,30 +27,43 @@ export default function CocinaView() {
                 setLoading(false);
                 return;
             }
-            // Realistically we want to get matches based on inventory.
-            // Using getMatchingRecipes.
-            const res = await catalogService.getMatchingRecipes(token);
+            // Fetch both recipes and inventory to compute availability
+            const [res, invRes] = await Promise.all([
+                catalogService.getMatchingRecipes(token),
+                inventoryService.getInventory(token)
+            ]);
+
             let finalRecipes: Recipe[] = [];
+            const inventory = (invRes.ok && Array.isArray((invRes.data as any)?.items)) ? (invRes.data as any).items : [];
+            const inventoryMap = new Map(inventory.map((item: any) => [
+                item.ingredient_id || item.ingredients?.id || item.id,
+                Number(item.current_quantity || item.quantity || 0)
+            ]));
 
             if (res.ok && res.data && Array.isArray(res.data.data)) {
                 // Map the matching recipes
                 finalRecipes = res.data.data.map((r: any) => ({
                     id: r.id.toString(),
                     name: r.title,
-                    time: 30, // Mocked for now
+                    time: r.time_minutes || 30, // Fallback if missing
                     calories: 400,
-                    difficulty: "Media",
-                    servings: 2,
+                    difficulty: r.difficulty || "Media",
+                    servings: r.servings || 2,
+                    instructions: r.instructions,
                     hasAllIngredients: r.missingCount === 0,
                     missingIngredients: r.missingCount > 0 ? ["Faltan " + r.missingCount + " ingredientes"] : [],
                     imageUrl: r.image_url,
-                    ingredients: r.ingredients?.map((i: any) => ({
-                        id: `i-${i.ingredient_id}`,
-                        name: i.name,
-                        amount: i.quantity,
-                        unit: i.unit,
-                        available: true // from matching context
-                    })) || []
+                    ingredients: r.ingredients?.map((i: any) => {
+                        const requiredQty = i.quantity || 1;
+                        const availableQty = inventoryMap.get(i.ingredient_id) || 0;
+                        return {
+                            id: `i-${i.ingredient_id}`,
+                            name: i.name || i.Ingredient?.name || 'Desconocido',
+                            amount: i.quantity,
+                            unit: i.unit,
+                            available: availableQty >= requiredQty
+                        };
+                    }) || []
                 }));
             }
 
@@ -89,6 +103,7 @@ export default function CocinaView() {
                                     calories: 500,
                                     difficulty: "Media",
                                     servings: 2,
+                                    instructions: m.strInstructions,
                                     hasAllIngredients: false,
                                     missingIngredients: ["Faltan ingredientes del catálogo global"],
                                     imageUrl: m.strMealThumb,
@@ -113,16 +128,22 @@ export default function CocinaView() {
                                     calories: 400,
                                     difficulty: r.difficulty || "Media",
                                     servings: 2,
+                                    instructions: r.instructions,
                                     hasAllIngredients: false,
                                     missingIngredients: ["Faltan ingredientes"],
                                     imageUrl: r.image_url,
-                                    ingredients: rawIngredients.map((i: any) => ({
-                                        id: `i-${i.ingredient_id || i.id}`,
-                                        name: i.name || i.Ingredient?.name || i.ingredient?.name || 'Desconocido',
-                                        amount: i.quantity || 1,
-                                        unit: i.unit || 'unidad',
-                                        available: false
-                                    }))
+                                    ingredients: rawIngredients.map((i: any) => {
+                                        const ingId = i.ingredient_id || i.id;
+                                        const requiredQty = i.quantity || 1;
+                                        const availableQty = inventoryMap.get(ingId) || 0;
+                                        return {
+                                            id: `i-${ingId}`,
+                                            name: i.name || i.Ingredient?.name || i.ingredient?.name || 'Desconocido',
+                                            amount: i.quantity || 1,
+                                            unit: i.unit || 'unidad',
+                                            available: availableQty >= requiredQty
+                                        };
+                                    })
                                 };
                                 finalRecipes = [localRecipe, ...finalRecipes];
                                 setSelectedRecipe(localRecipe);
@@ -146,7 +167,7 @@ export default function CocinaView() {
     const filteredRecipes = recipes.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-background-light dark:bg-background-dark">
             <Sidebar activeTab="cocina" />
 
             <main className="flex-1 flex flex-col overflow-hidden">
@@ -159,10 +180,10 @@ export default function CocinaView() {
                             <span className="text-gray-500">Buscando qué puedes cocinar...</span>
                         </div>
                     ) : recipes.length === 0 ? (
-                        <div className="w-full h-full bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center">
+                        <div className="w-full h-full bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm flex items-center justify-center">
                             <div className="text-center">
                                 <div className="text-4xl mb-4">🍳</div>
-                                <h3 className="text-lg font-bold text-gray-900">Tu inventario no coincide con ninguna receta</h3>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Tu inventario no coincide con ninguna receta</h3>
                                 <p className="text-sm text-gray-500 mt-2 max-w-sm">
                                     Agrega más ingredientes a tu inventario para ver sugerencias de recetas.
                                 </p>
@@ -178,7 +199,7 @@ export default function CocinaView() {
                                         placeholder="Buscar receta sugerida..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm"
+                                        className="w-full pl-10 pr-4 py-2 border border-[#f1f3f1] dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white rounded-lg text-sm"
                                     />
                                 </div>
                                 {filteredRecipes.map(recipe => (
@@ -190,7 +211,7 @@ export default function CocinaView() {
                                     />
                                 ))}
                             </div>
-                            <div className="w-full md:w-2/3 h-full overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="w-full md:w-2/3 h-full overflow-hidden bg-white dark:bg-transparent rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm">
                                 {selectedRecipe ? (
                                     <RecipeDetail recipe={selectedRecipe} />
                                 ) : (

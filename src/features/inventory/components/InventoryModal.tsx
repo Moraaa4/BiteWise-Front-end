@@ -5,6 +5,7 @@ import { X, Tag, Package, Hash } from "lucide-react";
 
 export interface InventoryItem {
     id: string;
+    ingredientId?: string;
     name: string;
     category: string;
     quantity: string;
@@ -41,6 +42,7 @@ export default function InventoryModal({
 
         const inventoryData: InventoryItem = {
             id: initialData?.id || Date.now().toString(),
+            ingredientId: initialData?.ingredientId,
             name,
             category,
             quantity,

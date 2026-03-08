@@ -14,7 +14,7 @@ export default function RecipeCard({ recipe, isSelected, onSelect }: RecipeCardP
     return (
         <button
             onClick={() => onSelect(recipe)}
-            className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${isSelected ? "bg-green-50" : "hover:bg-gray-50"
+            className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${isSelected ? "bg-[#e6f4ea] dark:bg-green-900/20" : "hover:bg-gray-50 dark:hover:bg-white/5"
                 }`}
         >
             <div className="flex items-center gap-3">
@@ -25,14 +25,14 @@ export default function RecipeCard({ recipe, isSelected, onSelect }: RecipeCardP
                         className="w-12 h-12 rounded-lg object-cover bg-gray-100 flex-shrink-0"
                     />
                 ) : (
-                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 text-xl">
+                    <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-xl">
                         🍲
                     </div>
                 )}
 
                 <div className="flex-1 min-w-0">
                     <p
-                        className={`text-sm font-semibold truncate ${isSelected ? "text-green-800" : "text-gray-800"
+                        className={`text-sm font-semibold truncate ${isSelected ? "text-green-800 dark:text-green-400" : "text-gray-800 dark:text-gray-200"
                             }`}
                     >
                         {recipe.name}

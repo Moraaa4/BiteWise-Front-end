@@ -14,6 +14,7 @@ export interface Recipe {
     difficulty: string;
     servings: number;
     tag?: string;
+    instructions?: string;
     hasAllIngredients: boolean;
     missingIngredients?: string[];
     ingredients: Ingredient[];
