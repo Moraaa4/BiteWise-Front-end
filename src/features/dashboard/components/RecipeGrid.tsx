@@ -13,7 +13,7 @@ export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
             <div className="flex items-center justify-between px-2">
                 <h3 className="text-[#131613] dark:text-white text-lg font-bold uppercase tracking-tight">RECETAS SUGERIDAS</h3>
                 <button className="flex items-center gap-1 text-primary text-sm font-bold hover:underline">
-                    <span className="material-symbols-outlined text-sm">visibility</span>
+                    <span translate="no" className="material-symbols-outlined notranslate text-sm">visibility</span>
                     Ver todas
                 </button>
             </div>
@@ -24,7 +24,7 @@ export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
                         <div className="h-40 bg-gray-200 dark:bg-zinc-800 bg-cover bg-center">
                             <div className="p-3">
                                 <span className="bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded-full text-xs font-medium flex items-center w-fit gap-1">
-                                    <span className="material-symbols-outlined text-[14px]">schedule</span> {r.time}
+                                    <span translate="no" className="material-symbols-outlined notranslate text-[14px]">schedule</span> {r.time}
                                 </span>
                             </div>
                         </div>
@@ -38,7 +38,7 @@ export function RecipeGrid({ recipes }: { recipes: DashboardRecipe[] }) {
 
             <div className="pt-4 flex justify-center">
                 <button className="flex items-center gap-2 px-6 py-2.5 bg-background-light dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full text-sm font-bold text-gray-800 dark:text-gray-200 hover:bg-[#eceeec] dark:hover:bg-white/10 transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">refresh</span>
+                    <span translate="no" className="material-symbols-outlined notranslate text-[18px]">refresh</span>
                     <span>ACTUALIZAR SUGERENCIAS</span>
                 </button>
             </div>

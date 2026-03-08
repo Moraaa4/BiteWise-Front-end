@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { LoginPayload } from '../types';
+import { usersService } from '@/services/users.service';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -17,12 +17,15 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
 
-    const payload: LoginPayload = { email, password };
+    const response = await usersService.login({ email, password });
 
-    setTimeout(() => {
-      setLoading(false);
+    if (response.ok && response.data) {
+      localStorage.setItem('token', response.data.token);
       window.location.href = '/dashboard';
-    }, 500);
+    } else {
+      setError(response.error || 'Credenciales inválidas');
+      setLoading(false);
+    }
   };
 
   return (

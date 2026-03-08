@@ -15,11 +15,27 @@ export default function ListaDeComprasView() {
 
     useEffect(() => {
         const saved = localStorage.getItem("biteWise_shoppingLists");
-        if (saved) {
-            setLists(JSON.parse(saved));
-        } else {
-            setLists(SHOPPING_LISTS);
+        let loadedLists: ShoppingList[] = [];
+        if (saved && saved !== "[]") {
+            loadedLists = JSON.parse(saved);
         }
+
+        // Sync real progress/total from per-list localStorage items
+        const updatedLists = loadedLists.map((list: ShoppingList) => {
+            try {
+                const itemsStr = localStorage.getItem(`biteWise_list_items_${list.id}`);
+                if (itemsStr) {
+                    const items = JSON.parse(itemsStr);
+                    const total = items.length;
+                    const progress = items.filter((i: any) => i.checked).length;
+                    const status = total > 0 && progress === total ? "complete" : list.status;
+                    return { ...list, total, progress, status };
+                }
+            } catch (e) { /* ignore */ }
+            return list;
+        });
+
+        setLists(updatedLists);
         setIsLoaded(true);
     }, []);
 
@@ -40,17 +56,22 @@ export default function ListaDeComprasView() {
                 status: "incomplete",
                 createdLabel: "Justo ahora",
                 progress: 0,
-                total: 5
+                total: 0
             };
             const updatedLists = [...lists, newList];
             setLists(updatedLists);
             localStorage.setItem("biteWise_shoppingLists", JSON.stringify(updatedLists));
-            router.push(`/shopping-list-detail`);
+
+            // Ensure the new list starts completely empty and isolated
+            localStorage.setItem(`biteWise_list_items_${newList.id}`, JSON.stringify([]));
+            localStorage.setItem("biteWise_currentList", JSON.stringify([])); // clear fallback
+
+            router.push(`/shopping-list-detail?id=${newList.id}`);
         }
     };
 
     const handleViewDetails = (list: ShoppingList) => {
-        router.push(`/shopping-list-detail`);
+        router.push(`/shopping-list-detail?id=${list.id}`);
     };
 
     const handleDelete = (id: string) => {

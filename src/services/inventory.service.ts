@@ -14,21 +14,8 @@ export interface InventoryItem {
 }
 
 export interface CreateInventoryItemRequest {
-  name: string;
+  ingredient_id: number;
   quantity: number;
-  unit: string;
-  min_threshold: number;
-  location?: string;
-  category?: string;
-}
-
-export interface UpdateInventoryItemRequest {
-  name?: string;
-  quantity?: number;
-  unit?: string;
-  min_threshold?: number;
-  location?: string;
-  category?: string;
 }
 
 export interface LowStockAlert {
@@ -48,49 +35,49 @@ export const inventoryService = {
   },
 
   async getInventory(token: string) {
-    const response = await inventoryClient.get<InventoryItem[]>('/', {
+    const response = await inventoryClient.get<{ message: string; items: any[] }>('/api/inventory', {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async getInventoryItem(id: number, token: string) {
-    const response = await inventoryClient.get<InventoryItem>(`/${id}`, {
+    const response = await inventoryClient.get<InventoryItem>(`/api/inventory/${id}`, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async createInventoryItem(item: CreateInventoryItemRequest, token: string) {
-    const response = await inventoryClient.post<InventoryItem>('/', item, {
+    const response = await inventoryClient.post<any>('/api/inventory', item, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
-  async updateInventoryItem(id: number, item: UpdateInventoryItemRequest, token: string) {
-    const response = await inventoryClient.put<InventoryItem>(`/${id}`, item, {
+  async deleteInventoryItem(id: number, quantity: number, token: string) {
+    const response = await inventoryClient.post<{ message: string }>(`/api/inventory/remove`, { ingredient_id: id, quantity }, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
-  async deleteInventoryItem(id: number, token: string) {
-    const response = await inventoryClient.delete<{ message: string }>(`/${id}`, {
+  async cookRecipe(recipe_id: number, token: string) {
+    const response = await inventoryClient.post<{ message: string; details: string }>('/api/inventory/cook', { recipe_id }, {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async getLowStockItems(token: string) {
-    const response = await inventoryClient.get<LowStockAlert[]>('/low-stock', {
+    const response = await inventoryClient.get<LowStockAlert[]>('/api/inventory/low-stock', {
       Authorization: `Bearer ${token}`,
     });
     return response;
   },
 
   async updateStock(id: number, quantity: number, token: string) {
-    const response = await inventoryClient.patch<InventoryItem>(`/${id}/stock`, { quantity }, {
+    const response = await inventoryClient.patch<InventoryItem>(`/api/inventory/${id}/stock`, { quantity }, {
       Authorization: `Bearer ${token}`,
     });
     return response;

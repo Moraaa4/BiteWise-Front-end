@@ -17,4 +17,7 @@ export interface Recipe {
     hasAllIngredients: boolean;
     missingIngredients?: string[];
     ingredients: Ingredient[];
+    imageUrl?: string;
+    /** Raw TheMealDB object stored for external recipes so they can be imported */
+    externalMealData?: Record<string, any>;
 }

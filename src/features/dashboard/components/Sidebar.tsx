@@ -26,7 +26,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                 onClick={() => setIsOpen(true)}
                 className="md:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-background-dark rounded-lg shadow-md border border-gray-100 dark:border-white/10 text-gray-700 dark:text-gray-300"
             >
-                <span className="material-symbols-outlined">menu</span>
+                <span translate="no" className="material-symbols-outlined notranslate">menu</span>
             </button>
 
             {/* Overlay para móvil */}
@@ -57,7 +57,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                         </div>
                         {/* Botón cerrar en móvil */}
                         <button onClick={() => setIsOpen(false)} className="md:hidden text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 p-1 rounded-md">
-                            <span className="material-symbols-outlined">close</span>
+                            <span translate="no" className="material-symbols-outlined notranslate">close</span>
                         </button>
                     </div>
 
@@ -71,7 +71,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                                     : 'text-[#131613] dark:text-gray-300 hover:bg-primary/10 dark:hover:bg-white/5'
                                     }`}
                             >
-                                <span className="material-symbols-outlined">{item.icon}</span>
+                                <span translate="no" className="material-symbols-outlined notranslate">{item.icon}</span>
                                 <span>{item.label}</span>
                             </Link>
                         ))}

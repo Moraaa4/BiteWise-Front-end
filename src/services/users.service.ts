@@ -1,7 +1,7 @@
 import { createHttpClient } from './http.client';
 
 export interface UserRegisterRequest {
-  username: string;
+  name: string;
   email: string;
   password: string;
 }

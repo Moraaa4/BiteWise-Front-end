@@ -6,7 +6,7 @@ const Navbar = () => (
     <div className="max-w-7xl mx-auto px-6 lg:px-20 h-20 flex items-center justify-between">
       <Link href="/" className="flex items-center gap-2 group">
         <div className="size-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-          <span className="material-symbols-outlined">restaurant</span>
+          <span translate="no" className="material-symbols-outlined notranslate">restaurant</span>
         </div>
         <span className="text-xl font-bold tracking-tight text-emerald-600">BiteWise</span>
       </Link>
@@ -47,7 +47,7 @@ export default function LandingPage() {
             <ul className="space-y-3" role="list">
               {['Inventario en 30 segundos', '3 recetas listas de inmediato', 'Nunca olvides lo que compraste'].map((item) => (
                 <li key={item} className="flex items-center gap-3 font-medium text-zinc-700 dark:text-zinc-300">
-                  <span className="material-symbols-outlined text-emerald-500 font-bold bg-emerald-100 rounded-full p-1 text-sm">check</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-emerald-500 font-bold bg-emerald-100 rounded-full p-1 text-sm">check</span>
                   {item}
                 </li>
               ))}
@@ -55,7 +55,7 @@ export default function LandingPage() {
 
             <Link href="/register" className="bg-emerald-500 text-white text-lg font-bold px-10 py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none flex items-center gap-2 hover:bg-emerald-600 transition-all">
               REGISTRATE
-              <span className="material-symbols-outlined">arrow_forward</span>
+              <span translate="no" className="material-symbols-outlined notranslate">arrow_forward</span>
             </Link>
           </article>
 
@@ -65,13 +65,14 @@ export default function LandingPage() {
                 src="/kitchen.png"
                 alt="Persona cocinando de forma organizada"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
                 priority
               />
             </div>
             <figcaption className="absolute -bottom-6 -left-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 flex items-center gap-4">
               <div className="size-12 bg-emerald-500 rounded-full flex items-center justify-center text-white">
-                <span className="material-symbols-outlined">restaurant</span>
+                <span translate="no" className="material-symbols-outlined notranslate">restaurant</span>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gasto Semanal</p>
@@ -92,7 +93,7 @@ export default function LandingPage() {
 
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
-                  <span className="material-symbols-outlined text-emerald-500 text-3xl">inventory_2</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-emerald-500 text-3xl">inventory_2</span>
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-bold text-2xl">Gestión de Inventario</h3>
@@ -110,7 +111,7 @@ export default function LandingPage() {
 
               <article className="p-10 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex flex-col items-start gap-6 hover:shadow-xl transition-shadow">
                 <div className="size-14 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm flex items-center justify-center">
-                  <span className="material-symbols-outlined text-emerald-500 text-3xl">skillet</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-emerald-500 text-3xl">skillet</span>
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-bold text-2xl">Sugerencias de recetas</h3>
@@ -149,7 +150,7 @@ export default function LandingPage() {
           </div>
           <Link href="/register" className="mt-20 group inline-flex items-center gap-4 text-emerald-600 font-black text-2xl hover:gap-6 transition-all underline decoration-4 underline-offset-8 decoration-emerald-200">
             DEJA DE DESPERDICIAR COMIDA AHORA
-            <span className="material-symbols-outlined">arrow_forward</span>
+            <span translate="no" className="material-symbols-outlined notranslate">arrow_forward</span>
           </Link>
         </section>
 
@@ -177,14 +178,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-20 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <div className="size-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-sm">restaurant</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-sm">restaurant</span>
             </div>
             <span className="text-lg font-bold text-emerald-600">BiteWise</span>
           </div>
           <p className="text-sm text-zinc-500 font-medium">© 2025 BiteWise. Salvando tu despensa y el planeta.</p>
           <div className="flex gap-6">
-            <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">share</span>
-            <span className="material-symbols-outlined text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">mail</span>
+            <span translate="no" className="material-symbols-outlined notranslate text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">share</span>
+            <span translate="no" className="material-symbols-outlined notranslate text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">mail</span>
           </div>
         </div>
       </footer>

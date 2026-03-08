@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { RegisterPayload } from '../types';
+import { usersService } from '@/services/users.service';
 
 export default function RegisterForm() {
   const [name, setName] = useState('');
@@ -18,12 +18,14 @@ export default function RegisterForm() {
     setError('');
     setLoading(true);
 
-    const payload: RegisterPayload = { name, email, password };
+    const response = await usersService.register({ name, email, password });
 
-    setTimeout(() => {
-      setLoading(false);
+    if (response.ok && response.data) {
       window.location.href = '/login';
-    }, 500);
+    } else {
+      setError(response.error || 'Error al crear la cuenta');
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,8 +37,8 @@ export default function RegisterForm() {
         <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
       </div>
 
-      <h1 className="text-3xl font-extrabold mb-2 text-[#111811]">¡Crea tu cuenta!</h1>
-      <p className="text-[#608562] mb-6">Únete para reducir el desperdicio de comida.</p>
+      <h1 className="text-3xl font-extrabold mb-2 text-[#111811] dark:text-white">¡Crea tu cuenta!</h1>
+      <p className="text-[#608562] dark:text-gray-300 mb-6">Únete para reducir el desperdicio de comida.</p>
 
       {error && (
         <div className="mb-4 px-4 py-3 bg-red-50 text-red-700 rounded-md">{error}</div>
@@ -44,31 +46,31 @@ export default function RegisterForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-sm font-semibold block mb-2">Nombre</label>
+          <label className="text-sm font-semibold block mb-2 dark:text-white">Nombre</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full rounded-lg border border-[#d6e1d6] py-3 px-4"
+            className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
             placeholder="Tu nombre completo"
           />
         </div>
 
         <div>
-          <label className="text-sm font-semibold block mb-2">Correo electrónico</label>
+          <label className="text-sm font-semibold block mb-2 dark:text-white">Correo electrónico</label>
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             type="email"
-            className="w-full rounded-lg border border-[#d6e1d6] py-3 px-4"
+            className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
             placeholder="ejemplo@correo.com"
           />
         </div>
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-semibold">Contraseña</label>
+            <label className="text-sm font-semibold dark:text-white">Contraseña</label>
           </div>
           <div className="relative">
             <input
@@ -76,7 +78,7 @@ export default function RegisterForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               type={showPassword ? 'text' : 'password'}
-              className="w-full rounded-lg border border-[#d6e1d6] py-3 px-4"
+              className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
               placeholder="••••••••"
             />
             <button
@@ -105,7 +107,6 @@ export default function RegisterForm() {
       </div>
 
       <button className="w-full flex items-center justify-center gap-3 py-3 border rounded-lg">
-        <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
         <span className="font-semibold">Google</span>
       </button>
 

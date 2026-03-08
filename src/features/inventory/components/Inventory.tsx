@@ -1,17 +1,37 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
 import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
+import { inventoryService } from '@/services/inventory.service';
+import { catalogService } from '@/services/catalog.service';
 
 export default function Inventory() {
-    const [ingredients, setIngredients] = useState<InventoryItem[]>([
-        { id: '1', name: 'Jitomate', category: 'Verduras', quantity: '4 piezas' },
-        { id: '2', name: 'Pechuga de pollo', category: 'Carnes', quantity: '1 kg' },
-        { id: '3', name: 'Cebolla', category: 'Verduras', quantity: '2 piezas' }
-    ]);
+    const [ingredients, setIngredients] = useState<InventoryItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+
+    const loadInventory = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+            const res = await inventoryService.getInventory(token);
+            if (res.ok && res.data && Array.isArray(res.data.items)) {
+                // Map both original format and possible backend format just in case
+                const mapped = res.data.items.map((item: any) => ({
+                    id: item.id?.toString() || item.ingredient_id?.toString() || Math.random().toString(),
+                    name: item.ingredients?.name || item.name || 'Desconocido',
+                    category: item.ingredients?.category || item.category || 'General',
+                    quantity: `${item.current_quantity ?? item.quantity ?? 0} g/ml/oz`
+                }));
+                setIngredients(mapped);
+            }
+        } catch (e) { console.error("Error loading inventory:", e) }
+    };
+
+    useEffect(() => {
+        loadInventory();
+    }, []);
 
     const handleAdd = () => {
         setEditingItem(undefined);
@@ -26,17 +46,79 @@ export default function Inventory() {
         }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
-            setIngredients(ingredients.filter(ing => ing.id !== id));
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                // Find the item to know its current quantity
+                const itemToRemove = ingredients.find(ing => ing.id === id);
+                const numericQuantity = parseFloat(itemToRemove?.quantity || "999999"); // Send a huge number to clear it out if parsing fails (backend caps at available balance via error, but we'll try to get exact)
+
+                const res = await inventoryService.deleteInventoryItem(Number(id), numericQuantity, token);
+                if (res.ok) {
+                    await loadInventory();
+                }
+            } catch (error) {
+                console.error("Error deleting item:", error);
+                alert("No se pudo eliminar el ingrediente. Probablemente ya está vacío.");
+            }
         }
     };
 
-    const handleSaveItem = (savedItem: InventoryItem) => {
-        if (editingItem) {
-            setIngredients(ingredients.map(ing => ing.id === savedItem.id ? savedItem : ing));
-        } else {
-            setIngredients([...ingredients, savedItem]);
+    const handleSaveItem = async (savedItem: InventoryItem) => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            const numericQuantity = parseFloat(savedItem.quantity) || 1;
+            let ingredientId = Number(savedItem.id);
+
+            // If it's a new item or arbitrarily passed, we must resolve it to a Catalog Ingredient ID
+            if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
+                // Try to create it in the catalog first
+                const catRes = await catalogService.createIngredient({
+                    name: savedItem.name,
+                    category: savedItem.category,
+                    weight_per_unit: 1
+                }, token);
+
+                if (catRes.ok && catRes.data && catRes.data.ingredient) {
+                    ingredientId = catRes.data.ingredient.id;
+                } else {
+                    // It probably already exists! Let's find it.
+                    const allRes = await catalogService.getIngredients(token);
+                    if (allRes.ok && allRes.data) {
+                        const found = allRes.data.find((i: any) => i.name.toLowerCase() === savedItem.name.toLowerCase());
+                        if (found) {
+                            ingredientId = found.id;
+                        } else {
+                            throw new Error("No pudimos crear ni encontrar el ingrediente en el catálogo.");
+                        }
+                    } else {
+                        throw new Error("Error al consultar el catálogo.");
+                    }
+                }
+            }
+
+            // We have a solid ingredient_id, upsert it to Inventory
+            const res = await inventoryService.createInventoryItem(
+                {
+                    ingredient_id: ingredientId,
+                    quantity: numericQuantity,
+                },
+                token
+            );
+
+            if (res.ok) {
+                await loadInventory();
+                setIsModalOpen(false);
+            } else {
+                alert("Hubo un error al guardar el ingrediente en el inventario.");
+            }
+        } catch (error) {
+            console.error("Error saving inventory item:", error);
+            alert("No se pudo guardar el ingrediente");
         }
     };
 
@@ -55,7 +137,7 @@ export default function Inventory() {
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
                             {/* Search */}
                             <div className="relative flex-1 min-w-[200px]">
-                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                                <span translate="no" className="material-symbols-outlined notranslate absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
                                 <input
                                     type="text"
                                     placeholder="Buscar ingrediente..."
@@ -65,13 +147,13 @@ export default function Inventory() {
 
                             {/* Filters */}
                             <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-zinc-800 rounded-full text-sm font-semibold hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">tune</span>
+                                <span translate="no" className="material-symbols-outlined notranslate text-[18px]">tune</span>
                                 <span className="hidden sm:inline">Filtros</span>
                             </button>
 
                             {/* Add Button */}
                             <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-bold shadow-md transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">add</span>
+                                <span translate="no" className="material-symbols-outlined notranslate text-[18px]">add</span>
                                 <span className="hidden sm:inline">Agregar</span>
                             </button>
                         </div>
@@ -112,10 +194,10 @@ export default function Inventory() {
                                                 </div>
                                                 <div className="flex justify-start sm:justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity sm:col-span-1">
                                                     <button onClick={() => handleEdit(ing.id, ing.name)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Editar">
-                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                        <span translate="no" className="material-symbols-outlined notranslate text-[18px]">edit</span>
                                                     </button>
                                                     <button onClick={() => handleDelete(ing.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
-                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                        <span translate="no" className="material-symbols-outlined notranslate text-[18px]">delete</span>
                                                     </button>
                                                 </div>
                                             </div>

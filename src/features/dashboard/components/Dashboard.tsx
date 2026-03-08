@@ -1,57 +1,117 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { IngredientList, DashboardIngredient } from './IngredientList';
-import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
+import { useRouter } from 'next/navigation';
+
+const CATEGORY_MAP: Record<string, string> = {
+  'Desayuno': 'Breakfast',
+  'Almuerzo': 'Lunch',
+  'Cena': 'Dinner',
+  'Snacks': 'Snack',
+  'Vegetariano': 'Vegetarian',
+  'Saludable': 'Miscellaneous',
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  'chicken': '🍗',
+  'beef': '🥩',
+  'pasta': '🍝',
+  'vegetarian': '🥗',
+  'dessert': '🍰',
+  'breakfast': '🍳',
+  'seafood': '🦐',
+  'default': '🍽️',
+};
+
+function getRecipeIcon(category: string): string {
+  const lower = (category || '').toLowerCase();
+  return CATEGORY_ICONS[lower] ?? CATEGORY_ICONS['default'];
+}
 
 export default function Dashboard() {
-  const [ingredients, setIngredients] = useState<DashboardIngredient[]>([
-    { id: 'i1', name: 'Jitomate', qty: 4 },
-    { id: 'i2', name: 'Pechuga pollo', qty: 2 },
-    { id: 'i3', name: 'Cebolla', qty: 3 },
-  ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<any[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
+  const [loadingInventory, setLoadingInventory] = useState(false);
 
-  const handleAddIngredient = () => {
-    setEditingItem(undefined);
-    setIsModalOpen(true);
-  };
+  const CATALOG_URL = 'http://localhost:3002';
+  const INVENTORY_URL = 'http://localhost:3003';
 
-  const handleEditIngredient = (id: string) => {
-    const itemToEdit = ingredients.find(ing => ing.id === id);
-    if (itemToEdit) {
-      setEditingItem({
-        id: itemToEdit.id,
-        name: itemToEdit.name,
-        category: 'General', // Dashboard doesn't track this, default it
-        quantity: itemToEdit.qty.toString()
-      });
-      setIsModalOpen(true);
-    }
-  };
-
-  const handleSaveIngredient = (savedItem: InventoryItem) => {
-    const dashboardIngredient: DashboardIngredient = {
-      id: savedItem.id,
-      name: savedItem.name,
-      qty: savedItem.quantity
+  // Load inventory from real API
+  useEffect(() => {
+    const loadInventory = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      setLoadingInventory(true);
+      try {
+        const res = await fetch(`${INVENTORY_URL}/api/inventory`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setInventoryItems(data.items || []);
+        }
+      } catch (e) {
+        console.error('Error loading inventory', e);
+      } finally {
+        setLoadingInventory(false);
+      }
     };
+    loadInventory();
+  }, []);
 
-    if (editingItem) {
-      setIngredients(ingredients.map(ing => ing.id === savedItem.id ? dashboardIngredient : ing));
-    } else {
-      setIngredients([...ingredients, dashboardIngredient]);
-    }
-  };
+  // Load recipes from catalog API
+  useEffect(() => {
+    const loadRecipes = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      setLoadingRecipes(true);
+      try {
+        const res = await fetch(`${CATALOG_URL}/api/recipes`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setRecipes(data.recipes || []);
+        }
+      } catch (e) {
+        console.error('Error loading recipes', e);
+      } finally {
+        setLoadingRecipes(false);
+      }
+    };
+    loadRecipes();
+  }, []);
 
-  const handleDeleteIngredient = (id: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
-      setIngredients(ingredients.filter(ing => ing.id !== id));
+  // Apply category + search filter whenever they change
+  useEffect(() => {
+    let result = [...recipes];
+
+    if (activeCategory !== 'Todos') {
+      const englishCat = CATEGORY_MAP[activeCategory]?.toLowerCase() ?? activeCategory.toLowerCase();
+      result = result.filter(r =>
+        (r.category ?? r.title ?? '').toLowerCase().includes(englishCat)
+      );
     }
-  };
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(r =>
+        r.title?.toLowerCase().includes(q) ||
+        r.ingredients?.some((ing: any) => ing.name?.toLowerCase().includes(q))
+      );
+    }
+
+    setFilteredRecipes(result);
+  }, [recipes, activeCategory, searchQuery]);
+
+  const categories = ['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'];
 
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
@@ -60,19 +120,29 @@ export default function Dashboard() {
       <main className="flex-1 flex flex-col overflow-y-auto">
         <Header />
 
-        <div className="p-3 sm:p-4 md:p-8 pt-16 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
-          <section className="space-y-6">
+        <div className="p-3 sm:p-4 md:p-8 pt-6 max-w-[1200px] mx-auto w-full space-y-6 md:space-y-8">
+
+          {/* Search + Category Filter */}
+          <section className="space-y-4">
             <div className="relative max-w-2xl mx-auto">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d] dark:text-gray-400">search</span>
-              <input className="w-full pl-12 pr-4 py-2 sm:py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400" placeholder="Buscar recetas, ingredientes..." type="text" />
+              <span translate="no" className="material-symbols-outlined notranslate absolute left-4 top-1/2 -translate-y-1/2 text-[#6c7f6d] dark:text-gray-400">search</span>
+              <input
+                className="w-full pl-12 pr-4 py-2 sm:py-3 md:py-4 bg-white dark:bg-white/5 border border-[#f1f3f1] dark:border-white/10 rounded-full focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-sm text-gray-900 dark:text-white dark:placeholder-gray-400"
+                placeholder="Buscar recetas, ingredientes..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+
             <div className="flex flex-wrap items-center justify-start md:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {['Todos', 'Desayuno', 'Almuerzo', 'Cena', 'Snacks', 'Vegetariano', 'Saludable'].map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
-                  className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === 'Todos'
-                    ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
-                    : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-sm transition-all whitespace-nowrap ${cat === activeCategory
+                      ? 'bg-[#4cae4f] text-white border border-[#4cae4f]'
+                      : 'bg-white dark:bg-white/5 text-[#6c7f6d] dark:text-gray-300 border border-[#f1f3f1] dark:border-white/10 hover:bg-[#4cae4f] hover:border-[#4cae4f] hover:text-white dark:hover:bg-[#4cae4f] dark:hover:text-white'
                     }`}
                 >
                   {cat}
@@ -81,29 +151,126 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 lg:max-w-4xl lg:mx-auto gap-6 md:gap-8">
-            <section className="flex flex-col h-[400px] sm:h-[500px]">
-              <IngredientList
-                ingredients={ingredients}
-                onAdd={handleAddIngredient}
-                onEdit={handleEditIngredient}
-                onDelete={handleDeleteIngredient}
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+
+            {/* Inventory Section */}
+            <section className="lg:col-span-1">
+              <div className="bg-white dark:bg-white/5 rounded-xl border border-[#f1f3f1] dark:border-white/10 shadow-sm flex flex-col max-h-[480px]">
+                <div className="p-5 border-b border-[#f1f3f1] dark:border-white/10 flex justify-between items-center">
+                  <h3 className="text-[#131613] dark:text-white text-base font-bold uppercase tracking-tight">Tu Inventario</h3>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">
+                    {loadingInventory ? '...' : `${inventoryItems.length} items`}
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto divide-y divide-[#f1f3f1] dark:divide-white/5">
+                  {loadingInventory ? (
+                    <div className="p-6 text-center text-sm text-gray-400">Cargando inventario...</div>
+                  ) : inventoryItems.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-gray-400">
+                      No tienes ingredientes en tu inventario aún.
+                    </div>
+                  ) : (
+                    inventoryItems.map((item: any) => {
+                      const name = item.ingredients?.name ?? item.name ?? 'Sin nombre';
+                      const qty = Math.round(Number(item.current_quantity) * 10) / 10;
+                      const unit = item.ingredients?.unit_default ?? 'g';
+                      return (
+                        <div key={item.id} className="flex items-center gap-3 px-5 py-3 hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+                          <div className="text-primary flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-9 text-lg">
+                            🥗
+                          </div>
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <p className="text-[#131613] dark:text-white text-sm font-semibold truncate">{name}</p>
+                            <p className="text-[#6c7f6d] dark:text-gray-400 text-xs">{qty} {unit}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-[#f1f3f1] dark:border-white/10">
+                  <button
+                    onClick={() => router.push('/inventory')}
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <span translate="no" className="material-symbols-outlined notranslate text-base">open_in_new</span>
+                    Ver Inventario Completo
+                  </button>
+                </div>
+              </div>
             </section>
+
+            {/* Recipes Section */}
+            <section className="lg:col-span-2">
+              <div className="bg-white dark:bg-white/5 rounded-xl border border-[#f1f3f1] dark:border-white/10 shadow-sm flex flex-col max-h-[480px]">
+                <div className="p-5 border-b border-[#f1f3f1] dark:border-white/10 flex justify-between items-center">
+                  <h3 className="text-[#131613] dark:text-white text-base font-bold uppercase tracking-tight">
+                    {activeCategory === 'Todos' ? 'Recetas del Catálogo' : `Recetas: ${activeCategory}`}
+                  </h3>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-bold">
+                    {loadingRecipes ? '...' : `${filteredRecipes.length} recetas`}
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto divide-y divide-[#f1f3f1] dark:divide-white/5">
+                  {loadingRecipes ? (
+                    <div className="p-6 text-center text-sm text-gray-400">Cargando recetas...</div>
+                  ) : filteredRecipes.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-gray-400">
+                      {activeCategory !== 'Todos'
+                        ? `No hay recetas de "${activeCategory}" en tu catálogo.`
+                        : 'No hay recetas en tu catálogo aún.'}
+                    </div>
+                  ) : (
+                    filteredRecipes.map((recipe: any) => (
+                      <div
+                        key={recipe.id}
+                        onClick={() => router.push(`/kitchen?recipeId=${recipe.id}`)}
+                        className="flex items-center gap-4 px-5 py-4 hover:bg-background-light dark:hover:bg-white/5 transition-colors cursor-pointer group"
+                      >
+                        <div className="size-12 rounded-lg overflow-hidden shrink-0 bg-gray-100 dark:bg-white/10 flex items-center justify-center text-2xl">
+                          {recipe.image_url
+                            ? <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
+                            : getRecipeIcon(recipe.category ?? '')
+                          }
+                        </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <p className="text-[#131613] dark:text-white text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                            {recipe.title}
+                          </p>
+                          <p className="text-[#6c7f6d] dark:text-gray-400 text-xs">
+                            {recipe.ingredients?.length ?? 0} ingredientes
+                            {recipe.servings ? ` · ${recipe.servings} porciones` : ''}
+                          </p>
+                        </div>
+                        <span translate="no" className="material-symbols-outlined notranslate text-gray-300 group-hover:text-primary transition-colors text-xl shrink-0">
+                          chevron_right
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-[#f1f3f1] dark:border-white/10">
+                  <button
+                    onClick={() => router.push('/Recipes')}
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <span translate="no" className="material-symbols-outlined notranslate text-base">restaurant_menu</span>
+                    Explorar todas las Recetas
+                  </button>
+                </div>
+              </div>
+            </section>
+
           </div>
         </div>
 
         <footer className="mt-auto p-6 md:p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
           <p className="text-xs text-[#6c7f6d] dark:text-gray-400">© 2024 BiteWise. Come mejor, desperdicia menos.</p>
         </footer>
-
-        {isModalOpen && (
-          <InventoryModal
-            initialData={editingItem}
-            onSave={handleSaveIngredient}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
       </main>
     </div>
   );

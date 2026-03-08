@@ -17,7 +17,19 @@ export default function RecipeCard({ recipe, isSelected, onSelect }: RecipeCardP
             className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${isSelected ? "bg-green-50" : "hover:bg-gray-50"
                 }`}
         >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                {recipe.imageUrl ? (
+                    <img
+                        src={recipe.imageUrl}
+                        alt={recipe.name}
+                        className="w-12 h-12 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                    />
+                ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 text-xl">
+                        🍲
+                    </div>
+                )}
+
                 <div className="flex-1 min-w-0">
                     <p
                         className={`text-sm font-semibold truncate ${isSelected ? "text-green-800" : "text-gray-800"

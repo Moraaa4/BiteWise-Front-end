@@ -17,9 +17,17 @@ export default function AvailableRecipeCard({ recipe, onClick, onEdit, onDelete 
             onClick={() => onClick(recipe)}
             className="cursor-pointer bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden text-left hover:shadow-md hover:border-emerald-500 dark:hover:border-emerald-500 hover:-translate-y-0.5 transition-all duration-200 flex flex-col group relative"
         >
-            {/* Image placeholder */}
-            <div className="relative w-full h-36 bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0">
-                <span className="text-gray-300 dark:text-white/30 text-3xl">🍽️</span>
+            {/* Image placeholder or Real image */}
+            <div className="relative w-full h-36 bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
+                {recipe.imageUrl ? (
+                    <img
+                        src={recipe.imageUrl}
+                        alt={recipe.name}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <span className="text-gray-300 dark:text-white/30 text-3xl">🍽️</span>
+                )}
 
                 {/* Badge */}
                 <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-md tracking-wide z-10">

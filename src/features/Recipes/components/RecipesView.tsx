@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import AvailableRecipeCard from "@/features/Recipes/components/AvailableRecipeCard";
 import HistoryTable from "@/features/Recipes/components/HistoryTable";
+import { catalogService } from "@/services/catalog.service";
 import {
-    AVAILABLE_RECIPES,
     HISTORY_RECIPES,
     type AvailableRecipe,
     type HistoryRecipe,
@@ -18,13 +18,58 @@ import { useRouter } from "next/navigation";
 
 export default function RecetasView() {
     const router = useRouter();
-    const [recipes, setRecipes] = useState<AvailableRecipe[]>(AVAILABLE_RECIPES);
+    const [recipes, setRecipes] = useState<AvailableRecipe[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRecipe, setEditingRecipe] = useState<AvailableRecipe | undefined>();
     const [repeatRecipe, setRepeatRecipe] = useState<HistoryRecipe | undefined>();
 
+    useEffect(() => {
+        const fetchRecipes = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            let currentRecipes: AvailableRecipe[] = [];
+
+            // 1. Fetch fast local recipes first
+            const resLocal = await catalogService.getRecipes(token);
+            if (resLocal.ok && resLocal.data && resLocal.data.recipes) {
+                const mappedLocal = resLocal.data.recipes.map((r: any) => ({
+                    id: r.id.toString(),
+                    name: r.title,
+                    description: r.instructions?.substring(0, 100) + "...",
+                    timeMinutes: 30,
+                    ingredientsBadge: "LOCAL",
+                    imageUrl: r.image_url
+                }));
+                currentRecipes = mappedLocal;
+                setRecipes([...currentRecipes]); // Render immediately
+            }
+
+            // 2. Fetch slow external recipes in the background to avoid freezing the screen
+            catalogService.getRegionalRecipes(token).then((resExternal) => {
+                if (resExternal.ok && resExternal.data && resExternal.data.recipes) {
+                    const mappedExternal = resExternal.data.recipes.map((r: any) => ({
+                        id: `ext-${r.id}`,
+                        name: r.title,
+                        description: `${r.category || 'Platillo'} | ${r.region || 'Global'}`,
+                        timeMinutes: 45,
+                        ingredientsBadge: "THEMEALDB",
+                        imageUrl: r.image_url
+                    }));
+                    // Append and re-render only when ready, avoiding duplicates in Strict Mode
+                    setRecipes(prev => {
+                        const existingIds = new Set(prev.map(p => p.id));
+                        const uniqueNew = mappedExternal.filter((m: any) => !existingIds.has(m.id));
+                        return [...prev, ...uniqueNew];
+                    });
+                }
+            }).catch(console.error);
+        };
+        fetchRecipes();
+    }, []);
+
     const handleRecipeClick = (recipe: AvailableRecipe) => {
-        router.push("/recipes-details");
+        router.push(`/recipes-details?id=${recipe.id}`);
     };
 
     const handleCreate = () => {
@@ -109,7 +154,7 @@ export default function RecetasView() {
                         <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
                             Tus creaciones recientes. ¿Quieres repetir alguna?
                         </p>
-                        <HistoryTable recipes={HISTORY_RECIPES} onRepeat={handleRepeat} />
+                        <HistoryTable recipes={[]} onRepeat={handleRepeat} />
                     </section>
                 </main>
 

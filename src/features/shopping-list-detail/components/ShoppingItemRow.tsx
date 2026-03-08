@@ -1,20 +1,22 @@
 "use client";
 
 import React from "react";
+import { Trash2 } from "lucide-react";
 import type { ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 
 interface ShoppingItemRowProps {
     item: ShoppingItem;
     onToggle: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
-export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps) {
+export default function ShoppingItemRow({ item, onToggle, onDelete }: ShoppingItemRowProps) {
     return (
-        <label
-            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-white/10 last:border-0 cursor-pointer group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
+        <div
+            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-white/10 last:border-0 group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
                 }`}
         >
-            <div className="flex items-center gap-3">
+            <label className="flex flex-1 items-center gap-3 cursor-pointer">
                 <div className="relative">
                     <input
                         type="checkbox"
@@ -47,8 +49,22 @@ export default function ShoppingItemRow({ item, onToggle }: ShoppingItemRowProps
                 >
                     {item.name}
                 </span>
+            </label>
+
+            <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{item.quantity}</span>
+                {onDelete && (
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onDelete(item.id);
+                        }}
+                        className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                )}
             </div>
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{item.quantity}</span>
-        </label>
+        </div>
     );
 }
