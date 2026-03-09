@@ -40,8 +40,8 @@ export default function Dashboard() {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [loadingInventory, setLoadingInventory] = useState(false);
 
-  const CATALOG_URL = process.env.NEXT_PUBLIC_CATALOG_API_URL || 'http://localhost:3002';
-  const INVENTORY_URL = process.env.NEXT_PUBLIC_INVENTORY_API_URL || 'http://localhost:3003';
+  const CATALOG_URL = process.env.NEXT_PUBLIC_API_CATALOGO || 'http://localhost:3002';
+  const INVENTORY_URL = process.env.NEXT_PUBLIC_API_INVENTARIO || 'http://localhost:3003';
 
   // Cargamos el inventario desde la API
   useEffect(() => {
