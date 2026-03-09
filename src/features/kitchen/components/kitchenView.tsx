@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import type { Recipe } from "@/types/global";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
@@ -80,39 +80,66 @@ export default function CocinaView() {
                 }
             });
 
-            if (res.ok && res.data && Array.isArray(res.data.data)) {
+            if (res.ok && res.data) {
+                // The newest backend returns data in { readyToCook: [], almostReady: [] }
+                // or just a direct array of recipes in some versions. Handling both elegantly:
+                let rawRecipes: any[] = [];
+
+                const responseData = res.data.data || res.data; // Safely get payload
+
+                if (Array.isArray(responseData)) {
+                    // It's a flat array
+                    rawRecipes = responseData;
+                } else if (responseData && typeof responseData === 'object') {
+                    // It's an object, check for perfectMatch and partialMatch
+                    const dataObj = responseData as any;
+                    const perfect = Array.isArray(dataObj.perfectMatch) ? dataObj.perfectMatch : [];
+                    const partial = Array.isArray(dataObj.partialMatch) ? dataObj.partialMatch : [];
+
+                    // Fallback for previous guessed names just in case
+                    const ready = Array.isArray(dataObj.readyToCook) ? dataObj.readyToCook : [];
+                    const almost = Array.isArray(dataObj.almostReady) ? dataObj.almostReady : [];
+
+                    rawRecipes = [...perfect, ...partial, ...ready, ...almost];
+                }
+
                 // Mapeamos las recetas que coinciden
-                finalRecipes = res.data.data.map((r: any) => ({
-                    id: r.id.toString(),
-                    name: r.title,
-                    time: r.time_minutes || 30, // Si no hay tiempo, ponemos 30 por defecto
-                    calories: 400,
-                    difficulty: r.difficulty || "Media",
-                    servings: r.servings || 2,
-                    instructions: r.instructions,
-                    hasAllIngredients: r.missingCount === 0,
-                    missingIngredients: r.missingCount > 0 ? ["Faltan " + r.missingCount + " ingredientes"] : [],
-                    imageUrl: r.image_url,
-                    ingredients: r.ingredients?.map((i: any) => {
-                        const ingId = Number(i.ingredient_id);
-                        const ingName = (i.name || i.Ingredient?.name || '').toLowerCase().trim();
-                        const requiredQty = Number(i.required_quantity || i.quantity || 1);
+                finalRecipes = rawRecipes.map((item: any) => {
+                    if (!item) return null;
+                    const r = item.recipe || item; // Safe destructuring in case it's grouped
 
-                        // Buscamos por ID, y si no, por nombre (respaldo)
-                        let availableQty = Number(inventoryMap.get(ingId) || 0);
-                        if (availableQty < requiredQty && ingName) {
-                            availableQty = Math.max(availableQty, inventoryByNameMap.get(ingName) || 0);
-                        }
+                    return {
+                        id: (r.id || r.recipe_id || Date.now() + Math.random()).toString(),
+                        name: r.title || r.name || "Receta sugerida",
+                        time: r.time_minutes || 30, // Si no hay tiempo, ponemos 30 por defecto
+                        calories: 400,
+                        difficulty: r.difficulty || "Media",
+                        servings: r.servings || 2,
+                        instructions: r.instructions || "",
+                        hasAllIngredients: item.missingCount === 0 || item.missingIngredients?.length === 0 || r.missingCount === 0,
+                        missingIngredients: item.missingCount > 0 ? [`Faltan ${item.missingCount} ingredientes`] : (item.missingIngredients || r.missingIngredients || []),
+                        imageUrl: r.image_url || r.imageUrl,
+                        ingredients: (r.ingredients || r.recipe_ingredients || [])?.map((i: any) => {
+                            const ingId = Number(i.ingredient_id || i.id);
+                            const ingName = (i.name || i.Ingredient?.name || i.ingredient?.name || '').toLowerCase().trim();
+                            const requiredQty = Number(i.required_quantity || i.quantity || 1);
 
-                        return {
-                            id: `i-${ingId}`,
-                            name: i.name || i.Ingredient?.name || 'Desconocido',
-                            amount: requiredQty,
-                            unit: i.unit || i.ingredient?.unit_default || 'g',
-                            available: availableQty >= requiredQty
-                        };
-                    }) || []
-                }));
+                            // Buscamos por ID, y si no, por nombre (respaldo)
+                            let availableQty = Number(inventoryMap.get(ingId) || 0);
+                            if (availableQty < requiredQty && ingName) {
+                                availableQty = Math.max(availableQty, inventoryByNameMap.get(ingName) || 0);
+                            }
+
+                            return {
+                                id: `i-${ingId}`,
+                                name: i.name || i.Ingredient?.name || i.ingredient?.name || 'Desconocido',
+                                amount: requiredQty,
+                                unit: i.unit || i.ingredient?.unit_default || 'g',
+                                available: availableQty >= requiredQty
+                            };
+                        }) || []
+                    };
+                }).filter(Boolean) as Recipe[];
             }
 
             if (recipeIdParam) {
@@ -299,7 +326,7 @@ export default function CocinaView() {
                                     </div>
                                 )}
 
-                                <div className="relative">
+                                <div className="relative mb-6">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
                                         type="text"
@@ -309,14 +336,56 @@ export default function CocinaView() {
                                         className="w-full pl-10 pr-4 py-2 border border-[#f1f3f1] dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-white rounded-lg text-sm"
                                     />
                                 </div>
-                                {filteredRecipes.map(recipe => (
-                                    <RecipeCard
-                                        key={recipe.id}
-                                        recipe={recipe}
-                                        isSelected={selectedRecipe?.id === recipe.id}
-                                        onSelect={setSelectedRecipe}
-                                    />
-                                ))}
+
+                                {/* Listas para cocinar */}
+                                {filteredRecipes.filter(r => r.hasAllIngredients).length > 0 && (
+                                    <div className="mb-6">
+                                        <div className="flex items-center justify-between px-2 mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle2 className="text-green-500" size={16} />
+                                                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Listas para cocinar</h3>
+                                            </div>
+                                            <span className="bg-[#e6f4ea] text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                {filteredRecipes.filter(r => r.hasAllIngredients).length} recetas
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            {filteredRecipes.filter(r => r.hasAllIngredients).map(recipe => (
+                                                <RecipeCard
+                                                    key={recipe.id}
+                                                    recipe={recipe}
+                                                    isSelected={selectedRecipe?.id === recipe.id}
+                                                    onSelect={setSelectedRecipe}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Casi listas */}
+                                {filteredRecipes.filter(r => !r.hasAllIngredients).length > 0 && (
+                                    <div className="mb-4">
+                                        <div className="flex items-center justify-between px-2 mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <AlertCircle className="text-orange-500" size={16} />
+                                                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">Casi listas</h3>
+                                            </div>
+                                            <span className="bg-[#fff4e6] text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                Faltan 1-2
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            {filteredRecipes.filter(r => !r.hasAllIngredients).map(recipe => (
+                                                <RecipeCard
+                                                    key={recipe.id}
+                                                    recipe={recipe}
+                                                    isSelected={selectedRecipe?.id === recipe.id}
+                                                    onSelect={setSelectedRecipe}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="w-full md:w-2/3 h-full overflow-y-auto bg-white dark:bg-transparent rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm">
                                 {selectedRecipe ? (

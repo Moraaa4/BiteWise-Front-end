@@ -12,7 +12,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 interface RecipeIngredient {
     id: string;
     name: string;
-    amount: string;
+    quantity: string;
     inInventory: boolean;
 }
 
@@ -43,7 +43,7 @@ export default function RecipeDetailView() {
             // Fetch inventory once to check ingredient availability
             let inventoryItems: { name?: string, ingredients?: { name: string } }[] = [];
             try {
-                const invRes = await fetch(`${process.env.NEXT_PUBLIC_API_INVENTARIO || 'http://localhost:3003'}/api/inventory`, {
+                const invRes = await fetch(`${API_CONFIG.INVENTORY_URL}/api/inventory`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (invRes.ok) {

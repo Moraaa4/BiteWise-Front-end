@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, BarChart2, Users, Bookmark, ShoppingBag, PlayCircle, Check, Loader2, Save, CheckCircle2 } from "lucide-react";
+import { Clock, BarChart2, Users, Bookmark, ShoppingBag, PlayCircle, Check, Loader2, Save, CheckCircle2, ChefHat } from "lucide-react";
 import type { Recipe } from "@/types/global";
 import { inventoryService } from "@/services/inventory.service";
 import { catalogService, type ExternalRecipe } from "@/services/catalog.service";
@@ -15,7 +15,6 @@ interface RecipeDetailProps {
 export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     const [cooking, setCooking] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients');
     const [savedLocalId, setSavedLocalId] = useState<number | null>(() => {
         if (typeof window === 'undefined') return null;
         const saved = localStorage.getItem(`${STORAGE_KEYS.STEP_BY_STEP}_saved_${recipe.id}`); // Mejorado con prefijo constante
@@ -206,88 +205,61 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             </div>
 
             {/* Estadísticas */}
-            <div className="grid grid-cols-2 divide-x divide-gray-100 dark:divide-white/10 border-b border-gray-100 dark:border-white/10">
-                {[
-                    { icon: BarChart2, label: "Dificultad", value: recipe.difficulty },
-                    { icon: Users, label: "Porciones", value: `${recipe.servings} personas` },
-                ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex flex-col items-center py-4 gap-1">
-                        <Icon size={18} className="text-gray-400" />
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
-                            {label}
-                        </span>
-                        <span className="text-sm font-bold text-gray-800 dark:text-white">{value}</span>
-                    </div>
-                ))}
+            <div className="grid grid-cols-3 gap-4 p-5 border-b border-gray-100 dark:border-white/10">
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-1">
+                    <Clock size={20} className="text-gray-400 mb-1" />
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Tiempo</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{recipe.time || '30'} min</span>
+                </div>
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-1">
+                    <BarChart2 size={20} className="text-gray-400 mb-1" />
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Dificultad</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{recipe.difficulty || 'Fácil'}</span>
+                </div>
+                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-1">
+                    <Users size={20} className="text-gray-400 mb-1" />
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Porciones</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{recipe.servings || '2'} personas</span>
+                </div>
             </div>
 
-            {/* Pestañas */}
-            <div className="flex border-b border-gray-100 dark:border-white/10">
-                <button
-                    onClick={() => setActiveTab('ingredients')}
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'ingredients' ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50 dark:bg-green-900/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
-                >
-                    Ingredientes
-                </button>
-                <button
-                    onClick={() => setActiveTab('instructions')}
-                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'instructions' ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50 dark:bg-green-900/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
-                >
-                    Preparación
-                </button>
-            </div>
+            {/* Cuerpo del contenido (Ingredientes) */}
+            <div className="flex-1 overflow-y-auto px-5 pt-5 pb-0">
+                <div className="flex items-center gap-2 mb-4">
+                    <ChefHat size={18} className="text-gray-800 dark:text-gray-200" />
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Ingredientes Necesarios</h3>
+                </div>
 
-            {/* Cuerpo del contenido */}
-            <div className="flex-1 overflow-y-auto p-5">
-                {activeTab === 'ingredients' ? (
-                    <>
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-base">📋</span>
-                            <h3 className="text-sm font-bold text-gray-800 dark:text-white">Ingredientes Necesarios</h3>
-                        </div>
-
-                        <div className="space-y-3">
-                            {recipe.ingredients.map((ingredient) => (
-                                <div
-                                    key={ingredient.id}
-                                    className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-white/5 last:border-0"
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${ingredient.available ? 'bg-green-100 dark:bg-green-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
-                                            {ingredient.available ? (
-                                                <Check size={11} className="text-green-600" strokeWidth={3} />
-                                            ) : (
-                                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-                                            )}
-                                        </div>
-                                        <span className="text-sm text-gray-700 dark:text-gray-300">{ingredient.name}</span>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-semibold text-gray-800 dark:text-white">
-                                            {ingredient.amount}
-                                            {ingredient.unit}
-                                        </p>
-                                        {ingredient.available ? (
-                                            <p className="text-[10px] text-green-600">Disponible en inventario</p>
-                                        ) : (
-                                            <p className="text-[10px] text-orange-500">Falta en inventario</p>
-                                        )}
-                                    </div>
+                <div className="flex flex-col gap-2 mb-6">
+                    {recipe.ingredients.map((ingredient) => (
+                        <div
+                            key={ingredient.id}
+                            className={`flex items-center justify-between p-3 rounded-xl ${ingredient.available ? 'bg-[#f4fbf6] dark:bg-green-900/10' : 'bg-[#fff9f2] dark:bg-orange-900/10'}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${ingredient.available ? 'bg-green-200 dark:bg-green-900/50' : 'bg-orange-200 dark:bg-orange-900/50'}`}>
+                                    {ingredient.available ? (
+                                        <Check size={12} className="text-green-700 dark:text-green-400" strokeWidth={3} />
+                                    ) : (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                                    )}
                                 </div>
-                            ))}
+                                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{ingredient.name}</span>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                                    {ingredient.amount}
+                                    {ingredient.unit && ingredient.unit.toLowerCase() !== 'unidad' ? ingredient.unit : ''}
+                                </p>
+                                {ingredient.available ? (
+                                    <p className="text-[10px] font-medium text-green-600">Disponible en inventario</p>
+                                ) : (
+                                    <p className="text-[10px] font-medium text-orange-500">Falta en inventario</p>
+                                )}
+                            </div>
                         </div>
-                    </>
-                ) : (
-                    <>
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="text-base">👨‍🍳</span>
-                            <h3 className="text-sm font-bold text-gray-800 dark:text-white">Instrucciones de Preparación</h3>
-                        </div>
-                        <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
-                            {recipe.instructions ? recipe.instructions : "No hay instrucciones detalladas para esta receta."}
-                        </div>
-                    </>
-                )}
+                    ))}
+                </div>
             </div>
 
             {/* Acciones */}

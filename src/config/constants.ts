@@ -1,14 +1,12 @@
 export const DEFAULT_API_ENDPOINTS = {
-    USERS_DEV: 'http://localhost:3001',
-    CATALOG_DEV: 'http://localhost:3002',
-    INVENTORY_DEV: 'http://localhost:3003',
     RECIPES_API: 'https://www.themealdb.com/api/json/v1/1',
 } as const;
 
 export const API_CONFIG = {
-    USERS_URL: process.env.NEXT_PUBLIC_USERS_API_URL || DEFAULT_API_ENDPOINTS.USERS_DEV,
-    CATALOG_URL: process.env.NEXT_PUBLIC_CATALOG_API_URL || DEFAULT_API_ENDPOINTS.CATALOG_DEV,
-    INVENTORY_URL: process.env.NEXT_PUBLIC_INVENTORY_API_URL || DEFAULT_API_ENDPOINTS.INVENTORY_DEV,
+    // Estas variables siempre deben venir de .env en producción. (ej. Render, Vercel, etc.)
+    USERS_URL: process.env.NEXT_PUBLIC_API_USUARIOS || '',
+    CATALOG_URL: process.env.NEXT_PUBLIC_API_CATALOGO || '',
+    INVENTORY_URL: process.env.NEXT_PUBLIC_API_INVENTARIO || '',
     EXTERNAL_RECIPES_URL: process.env.NEXT_PUBLIC_RECIPES_API_URL || DEFAULT_API_ENDPOINTS.RECIPES_API,
 };
 

@@ -84,7 +84,7 @@ export interface ExternalRecipe {
   }>;
 }
 
-const catalogClient = createHttpClient(process.env.NEXT_PUBLIC_CATALOG_API_URL || 'http://localhost:3002');
+const catalogClient = createHttpClient(API_CONFIG.CATALOG_URL);
 
 export const catalogService = {
   async getIngredients(token: string) {
@@ -151,7 +151,10 @@ export const catalogService = {
   },
 
   async getMatchingRecipes(token: string) {
-    const response = await catalogClient.get<{ message: string; data: Recipe[] }>('/api/recipes/match', {
+    const response = await catalogClient.get<{
+      message: string;
+      data: Recipe[] | { perfectMatch: Recipe[]; partialMatch: Recipe[]; readyToCook?: Recipe[]; almostReady?: Recipe[] }
+    }>('/api/recipes/match', {
       Authorization: `Bearer ${token}`,
     });
     return response;

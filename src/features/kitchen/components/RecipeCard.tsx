@@ -14,49 +14,37 @@ export default function RecipeCard({ recipe, isSelected, onSelect }: RecipeCardP
     return (
         <button
             onClick={() => onSelect(recipe)}
-            className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${isSelected ? "bg-[#e6f4ea] dark:bg-green-900/20" : "hover:bg-gray-50 dark:hover:bg-white/5"
+            className={`w-full text-left p-4 rounded-xl transition-all duration-150 border ${isSelected ? "bg-[#f4fbf6] border-green-200 dark:bg-green-900/20 dark:border-green-800" : "bg-white border-transparent hover:border-gray-100 dark:bg-transparent dark:hover:border-white/5"
                 }`}
         >
-            <div className="flex items-center gap-3">
-                {recipe.imageUrl ? (
-                    <img
-                        src={recipe.imageUrl}
-                        alt={recipe.name}
-                        className="w-12 h-12 rounded-lg object-cover bg-gray-100 flex-shrink-0"
-                    />
-                ) : (
-                    <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-xl">
-                        🍲
-                    </div>
-                )}
-
+            <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                     <p
-                        className={`text-sm font-semibold truncate ${isSelected ? "text-green-800 dark:text-green-400" : "text-gray-800 dark:text-gray-200"
+                        className={`text-sm font-bold truncate ${isSelected ? "text-gray-900 dark:text-white" : "text-gray-800 dark:text-gray-200"
                             }`}
                     >
                         {recipe.name}
                     </p>
-                    <div className="flex items-center gap-3 mt-1">
-                        <span className="flex items-center gap-1 text-[11px] text-gray-400">
-                            <Clock size={11} />
+                    <div className="flex items-center gap-3 mt-2">
+                        <span className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                            <Clock size={12} />
                             {recipe.time} min
                         </span>
                         {recipe.hasAllIngredients ? (
                             <span className="flex items-center gap-1 text-[11px] text-green-600 font-medium">
-                                <CheckCircle2 size={11} />
+                                <CheckCircle2 size={12} />
                                 100% ingredientes
                             </span>
                         ) : (
                             <span className="flex items-center gap-1 text-[11px] text-orange-500 font-medium">
-                                <AlertCircle size={11} />
+                                <AlertCircle size={12} />
                                 Falta: {recipe.missingIngredients?.join(", ")}
                             </span>
                         )}
                     </div>
                 </div>
                 {isSelected && (
-                    <ChevronRight size={16} className="text-green-500 flex-shrink-0 ml-2" />
+                    <ChevronRight size={18} className="text-green-500 flex-shrink-0 ml-3" />
                 )}
             </div>
         </button>
