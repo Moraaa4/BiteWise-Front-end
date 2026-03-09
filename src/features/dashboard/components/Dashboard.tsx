@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useRouter } from 'next/navigation';
-import { API_CONFIG, STORAGE_KEYS } from '@/config/constants';
+import { API_CONFIG, STORAGE_KEYS, BRAND_TEXT } from '@/config/constants';
 import { catalogService, type Recipe } from '@/services/catalog.service';
 import { inventoryService, type InventoryItem } from '@/services/inventory.service';
 
@@ -279,7 +279,7 @@ export default function Dashboard() {
         </div>
 
         <footer className="mt-auto p-6 md:p-8 border-t border-[#f1f3f1] dark:border-white/10 text-center">
-          <p className="text-xs text-[#6c7f6d] dark:text-gray-400">© 2024 BiteWise. Come mejor, desperdicia menos.</p>
+          <p className="text-xs text-[#6c7f6d] dark:text-gray-400">{BRAND_TEXT.FOOTER_COPYRIGHT} {BRAND_TEXT.APP_NAME}. {BRAND_TEXT.TAGLINE}.</p>
         </footer>
       </main>
     </div>

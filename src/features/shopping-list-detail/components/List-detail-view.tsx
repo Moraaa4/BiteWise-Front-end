@@ -7,7 +7,7 @@ import { Header } from "@/features/dashboard/components/Header";
 import ShoppingItemRow from "@/features/shopping-list-detail/components/ShoppingItemRow";
 import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 import { useSearchParams } from "next/navigation";
-import { STORAGE_KEYS } from "@/config/constants";
+import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
 
 export default function ListaDetalleView() {
     const searchParams = useSearchParams();
@@ -292,7 +292,7 @@ export default function ListaDetalleView() {
                 {/* Footer */}
                 <footer className="py-4 text-center">
                     <p className="text-xs text-gray-400">
-                        © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.
+                        {BRAND_TEXT.FOOTER_COPYRIGHT} <span className="font-semibold">{BRAND_TEXT.APP_NAME}</span>. {BRAND_TEXT.TAGLINE}.
                     </p>
                 </footer>
             </div>

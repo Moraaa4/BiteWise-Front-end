@@ -3,10 +3,11 @@ import "./globals.css";
 import { ThemeProvider } from 'next-themes';
 import ThemeSwitch from '@/components/ThemeSwitch';
 import AuthCheck from '@/components/AuthCheck';
+import { EXTERNAL_URLS, BRAND_TEXT } from '@/config/constants';
 
 export const metadata: Metadata = {
-  title: "BiteWise - Cocina Inteligente",
-  description: "Ahorra tiempo y reduce el desperdicio de comida",
+  title: BRAND_TEXT.META_TITLE,
+  description: BRAND_TEXT.META_DESCRIPTION,
 };
 
 export default function RootLayout({
@@ -20,7 +21,7 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          href={EXTERNAL_URLS.GOOGLE_FONTS}
         />
       </head>
       <body suppressHydrationWarning>

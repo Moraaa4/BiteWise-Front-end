@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from '@/config/constants';
+import { STORAGE_KEYS, APP_ROUTES, EXTERNAL_URLS, DEV_PORTS } from '@/config/constants';
 
 export interface HttpClientConfig {
   baseURL?: string;
@@ -57,17 +57,17 @@ export class HttpClient {
         data = (await response.text()) as unknown as T;
       }
 
-      const isProductionService = url.includes('render.com');
+      const isProductionService = url.includes(EXTERNAL_URLS.PRODUCTION_DOMAIN);
 
       if (!response.ok && response.status === 401) {
         console.warn(`[HttpClient] 401 detectado en: ${url}. Verificando origen...`);
 
         // Si el error de sesión viene de nuestros servicios descentralizados, limpiamos
-        if (isProductionService || url.includes(':3001')) {
+        if (isProductionService || url.includes(`:${DEV_PORTS.USERS}`)) {
           if (typeof window !== 'undefined') {
             console.log("[HttpClient] Limpiando sesión completa por seguridad...");
             localStorage.clear(); // Limpieza total por seguridad en errores 401 críticos
-            window.location.href = '/login';
+            window.location.href = APP_ROUTES.LOGIN;
           }
         }
       }

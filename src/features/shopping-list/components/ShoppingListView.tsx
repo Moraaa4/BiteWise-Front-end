@@ -8,6 +8,7 @@ import { Header } from "@/features/dashboard/components/Header";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
 import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
+import { BRAND_TEXT } from "@/config/constants";
 
 export default function ListaDeComprasView() {
     const [lists, setLists] = useState<ShoppingList[]>([]);
@@ -116,7 +117,7 @@ export default function ListaDeComprasView() {
                 {/* Pie de página */}
                 <footer className="py-4 text-center mt-auto">
                     <p className="text-xs text-gray-400">
-                        © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.
+                        {BRAND_TEXT.FOOTER_COPYRIGHT} <span className="font-semibold">{BRAND_TEXT.APP_NAME}</span>. {BRAND_TEXT.TAGLINE}.
                     </p>
                 </footer>
             </div>
