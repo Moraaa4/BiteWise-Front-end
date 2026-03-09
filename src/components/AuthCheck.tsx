@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { STORAGE_KEYS } from '@/config/constants';
 
 export default function AuthCheck({ children }: { children: React.ReactNode }) {
     const [isChecking, setIsChecking] = useState(true);
@@ -10,15 +11,15 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const checkAuth = () => {
-            const token = localStorage.getItem('token');
-            let loginTimestamp = localStorage.getItem('loginTimestamp');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            let loginTimestamp = localStorage.getItem(STORAGE_KEYS.LOGIN_TS);
             const isPublicPath = ['/login', '/register', '/landing'].includes(pathname) || pathname === '/';
 
             if (token) {
                 // Migración: Si tiene token pero no timestamp, le damos uno ahora
                 if (!loginTimestamp) {
                     loginTimestamp = Date.now().toString();
-                    localStorage.setItem('loginTimestamp', loginTimestamp);
+                    localStorage.setItem(STORAGE_KEYS.LOGIN_TS, loginTimestamp);
                 }
 
                 const now = Date.now();
@@ -27,9 +28,9 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
 
                 if (now - loginTime > twentyFourHours) {
                     // Sesión realmente expirada
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    localStorage.removeItem('loginTimestamp');
+                    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+                    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+                    localStorage.removeItem(STORAGE_KEYS.LOGIN_TS);
                     if (!isPublicPath) {
                         router.push('/login');
                     } else {

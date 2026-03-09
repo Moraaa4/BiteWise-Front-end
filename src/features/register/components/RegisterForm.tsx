@@ -46,7 +46,7 @@ export default function RegisterForm() {
   return (
     <div className="w-full max-w-[520px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-primary rounded-lg text-white">
+        <div className="p-2 bg-emerald-500 rounded-lg text-white flex items-center justify-center overflow-hidden w-10 h-10">
           <Image src="/icon.svg" alt="BiteWise" width={28} height={28} priority unoptimized />
         </div>
         <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>

@@ -91,11 +91,11 @@ export default function ListaDeComprasView() {
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="lista" />
 
-            <div className="flex-1 flex flex-col overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Listas de Compras" />
 
                 {/* Cuadrícula de listas */}
-                <main className="flex-1 p-4 md:p-8">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-fr">
                         {/* Crear nueva lista - siempre al principio */}
                         <CreateListCard onCreate={handleCreate} />

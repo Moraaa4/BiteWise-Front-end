@@ -1,4 +1,5 @@
 import { createHttpClient } from './http.client';
+import { API_CONFIG } from '@/config/constants';
 
 export interface UserRegisterRequest {
   name: string;
@@ -38,7 +39,7 @@ export interface UpdateProfileRequest {
   weekly_budget?: number;
 }
 
-const userClient = createHttpClient(process.env.NEXT_PUBLIC_USERS_API_URL || 'http://localhost:3001');
+const userClient = createHttpClient(API_CONFIG.USERS_URL);
 
 export const usersService = {
   async register(userData: UserRegisterRequest) {

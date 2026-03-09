@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from '@/config/constants';
+
 export interface HttpClientConfig {
   baseURL?: string;
   timeout?: number;
@@ -18,7 +20,7 @@ export class HttpClient {
 
   constructor(config: HttpClientConfig = {}) {
     this.baseURL = config.baseURL || '';
-    this.timeout = config.timeout || 10000;
+    this.timeout = config.timeout || 30000; // Aumentado a 30s para mitigar cold starts en Render
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...config.headers,
@@ -55,17 +57,18 @@ export class HttpClient {
         data = (await response.text()) as unknown as T;
       }
 
-      const isUsersService = url.includes('bitewise-usuarios.onrender.com') || url.includes(':3001');
+      const isProductionService = url.includes('render.com');
 
-      if (!response.ok && response.status === 401 && isUsersService) {
-        console.warn(`[HttpClient] 401 detectado en USUARIOS: ${url}. Limpiando sesión...`);
-        // Solo limpiamos sesión si el servicio de usuarios falla (donde está el token real)
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('userId');
-          localStorage.removeItem('user');
-          localStorage.removeItem('loginTimestamp');
-          window.location.href = '/login';
+      if (!response.ok && response.status === 401) {
+        console.warn(`[HttpClient] 401 detectado en: ${url}. Verificando origen...`);
+
+        // Si el error de sesión viene de nuestros servicios descentralizados, limpiamos
+        if (isProductionService || url.includes(':3001')) {
+          if (typeof window !== 'undefined') {
+            console.log("[HttpClient] Limpiando sesión completa por seguridad...");
+            localStorage.clear(); // Limpieza total por seguridad en errores 401 críticos
+            window.location.href = '/login';
+          }
         }
       }
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usersService } from '@/services/users.service';
+import { STORAGE_KEYS } from '@/config/constants';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -21,16 +22,12 @@ export default function LoginForm() {
 
     if (response.ok && response.data) {
       // Proactive cleanup before setting new user data
-      const keysToRemove = Object.keys(localStorage).filter(key =>
-        key.startsWith('biteWise_') ||
-        ['token', 'userId', 'user'].includes(key)
-      );
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      localStorage.clear(); // Nuclear option for clean login
 
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('userId', response.data.user.id);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('loginTimestamp', Date.now().toString());
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.data.token);
+      localStorage.setItem(STORAGE_KEYS.USER_ID, response.data.user.id);
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data.user));
+      localStorage.setItem(STORAGE_KEYS.LOGIN_TS, Date.now().toString());
 
       window.location.href = '/dashboard';
     } else {
@@ -42,7 +39,7 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-[480px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-primary rounded-lg text-white">
+        <div className="p-2 bg-emerald-500 rounded-lg text-white flex items-center justify-center overflow-hidden w-10 h-10">
           <Image src="/icon.svg" alt="BiteWise" width={28} height={28} priority unoptimized />
         </div>
         <h2 className="text-2xl font-bold text-[#111811] dark:text-white">BiteWise</h2>
