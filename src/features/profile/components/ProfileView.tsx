@@ -8,7 +8,7 @@ import EditBudgetModal from "@/features/profile/components/EditBudgetModal";
 import EditProfileModal from "@/features/profile/components/EditProfileModal";
 import { UserProfile } from "@/features/profile/perfilTypes";
 import { usersService } from "@/services/users.service";
-import { STORAGE_KEYS } from "@/config/constants";
+import { STORAGE_KEYS, LIMITS } from "@/config/constants";
 
 function getInitials(name: string): string {
     if (!name) return "?";
@@ -16,7 +16,7 @@ function getInitials(name: string): string {
         .map(n => n[0])
         .filter(c => !!c)
         .join('')
-        .substring(0, 2)
+        .substring(0, LIMITS.INITIALS_LENGTH)
         .toUpperCase() || "?";
 }
 

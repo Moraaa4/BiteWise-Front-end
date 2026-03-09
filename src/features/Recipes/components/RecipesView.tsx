@@ -15,7 +15,7 @@ import RecipeModal from "@/features/Recipes/components/RecipeModal";
 import RepeatRecipeModal from "@/features/Recipes/components/RepeatRecipeModal";
 
 import { useRouter } from "next/navigation";
-import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
+import { STORAGE_KEYS, BRAND_TEXT, LIMITS } from "@/config/constants";
 
 export default function RecetasView() {
     const router = useRouter();
@@ -40,7 +40,7 @@ export default function RecetasView() {
                 const mappedLocal = resLocal.data.recipes.map((r: any) => ({
                     id: r.id.toString(),
                     name: r.title,
-                    description: r.instructions?.substring(0, 100) + "...",
+                    description: r.instructions?.substring(0, LIMITS.RECIPE_DESCRIPTION) + "...",
                     timeMinutes: 30,
                     ingredientsBadge: "LOCAL",
                     imageUrl: r.image_url
@@ -122,7 +122,7 @@ export default function RecetasView() {
 
         // Cargamos el historial de lo que ya se cocinó
         try {
-            const saved = localStorage.getItem(STORAGE_KEYS.COOK_HISTORY);
+            const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
             if (saved) setCookHistory(JSON.parse(saved));
         } catch (e) { console.error('Error loading cook history:', e); }
     }, []);
@@ -205,7 +205,7 @@ export default function RecetasView() {
                         const mappedLocal = resLocal.data.recipes.map((r: any) => ({
                             id: r.id.toString(),
                             name: r.title,
-                            description: r.instructions?.substring(0, 100) + "...",
+                            description: r.instructions?.substring(0, LIMITS.RECIPE_DESCRIPTION) + "...",
                             timeMinutes: 30,
                             ingredientsBadge: "LOCAL",
                             imageUrl: r.image_url,

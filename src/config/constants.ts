@@ -23,7 +23,13 @@ export const STORAGE_KEYS = {
     COOKING_SESSIONS: 'biteWise_cookingSessions',
     STEP_BY_STEP: 'biteWise_stepByStep',
     LIST_ITEMS_PREFIX: 'biteWise_list_items_',
+    CURRENT_LIST: 'biteWise_currentList',
 };
+
+export const LIMITS = {
+    INITIALS_LENGTH: 2,
+    RECIPE_DESCRIPTION: 100,
+} as const;
 
 export const APP_VERSION = '1.2.0';
 

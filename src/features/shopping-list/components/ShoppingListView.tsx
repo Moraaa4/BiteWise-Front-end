@@ -8,14 +8,14 @@ import { Header } from "@/features/dashboard/components/Header";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
 import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
-import { BRAND_TEXT } from "@/config/constants";
+import { BRAND_TEXT, STORAGE_KEYS, LIMITS } from "@/config/constants";
 
 export default function ListaDeComprasView() {
     const [lists, setLists] = useState<ShoppingList[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        const saved = localStorage.getItem("biteWise_shoppingLists");
+        const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
         let loadedLists: ShoppingList[] = [];
         if (saved && saved !== "[]") {
             loadedLists = JSON.parse(saved);
@@ -42,7 +42,7 @@ export default function ListaDeComprasView() {
 
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
+            localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(lists));
         }
     }, [lists, isLoaded]);
 
@@ -61,11 +61,11 @@ export default function ListaDeComprasView() {
             };
             const updatedLists = [...lists, newList];
             setLists(updatedLists);
-            localStorage.setItem("biteWise_shoppingLists", JSON.stringify(updatedLists));
+            localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(updatedLists));
 
             // Nos aseguramos de que la nueva lista empiece vacía
             localStorage.setItem(`biteWise_list_items_${newList.id}`, JSON.stringify([]));
-            localStorage.setItem("biteWise_currentList", JSON.stringify([])); // limpiamos cualquier dato anterior
+            localStorage.setItem(STORAGE_KEYS.CURRENT_LIST, JSON.stringify([])); // limpiamos cualquier dato anterior
 
             router.push(`/shopping-list-detail?id=${newList.id}`);
         }
