@@ -57,7 +57,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     };
 
     const handleCook = async () => {
-        // If external and not yet saved, block
+        // Si la receta es externa y no se ha guardado todavía, bloqueamos
         if (isExternal && !savedLocalId) {
             alert('Primero guarda la receta en tu catálogo usando el botón "Guardar Receta" para poder cocinarla.');
             return;
@@ -70,12 +70,12 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
 
         setCooking(true);
         try {
-            // Use the local ID if we just saved it, otherwise use the recipe's ID
+            // Usamos el ID local si acabamos de guardarlo, de lo contrario usamos el original
             const recipeId = savedLocalId ?? Number(recipe.id);
             const res = await inventoryService.cookRecipe(recipeId, token);
 
             if (res.ok) {
-                // 1. Update history
+                // 1. Actualizamos el historial
                 const historyEntry = {
                     id: `h-${Date.now()}`,
                     name: recipe.name,
@@ -93,7 +93,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                     localStorage.setItem('biteWise_cookHistory', JSON.stringify([historyEntry]));
                 }
 
-                // 2. Prepare steps data
+                // 2. Preparamos los datos de los pasos
                 const stepData = {
                     recipeId: String(recipeId),
                     name: recipe.name,
@@ -101,7 +101,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                     imageUrl: recipe.imageUrl || '',
                 };
 
-                // 3. Persist and Redirect
+                // 3. Guardamos y redirigimos
                 localStorage.setItem('biteWise_stepByStep', JSON.stringify(stepData));
 
                 // Small timeout to ensure localStorage is flushed in some browsers/architectures
@@ -122,7 +122,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     return (
         <div className="flex-1 bg-white dark:bg-transparent rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 flex flex-col">
             {/* Hero */}
-            <div className="relative h-52 overflow-hidden">
+            <div className="relative h-40 sm:h-52 overflow-hidden">
                 <div
                     className="absolute inset-0 bg-gray-200 bg-cover bg-center"
                     style={recipe.imageUrl ? { backgroundImage: `url(${recipe.imageUrl})` } : undefined}
@@ -131,7 +131,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-                {/* External recipe badge */}
+                {/* Etiqueta de receta externa */}
                 {isExternal && !savedLocalId && (
                     <div className="absolute top-4 right-4">
                         <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -166,7 +166,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 </div>
             </div>
 
-            {/* Stats */}
+            {/* Estadísticas */}
             <div className="grid grid-cols-2 divide-x divide-gray-100 dark:divide-white/10 border-b border-gray-100 dark:border-white/10">
                 {[
                     { icon: BarChart2, label: "Dificultad", value: recipe.difficulty },
@@ -182,7 +182,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 ))}
             </div>
 
-            {/* Tabs */}
+            {/* Pestañas */}
             <div className="flex border-b border-gray-100 dark:border-white/10">
                 <button
                     onClick={() => setActiveTab('ingredients')}
@@ -198,7 +198,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 </button>
             </div>
 
-            {/* Content body */}
+            {/* Cuerpo del contenido */}
             <div className="flex-1 overflow-y-auto p-5">
                 {activeTab === 'ingredients' ? (
                     <>
@@ -251,9 +251,9 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 )}
             </div>
 
-            {/* Actions */}
-            <div className="p-5 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center gap-3 flex-wrap">
-                {/* Save button for external recipes */}
+            {/* Acciones */}
+            <div className="p-5 pt-3 border-t border-gray-100 dark:border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                {/* Botón de guardar para recetas externas */}
                 {isExternal && !savedLocalId && (
                     <button
                         onClick={handleSave}

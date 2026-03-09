@@ -20,7 +20,7 @@ export default function ListaDeComprasView() {
             loadedLists = JSON.parse(saved);
         }
 
-        // Sync real progress/total from per-list localStorage items
+        // Sincronizamos el progreso real y el total desde el almacenamiento local
         const updatedLists = loadedLists.map((list: ShoppingList) => {
             try {
                 const itemsStr = localStorage.getItem(`biteWise_list_items_${list.id}`);
@@ -31,7 +31,7 @@ export default function ListaDeComprasView() {
                     const status = total > 0 && progress === total ? "complete" : list.status;
                     return { ...list, total, progress, status };
                 }
-            } catch (e) { /* ignore */ }
+            } catch { /* si hay error, lo ignoramos */ }
             return list;
         });
 
@@ -62,9 +62,9 @@ export default function ListaDeComprasView() {
             setLists(updatedLists);
             localStorage.setItem("biteWise_shoppingLists", JSON.stringify(updatedLists));
 
-            // Ensure the new list starts completely empty and isolated
+            // Nos aseguramos de que la nueva lista empiece vacía
             localStorage.setItem(`biteWise_list_items_${newList.id}`, JSON.stringify([]));
-            localStorage.setItem("biteWise_currentList", JSON.stringify([])); // clear fallback
+            localStorage.setItem("biteWise_currentList", JSON.stringify([])); // limpiamos cualquier dato anterior
 
             router.push(`/shopping-list-detail?id=${newList.id}`);
         }
@@ -94,13 +94,13 @@ export default function ListaDeComprasView() {
             <div className="flex-1 flex flex-col overflow-y-auto">
                 <Header title="Listas de Compras" />
 
-                {/* Grid */}
+                {/* Cuadrícula de listas */}
                 <main className="flex-1 p-4 md:p-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-fr">
-                        {/* Create New List — always first */}
+                        {/* Crear nueva lista - siempre al principio */}
                         <CreateListCard onCreate={handleCreate} />
 
-                        {/* Shopping List Cards */}
+                        {/* Tarjetas de listas de compras */}
                         {lists.map((list) => (
                             <ShoppingListCard
                                 key={list.id}
@@ -113,7 +113,7 @@ export default function ListaDeComprasView() {
                     </div>
                 </main>
 
-                {/* Footer */}
+                {/* Pie de página */}
                 <footer className="py-4 text-center mt-auto">
                     <p className="text-xs text-gray-400">
                         © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.

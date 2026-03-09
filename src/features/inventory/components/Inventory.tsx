@@ -18,7 +18,7 @@ export default function Inventory() {
         try {
             const res = await inventoryService.getInventory(token);
             if (res.ok && res.data && Array.isArray(res.data.items)) {
-                // Map both original format and possible backend format just in case
+                // Mapeamos los datos, asegurándonos de que coincidan con lo que el backend espera
                 const weightPerUnit = (i: any) => Number(i.ingredients?.weight_per_unit ?? 1) || 1;
                 const mapped = res.data.items.map((item: any) => {
                     const rawQty = Number(item.current_quantity ?? item.quantity ?? 0);
@@ -67,7 +67,7 @@ export default function Inventory() {
                 const catalogId = Number(itemToRemove.ingredientId);
                 const numericQuantity = parseFloat(itemToRemove.quantity) || 0;
 
-                // If quantity is 0 or ingredientId is invalid, just remove from local state
+                // Si la cantidad es cero o el ID no es válido, lo quitamos de la vista directamente
                 if (numericQuantity <= 0 || isNaN(catalogId) || catalogId <= 0) {
                     setIngredients(prev => prev.filter(ing => ing.id !== id));
                     return;
@@ -95,26 +95,25 @@ export default function Inventory() {
             const wpu = savedItem.weightPerUnit || 1;
             let ingredientId = Number(savedItem.id);
 
-            // 1. Resolve or Create in Catalog
+            // 1. Primero resolvemos o creamos el ingrediente en el catálogo
             if (editingItem && savedItem.ingredientId) {
                 ingredientId = Number(savedItem.ingredientId);
 
-                // IMPORTANT: If we're changing the weight, we MUST delete from inventory FIRST
-                // because the backend calculates removal grams based on the CURRENT weight in catalog.
-                // If we update the weight to 250g first, then try to delete "1 unit", 
-                // it tries to remove 250g, but we might only have 1g in DB!
+                // ¡Ojo aquí! Si cambiamos el peso, hay que borrarlo del inventario PRIMERO.
+                // Esto es porque el servidor calcula cuánto quitar basándose en el peso actual.
+                // Si lo actualizamos antes de borrar, las cuentas no van a cuadrar.
                 if (wpu !== editingItem.weightPerUnit) {
                     const currentQty = parseFloat(editingItem.quantity) || 0;
                     if (currentQty > 0) {
                         try {
                             await inventoryService.deleteInventoryItem(ingredientId, currentQty, token);
                         } catch (e) {
-                            console.warn("Could not delete previous inventory (likely insufficient mass for new weight calculations), ignoring to proceed with update.");
-                            // If it fails, it's likely already in a weird state; we'll force the new quantity later.
+                            console.warn("No se pudo limpiar el inventario anterior (quizás por el cálculo del peso), seguimos adelante con la actualización.");
+                            // Si falla, es probable que ya esté en un estado extraño; forzaremos la nueva cantidad después.
                         }
                     }
 
-                    // Now update the catalog with FULL data
+                    // Ahora actualizamos el catálogo con toda la información
                     const allIngredientsRes = await catalogService.getIngredients(token);
                     if (allIngredientsRes.ok && Array.isArray(allIngredientsRes.data)) {
                         const currentIng = allIngredientsRes.data.find((i: any) => i.id === ingredientId);
@@ -131,7 +130,7 @@ export default function Inventory() {
                     }
                 }
             } else if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
-                // ... same logic for creating new ingredients ...
+                // ... misma lógica para crear ingredientes nuevos ...
                 const catRes = await catalogService.createIngredient({
                     name: savedItem.name,
                     category: savedItem.category,
@@ -158,17 +157,16 @@ export default function Inventory() {
                                 weight_per_unit: wpu
                             }, token);
                         } else {
-                            throw new Error("No pudimos crear ni encontrar el ingrediente.");
+                            throw new Error(`No se pudo acceder al catálogo (Error ${allRes.status}). Esto suele ser un problema de permisos (JWT_SECRET) en el servidor.`);
                         }
                     } else {
-                        throw new Error("Error al consultar el catálogo.");
+                        throw new Error(`El servicio de catálogo no respondió correctamente (Error ${catRes.status}).`);
                     }
                 }
             }
 
-            // 2. Finally, add the new quantity to inventory
-            // Note: Since we (optionally) deleted it above if the weight changed, 
-            // this createInventoryItem will now set the correct grams based on the NEW weight.
+            // 2. Por último, guardamos la nueva cantidad en el inventario.
+            // Como ya limpiamos lo anterior si cambió el peso, ahora se guardará con los gramos correctos.
             const res = await inventoryService.createInventoryItem({
                 ingredient_id: ingredientId,
                 quantity: numericQuantity
@@ -191,7 +189,7 @@ export default function Inventory() {
             <Sidebar activeTab="inventario" />
             <main className="flex-1 flex flex-col overflow-y-auto">
                 <div className="p-3 sm:p-4 md:p-8 pt-16 max-w-[1200px] mx-auto w-full flex-1 flex flex-col">
-                    {/* Top Header Area */}
+                    {/* Encabezado principal */}
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 md:mb-8">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-black text-[#131613] dark:text-white mb-1">Inventario</h1>
@@ -199,7 +197,7 @@ export default function Inventory() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                            {/* Search */}
+                            {/* Buscador */}
                             <div className="relative flex-1 min-w-[200px]">
                                 <span translate="no" className="material-symbols-outlined notranslate absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
                                 <input
@@ -211,7 +209,7 @@ export default function Inventory() {
                                 />
                             </div>
 
-                            {/* Add Button */}
+                            {/* Botón para agregar */}
                             <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full text-sm font-bold shadow-md transition-colors">
                                 <span translate="no" className="material-symbols-outlined notranslate text-[18px]">add</span>
                                 <span className="hidden sm:inline">Agregar</span>
@@ -219,11 +217,11 @@ export default function Inventory() {
                         </div>
                     </div>
 
-                    {/* Table Shell */}
+                    {/* Estructura de la tabla */}
                     <div className="flex-1 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl flex flex-col overflow-hidden shadow-sm">
                         <div className="overflow-x-auto flex-1 flex flex-col">
                             <div className="flex-1 flex flex-col">
-                                {/* Table Headers */}
+                                {/* Encabezados de la tabla */}
                                 <div className="flex flex-col sm:grid sm:grid-cols-4 px-6 md:px-8 py-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 text-xs font-bold text-gray-400 tracking-wider">
                                     <div>INGREDIENTE</div>
                                     <div>CATEGORÍA</div>
@@ -231,7 +229,7 @@ export default function Inventory() {
                                     <div className="text-left sm:text-right">ACCIONES</div>
                                 </div>
 
-                                {/* Body */}
+                                {/* Contenido */}
                                 <div className="flex-1 overflow-y-auto flex flex-col">
                                     {ingredients.length === 0 ? (
                                         <div className="flex-1 flex items-center justify-center p-8 text-center">
@@ -273,7 +271,7 @@ export default function Inventory() {
                             </div>
                         </div>
 
-                        {/* Pagination Footer */}
+                        {/* Pie de página con paginación */}
                         <div className="px-4 md:px-8 py-4 border-t border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-4 justify-between items-center text-sm">
                             <span className="text-gray-500 font-medium">Mostrando {searchQuery.trim() ? ingredients.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()) || i.category.toLowerCase().includes(searchQuery.toLowerCase())).length : ingredients.length} ingredientes</span>
                             <div className="flex gap-2 w-full sm:w-auto">

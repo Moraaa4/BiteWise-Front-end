@@ -30,6 +30,8 @@ export default function LoginForm() {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.user.id);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('loginTimestamp', Date.now().toString());
+
       window.location.href = '/dashboard';
     } else {
       setError(response.error || 'Credenciales inválidas');
@@ -41,7 +43,7 @@ export default function LoginForm() {
     <div className="w-full max-w-[480px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-primary rounded-lg text-white">
-          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} />
+          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} priority unoptimized />
         </div>
         <h2 className="text-2xl font-bold text-[#111811] dark:text-white">BiteWise</h2>
       </div>

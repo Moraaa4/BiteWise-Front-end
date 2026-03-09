@@ -17,6 +17,13 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (name.length > 20) {
+      setError('El nombre debe tener un máximo de 20 caracteres.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const budgetNum = weeklyBudget ? parseFloat(weeklyBudget) : undefined;
@@ -40,7 +47,7 @@ export default function RegisterForm() {
     <div className="w-full max-w-[520px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-primary rounded-lg text-white">
-          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} />
+          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} priority unoptimized />
         </div>
         <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
       </div>
@@ -53,7 +60,7 @@ export default function RegisterForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <div>
             <label className="text-sm font-semibold block mb-2 dark:text-white">Nombre</label>
             <input
@@ -61,12 +68,12 @@ export default function RegisterForm() {
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full rounded-lg border border-[#d6e1d6] dark:border-zinc-700 py-3 px-4 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white"
-              placeholder="Tu nombre completo"
+              placeholder="Tu nombre"
             />
           </div>
 
           <div>
-            <label className="text-sm font-semibold block mb-2 dark:text-white">¿Cuánto gastas semanalmente?</label>
+            <label className="text-sm font-semibold block mb-2 dark:text-white">¿Cuánto gastas semanalmente en solo ingredientes de cocina?</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
               <input

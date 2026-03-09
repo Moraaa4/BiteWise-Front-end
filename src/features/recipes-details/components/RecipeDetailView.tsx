@@ -23,7 +23,7 @@ export default function RecipeDetailView() {
             // Fetch inventory once to check ingredient availability
             let inventoryItems: any[] = [];
             try {
-                const invRes = await fetch('http://localhost:3003/api/inventory', {
+                const invRes = await fetch(`${process.env.NEXT_PUBLIC_INVENTORY_API_URL || 'http://localhost:3003'}/api/inventory`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (invRes.ok) {

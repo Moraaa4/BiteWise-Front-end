@@ -55,6 +55,20 @@ export class HttpClient {
         data = (await response.text()) as unknown as T;
       }
 
+      const isUsersService = url.includes('bitewise-usuarios.onrender.com') || url.includes(':3001');
+
+      if (!response.ok && response.status === 401 && isUsersService) {
+        console.warn(`[HttpClient] 401 detectado en USUARIOS: ${url}. Limpiando sesión...`);
+        // Solo limpiamos sesión si el servicio de usuarios falla (donde está el token real)
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('user');
+          localStorage.removeItem('loginTimestamp');
+          window.location.href = '/login';
+        }
+      }
+
       return {
         data,
         status: response.status,

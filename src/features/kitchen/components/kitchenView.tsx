@@ -33,7 +33,7 @@ export default function CocinaView() {
     const [cookingSessions, setCookingSessions] = useState<CookingSession[]>([]);
     const router = useRouter();
 
-    // Load cooking sessions from localStorage
+    // Cargamos las sesiones de cocina que guardamos en el navegador
     useEffect(() => {
         try {
             const raw = localStorage.getItem('biteWise_cookingSessions');
@@ -43,7 +43,7 @@ export default function CocinaView() {
                     .sort((a, b) => b.lastUpdated - a.lastUpdated);
                 setCookingSessions(list);
             }
-        } catch { /* ignore */ }
+        } catch { /* si falla, no pasa nada */ }
     }, []);
 
     useEffect(() => {
@@ -53,7 +53,7 @@ export default function CocinaView() {
                 setLoading(false);
                 return;
             }
-            // Fetch both recipes and inventory to compute availability
+            // Traemos las recetas y el inventario para ver qué podemos cocinar
             const [res, invRes] = await Promise.all([
                 catalogService.getMatchingRecipes(token),
                 inventoryService.getInventory(token)
@@ -67,11 +67,11 @@ export default function CocinaView() {
             ]));
 
             if (res.ok && res.data && Array.isArray(res.data.data)) {
-                // Map the matching recipes
+                // Mapeamos las recetas que coinciden
                 finalRecipes = res.data.data.map((r: any) => ({
                     id: r.id.toString(),
                     name: r.title,
-                    time: r.time_minutes || 30, // Fallback if missing
+                    time: r.time_minutes || 30, // Si no hay tiempo, ponemos 30 por defecto
                     calories: 400,
                     difficulty: r.difficulty || "Media",
                     servings: r.servings || 2,
@@ -99,7 +99,8 @@ export default function CocinaView() {
                 if (preset) {
                     setSelectedRecipe(preset);
                 } else {
-                    // If it's not a matched recipe, let's fetch its specific details so the user can see what they're missing
+                    // Si no es una receta que coincida exactamente, buscamos sus detalles
+                    // para que el usuario pueda ver qué ingredientes le faltan
                     try {
                         if (recipeIdParam.startsWith('ext-')) {
                             const realId = recipeIdParam.replace('ext-', '');
@@ -135,7 +136,7 @@ export default function CocinaView() {
                                     missingIngredients: ["Faltan ingredientes del catálogo global"],
                                     imageUrl: m.strMealThumb,
                                     ingredients: mappedExtIngredients,
-                                    externalMealData: m  // Store raw TheMealDB object for import
+                                    externalMealData: m  // Guardamos los datos de TheMealDB por si queremos importarlos luego
                                 };
                                 finalRecipes = [extRecipe, ...finalRecipes];
                                 setSelectedRecipe(extRecipe);
@@ -145,7 +146,7 @@ export default function CocinaView() {
                             if (localRes.ok && localRes.data && localRes.data.recipe) {
                                 const r = localRes.data.recipe as any;
 
-                                // Provide robust fallback for ingredient fields from local DB
+                                // Aseguramos que los ingredientes lleguen bien desde la base de datos local
                                 const rawIngredients = r.ingredients || r.RecipeIngredients || r.recipe_ingredients || [];
 
                                 const localRecipe: Recipe = {
@@ -184,7 +185,7 @@ export default function CocinaView() {
                 if (finalRecipes.length > 0) setSelectedRecipe(finalRecipes[0]);
             }
 
-            // Ensure state is updated
+            // Actualizamos la lista de recetas
             setRecipes(finalRecipes);
             setLoading(false);
         };
@@ -200,7 +201,7 @@ export default function CocinaView() {
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Tu Cocina" />
 
-                {/* Body */}
+                {/* Contenido principal */}
                 <div className="flex-1 p-6 overflow-hidden flex flex-col md:flex-row gap-6">
                     {loading ? (
                         <div className="w-full flex justify-center items-center">
@@ -219,7 +220,7 @@ export default function CocinaView() {
                     ) : (
                         <>
                             <div className="w-full md:w-1/3 flex flex-col gap-4 overflow-y-auto">
-                                {/* Active cooking sessions */}
+                                {/* Sesiones de cocina activas */}
                                 {cookingSessions.length > 0 && (
                                     <div className="space-y-2">
                                         <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-1">

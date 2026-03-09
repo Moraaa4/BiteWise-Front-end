@@ -33,7 +33,7 @@ export default function RecetasView() {
 
             let currentRecipes: AvailableRecipe[] = [];
 
-            // 1. Fetch fast local recipes first
+            // 1. Primero traemos rápido las recetas locales
             const resLocal = await catalogService.getRecipes(token);
             if (resLocal.ok && resLocal.data && resLocal.data.recipes) {
                 const mappedLocal = resLocal.data.recipes.map((r: any) => ({
@@ -45,10 +45,10 @@ export default function RecetasView() {
                     imageUrl: r.image_url
                 }));
                 currentRecipes = mappedLocal;
-                setRecipes([...currentRecipes]); // Render immediately
+                setRecipes([...currentRecipes]); // Las mostramos de inmediato para que no se vea vacío
             }
 
-            // 2. Fetch BOTH regional and random in parallel for more recipes
+            // 2. Buscamos recetas regionales y aleatorias al mismo tiempo (multitasking)
             const fetchExternal = async () => {
                 setLoadingExternal(true);
                 try {
@@ -58,14 +58,22 @@ export default function RecetasView() {
                     ]);
 
                     let allExternal: any[] = [];
-                    if (resRegional.status === 'fulfilled' && resRegional.value.ok && resRegional.value.data) {
-                        allExternal.push(...(resRegional.value.data.recipes || []));
+                    if (resRegional.status === 'fulfilled') {
+                        if (resRegional.value.ok && resRegional.value.data) {
+                            allExternal.push(...(resRegional.value.data.recipes || []));
+                        } else if (resRegional.value.status === 401 || resRegional.value.status === 403) {
+                            console.error('Error de autenticación en Recetas Regionales:', resRegional.value.status);
+                        }
                     }
-                    if (resRandom.status === 'fulfilled' && resRandom.value.ok && resRandom.value.data) {
-                        allExternal.push(...(resRandom.value.data.recipes || []));
+                    if (resRandom.status === 'fulfilled') {
+                        if (resRandom.value.ok && resRandom.value.data) {
+                            allExternal.push(...(resRandom.value.data.recipes || []));
+                        } else if (resRandom.value.status === 401 || resRandom.value.status === 403) {
+                            console.error('Error de autenticación en Recetas Aleatorias:', resRandom.value.status);
+                        }
                     }
 
-                    // Deduplicate by id
+                    // Quitamos las repetidas por ID
                     const seen = new Set<string>();
                     const deduped = allExternal.filter((r: any) => {
                         const key = r.id || r.idMeal;
@@ -99,7 +107,7 @@ export default function RecetasView() {
         };
         fetchRecipes();
 
-        // Load cooking history from localStorage
+        // Cargamos el historial de lo que ya se cocinó
         try {
             const saved = localStorage.getItem('biteWise_cookHistory');
             if (saved) setCookHistory(JSON.parse(saved));
@@ -150,7 +158,7 @@ export default function RecetasView() {
 
         try {
             if (editingRecipe) {
-                // Update logic if needed, but for now we focus on Create as requested
+                // Lógica para actualizar si se necesitara, por ahora solo crear
                 const payload = {
                     title: savedRecipe.name,
                     instructions: savedRecipe.instructions || "",
@@ -178,7 +186,7 @@ export default function RecetasView() {
 
                 const res = await catalogService.createRecipe(payload, token);
                 if (res.ok && res.data) {
-                    // Success! Let's re-fetch to get the real ID and calculated badges
+                    // ¡Listo! Volvemos a pedir las recetas para tener los ID reales y las etiquetas
                     const resLocal = await catalogService.getRecipes(token);
                     if (resLocal.ok && resLocal.data && resLocal.data.recipes) {
                         const mappedLocal = resLocal.data.recipes.map((r: any) => ({
@@ -197,7 +205,7 @@ export default function RecetasView() {
                             }))
                         }));
 
-                        // Merge with external recipes already in state
+                        // Mezclamos con las recetas externas que ya teníamos
                         setRecipes(prev => {
                             const external = prev.filter(p => p.ingredientsBadge === "THEMEALDB");
                             return [...mappedLocal, ...external];
@@ -224,12 +232,12 @@ export default function RecetasView() {
             <div className="flex-1 flex flex-col overflow-y-auto">
                 <Header title="Recetas Disponibles" />
 
-                {/* Content */}
+                {/* Contenido principal */}
                 <main className="flex-1 px-3 sm:px-4 md:px-8 py-7 flex flex-col gap-8 w-full max-w-7xl mx-auto">
 
-                    {/* Available Recipes */}
+                    {/* Recetas Disponibles */}
                     <section>
-                        <div className="flex items-baseline justify-between mb-1">
+                        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-2 sm:mb-1 gap-2 sm:gap-0">
                             <h2 className="text-base font-bold text-gray-900 dark:text-white">Recetas Disponibles</h2>
                             <div className="flex items-center gap-4">
                                 <button
@@ -274,7 +282,7 @@ export default function RecetasView() {
                         </div>
                     </section>
 
-                    {/* Cooking History */}
+                    {/* Historial de Cocina */}
                     <section>
                         <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">Historial de Cocina</h2>
                         <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
@@ -284,7 +292,7 @@ export default function RecetasView() {
                     </section>
                 </main>
 
-                {/* Recipe Modal */}
+                {/* Modal de Receta */}
                 {isModalOpen && (
                     <RecipeModal
                         initialData={editingRecipe}
@@ -293,7 +301,7 @@ export default function RecetasView() {
                     />
                 )}
 
-                {/* Repeat History Recipe Modal */}
+                {/* Modal para Repetir Receta del Historial */}
                 {repeatRecipe && (
                     <RepeatRecipeModal
                         recipe={repeatRecipe}
@@ -301,7 +309,7 @@ export default function RecetasView() {
                     />
                 )}
 
-                {/* Footer */}
+                {/* Pie de página */}
                 <footer className="py-4 text-center">
                     <p className="text-xs text-gray-400">
                         © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.

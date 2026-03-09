@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from 'next-themes';
 import ThemeSwitch from '@/components/ThemeSwitch';
+import AuthCheck from '@/components/AuthCheck';
 
 export const metadata: Metadata = {
   title: "BiteWise - Cocina Inteligente",
@@ -24,7 +25,9 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
+          <AuthCheck>
+            {children}
+          </AuthCheck>
           <ThemeSwitch />
         </ThemeProvider>
       </body>

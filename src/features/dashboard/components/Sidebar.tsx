@@ -61,7 +61,7 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                                <Image src="/icon.svg" alt="BiteWise" width={40} height={40} style={{ width: 'auto', height: 'auto' }} />
+                                <Image src="/icon.svg" alt="BiteWise" width={40} height={40} priority unoptimized />
                             </div>
                             <div className="flex flex-col">
                                 <h1 className="text-[#131613] dark:text-white text-lg font-bold leading-none">BiteWise</h1>

@@ -74,7 +74,7 @@ export default function InventoryModal({
                 </div>
 
                 <div className="space-y-4 mb-6">
-                    {/* Name */}
+                    {/* Nombre del ingrediente */}
                     <div>
                         <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
                             Nombre del Ingrediente
@@ -94,7 +94,7 @@ export default function InventoryModal({
                         </div>
                     </div>
 
-                    {/* Unit Type Toggle */}
+                    {/* Selector de tipo de unidad (Gramos o Unidades) */}
                     <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
                         <button
                             onClick={() => setUnitType('mass')}
@@ -111,7 +111,7 @@ export default function InventoryModal({
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Quantity */}
+                        {/* Cantidad */}
                         <div>
                             <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
                                 {unitType === 'unit' ? 'Cuántas unidades' : 'Cantidad total'}
@@ -130,7 +130,7 @@ export default function InventoryModal({
                             </div>
                         </div>
 
-                        {/* Weight per Unit (only if unitType is 'unit') */}
+                        {/* Peso por unidad (solo si se selecciona 'unidades') */}
                         {unitType === 'unit' && (
                             <div>
                                 <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
@@ -149,7 +149,7 @@ export default function InventoryModal({
                         )}
                     </div>
 
-                    {/* Category */}
+                    {/* Categoría */}
                     <div>
                         <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
                             Categoría

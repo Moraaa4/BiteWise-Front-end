@@ -40,10 +40,10 @@ export default function Dashboard() {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [loadingInventory, setLoadingInventory] = useState(false);
 
-  const CATALOG_URL = 'http://localhost:3002';
-  const INVENTORY_URL = 'http://localhost:3003';
+  const CATALOG_URL = process.env.NEXT_PUBLIC_CATALOG_API_URL || 'http://localhost:3002';
+  const INVENTORY_URL = process.env.NEXT_PUBLIC_INVENTORY_API_URL || 'http://localhost:3003';
 
-  // Load inventory from real API
+  // Cargamos el inventario desde la API
   useEffect(() => {
     const loadInventory = async () => {
       const token = localStorage.getItem('token');
@@ -56,6 +56,8 @@ export default function Dashboard() {
         if (res.ok) {
           const data = await res.json();
           setInventoryItems(data.items || []);
+        } else if (res.status === 401 || res.status === 403) {
+          console.error('Error de autenticación en Inventario:', res.status);
         }
       } catch (e) {
         console.error('Error loading inventory', e);
@@ -66,7 +68,7 @@ export default function Dashboard() {
     loadInventory();
   }, []);
 
-  // Load recipes from catalog API
+  // Cargamos las recetas desde el catálogo
   useEffect(() => {
     const loadRecipes = async () => {
       const token = localStorage.getItem('token');
@@ -89,7 +91,7 @@ export default function Dashboard() {
     loadRecipes();
   }, []);
 
-  // Apply category + search filter whenever they change
+  // Aplicamos los filtros de categoría y búsqueda cada vez que cambian
   useEffect(() => {
     let result = [...recipes];
 

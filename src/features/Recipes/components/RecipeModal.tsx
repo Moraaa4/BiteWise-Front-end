@@ -83,7 +83,7 @@ export default function RecipeModal({
                 servings,
                 timeMinutes: 30, // Default value since it's removed from UI
                 ingredientsBadge: "LOCAL",
-                imageUrl: initialData?.imageUrl,
+                imageUrl: initialData?.imageUrl || "/platillo-pre.png",
                 ingredients: selectedIngredients
             };
 
