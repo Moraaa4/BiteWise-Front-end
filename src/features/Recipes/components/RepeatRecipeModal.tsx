@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, ShoppingCart, CheckCircle2 } from "lucide-react";
 import type { HistoryRecipe } from "@/features/Recipes/recetasData";
+import { STORAGE_KEYS, LIMITS } from "@/config/constants";
 
 interface RepeatRecipeModalProps {
     recipe: HistoryRecipe;
@@ -13,7 +14,7 @@ export default function RepeatRecipeModal({ recipe, onClose }: RepeatRecipeModal
     const [status, setStatus] = useState<"idle" | "success">("idle");
 
     const handleAction = () => {
-        const saved = localStorage.getItem("biteWise_shoppingLists");
+        const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
         let lists = [];
         if (saved) {
             lists = JSON.parse(saved);
@@ -28,7 +29,7 @@ export default function RepeatRecipeModal({ recipe, onClose }: RepeatRecipeModal
             total: 5
         };
         lists.push(newList);
-        localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
+        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(lists));
 
         setStatus("success");
         setTimeout(() => {

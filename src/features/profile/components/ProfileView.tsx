@@ -6,8 +6,9 @@ import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import EditBudgetModal from "@/features/profile/components/EditBudgetModal";
 import EditProfileModal from "@/features/profile/components/EditProfileModal";
-import type { UserProfile } from "@/features/profile/perfilTypes";
+import { UserProfile } from "@/features/profile/perfilTypes";
 import { usersService } from "@/services/users.service";
+import { STORAGE_KEYS, LIMITS } from "@/config/constants";
 
 function getInitials(name: string): string {
     if (!name) return "?";
@@ -15,7 +16,7 @@ function getInitials(name: string): string {
         .map(n => n[0])
         .filter(c => !!c)
         .join('')
-        .substring(0, 2)
+        .substring(0, LIMITS.INITIALS_LENGTH)
         .toUpperCase() || "?";
 }
 
@@ -36,8 +37,8 @@ export default function ProfileView() {
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     const fetchProfile = async () => {
-        const token = localStorage.getItem("token");
-        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
         if (!token || !userId) {
             setError("No se encontró sesión activa. Inicia sesión de nuevo.");
             setLoading(false);
@@ -58,12 +59,12 @@ export default function ProfileView() {
                 let savingsPercent = 0;
 
                 try {
-                    const cookHistory = JSON.parse(localStorage.getItem('biteWise_cookHistory') || '[]');
+                    const cookHistory = JSON.parse(localStorage.getItem(STORAGE_KEYS.COOK_HISTORY) || '[]');
                     recipeCount = Array.isArray(cookHistory) ? cookHistory.length : 0;
                 } catch (e) { console.error("Error parsing cookHistory", e); }
 
                 try {
-                    const sessionsRaw = localStorage.getItem('biteWise_cookingSessions');
+                    const sessionsRaw = localStorage.getItem(STORAGE_KEYS.COOKING_SESSIONS);
                     if (sessionsRaw) {
                         const sessions = JSON.parse(sessionsRaw);
                         const sessionValues = Object.values(sessions);
@@ -75,7 +76,7 @@ export default function ProfileView() {
                 } catch (e) { console.error("Error parsing cookingSessions", e); }
 
                 try {
-                    const lists = JSON.parse(localStorage.getItem('biteWise_shoppingLists') || '[]');
+                    const lists = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS) || '[]');
                     listCount = Array.isArray(lists) ? lists.length : 0;
                 } catch (e) { console.error("Error parsing shoppingLists", e); }
 
@@ -116,7 +117,7 @@ export default function ProfileView() {
     }, []);
 
     const handleSaveBudget = async (newBudget: number) => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         const userId = profile?.id;
         if (!token || !userId) return;
 
@@ -133,7 +134,7 @@ export default function ProfileView() {
     };
 
     const handleSaveProfile = async (updates: Partial<UserProfile>) => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         const userId = profile?.id;
         if (!token || !userId) return;
 
@@ -151,11 +152,11 @@ export default function ProfileView() {
                     };
                 });
                 // Update localStorage too
-                const stored = localStorage.getItem("user");
+                const stored = localStorage.getItem(STORAGE_KEYS.USER_DATA);
                 if (stored) {
                     const user = JSON.parse(stored);
                     user.name = updates.name || user.name;
-                    localStorage.setItem("user", JSON.stringify(user));
+                    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
                 }
             } else {
                 alert(res.error || "No se pudo actualizar el perfil.");
@@ -231,12 +232,6 @@ export default function ProfileView() {
                                             {profile.initials || "?"}
                                         </span>
                                     </div>
-                                    <button
-                                        onClick={() => setShowProfileModal(true)}
-                                        className="absolute bottom-0 right-0 w-6 h-6 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
-                                    >
-                                        <Pencil size={11} className="text-gray-500 dark:text-gray-400" />
-                                    </button>
                                 </div>
                                 <h2 className="text-base font-bold text-gray-900 dark:text-white">
                                     {profile.name || "—"}

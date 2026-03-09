@@ -1,4 +1,5 @@
 import { createHttpClient } from './http.client';
+import { API_CONFIG } from '@/config/constants';
 
 export interface InventoryItem {
   id: number;
@@ -35,7 +36,7 @@ export const inventoryService = {
   },
 
   async getInventory(token: string) {
-    const response = await inventoryClient.get<{ message: string; items: any[] }>('/api/inventory', {
+    const response = await inventoryClient.get<{ message: string; items: InventoryItem[] }>('/api/inventory', {
       Authorization: `Bearer ${token}`,
     });
     return response;

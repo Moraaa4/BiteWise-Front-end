@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, User, Mail } from "lucide-react";
 import type { UserProfile } from "@/features/profile/perfilTypes";
+import { LIMITS } from "@/config/constants";
 
 interface EditProfileModalProps {
     currentProfile: UserProfile;
@@ -25,7 +26,7 @@ export default function EditProfileModal({
         const initialsStr = name.split(' ')
             .map(n => n[0])
             .join('')
-            .substring(0, 2)
+            .substring(0, LIMITS.INITIALS_LENGTH)
             .toUpperCase() || "?";
 
         onSave({ name, email, initials: initialsStr });
@@ -49,7 +50,7 @@ export default function EditProfileModal({
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
                         <span className="text-white text-2xl font-bold">
-                            {name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "?"}
+                            {name.split(' ').map(n => n[0]).join('').substring(0, LIMITS.INITIALS_LENGTH).toUpperCase() || "?"}
                         </span>
                     </div>
                 </div>

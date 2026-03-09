@@ -1,3 +1,5 @@
+import { useRouter } from 'next/navigation';
+import { STORAGE_KEYS } from '@/config/constants';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
@@ -10,13 +12,17 @@ export function Header({ title = "Dashboard Principal" }: HeaderProps) {
     const [initials, setInitials] = useState("M");
 
     useEffect(() => {
-        const user = localStorage.getItem('user');
-        if (user) {
-            const userData = JSON.parse(user);
-            if (userData.name) {
-                setName(userData.name);
-                const match = userData.name.match(/(\w)/);
-                if (match) setInitials(match[1].toUpperCase());
+        const savedUser = localStorage.getItem(STORAGE_KEYS.USER_DATA);
+        if (savedUser) {
+            try {
+                const userData = JSON.parse(savedUser);
+                if (userData.name) {
+                    setName(userData.name);
+                    const match = userData.name.match(/(\w)/);
+                    if (match) setInitials(match[1].toUpperCase());
+                }
+            } catch (e) {
+                console.error("Error al parsear el usuario del localStorage", e);
             }
         }
     }, []);

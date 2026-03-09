@@ -6,6 +6,7 @@ import type { Recipe } from "@/types/global";
 import { inventoryService } from "@/services/inventory.service";
 import { catalogService, type ExternalRecipe } from "@/services/catalog.service";
 import { useRouter } from "next/navigation";
+import { STORAGE_KEYS } from "@/config/constants";
 
 interface RecipeDetailProps {
     recipe: Recipe;
@@ -17,7 +18,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
     const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients');
     const [savedLocalId, setSavedLocalId] = useState<number | null>(() => {
         if (typeof window === 'undefined') return null;
-        const saved = localStorage.getItem(`biteWise_saved_${recipe.id}`);
+        const saved = localStorage.getItem(`${STORAGE_KEYS.STEP_BY_STEP}_saved_${recipe.id}`); // Mejorado con prefijo constante
         return saved ? Number(saved) : null;
     });
     const router = useRouter();
@@ -30,7 +31,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             return;
         }
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) {
             alert("Necesitas iniciar sesión para guardar recetas.");
             return;
@@ -43,7 +44,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             if (res.ok && res.data?.recipe?.id) {
                 const newId = res.data.recipe.id;
                 setSavedLocalId(newId);
-                localStorage.setItem(`biteWise_saved_${recipe.id}`, String(newId));
+                localStorage.setItem(`${STORAGE_KEYS.STEP_BY_STEP}_saved_${recipe.id}`, String(newId));
                 alert(`¡Receta guardada! Ahora puedes cocinar "${recipe.name}" desde tu catálogo.`);
             } else {
                 alert("No se pudo guardar la receta. Es posible que ya exista en tu catálogo.");
@@ -65,12 +66,46 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
 
         if (!confirm(`¿Estás seguro de que quieres cocinar "${recipe.name}"? Esto descontará los ingredientes de tu inventario.`)) return;
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
 
         setCooking(true);
         try {
-            // Usamos el ID local si acabamos de guardarlo, de lo contrario usamos el original
+            // 1. Unificación Silenciosa de IDs (Solución Frontend-Only para el error 400)
+            // Si el usuario tiene ingredientes con nombre correcto pero ID incorrecto, 
+            // los movemos al ID que espera la receta antes de llamar al endpoint de cocinado.
+            for (const ing of recipe.ingredients) {
+                const targetId = Number(ing.id.replace('i-', ''));
+                const ingName = ing.name.toLowerCase().trim();
+
+                // Obtenemos el inventario actual para buscar discrepancias
+                const invRes = await inventoryService.getInventory(token);
+                if (invRes.ok && Array.isArray((invRes.data as any)?.items)) {
+                    const items = (invRes.data as any).items;
+
+                    // Buscamos si existe stock con un ID distinto pero mismo nombre
+                    const discrepancy = items.find((item: any) => {
+                        const itemId = Number(item.ingredient_id || item.ingredients?.id);
+                        const itemName = (item.ingredients?.name || item.name || '').toLowerCase().trim();
+                        return itemId !== targetId && itemName === ingName && Number(item.current_quantity || item.quantity) > 0;
+                    });
+
+                    if (discrepancy) {
+                        const discId = Number(discrepancy.ingredient_id || discrepancy.ingredients?.id);
+                        const discQty = Number(discrepancy.current_quantity || discrepancy.quantity);
+
+                        // Mágicamente movemos el stock al ID correcto
+                        console.log(`Unificando stock de "${ing.name}": moviendo ${discQty} del ID ${discId} al ID ${targetId}`);
+                        await inventoryService.deleteInventoryItem(discId, discQty, token);
+                        await inventoryService.createInventoryItem({
+                            ingredient_id: targetId,
+                            quantity: discQty
+                        }, token);
+                    }
+                }
+            }
+
+            // 2. Ahora sí, procedemos a cocinar con los IDs sincronizados
             const recipeId = savedLocalId ?? Number(recipe.id);
             const res = await inventoryService.cookRecipe(recipeId, token);
 
@@ -86,11 +121,11 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 };
 
                 try {
-                    const existingHistory = JSON.parse(localStorage.getItem('biteWise_cookHistory') || '[]');
+                    const existingHistory = JSON.parse(localStorage.getItem(STORAGE_KEYS.COOK_HISTORY) || '[]');
                     existingHistory.unshift(historyEntry);
-                    localStorage.setItem('biteWise_cookHistory', JSON.stringify(existingHistory.slice(0, 50)));
+                    localStorage.setItem(STORAGE_KEYS.COOK_HISTORY, JSON.stringify(existingHistory.slice(0, 50)));
                 } catch {
-                    localStorage.setItem('biteWise_cookHistory', JSON.stringify([historyEntry]));
+                    localStorage.setItem(STORAGE_KEYS.COOK_HISTORY, JSON.stringify([historyEntry]));
                 }
 
                 // 2. Preparamos los datos de los pasos
@@ -102,15 +137,19 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 };
 
                 // 3. Guardamos y redirigimos
-                localStorage.setItem('biteWise_stepByStep', JSON.stringify(stepData));
+                localStorage.setItem(STORAGE_KEYS.STEP_BY_STEP, JSON.stringify(stepData));
 
                 // Small timeout to ensure localStorage is flushed in some browsers/architectures
                 setTimeout(() => {
                     router.push(`/step-by-step-kitchen?recipeId=${recipeId}&name=${encodeURIComponent(recipe.name)}`);
                 }, 100);
+            } else if (res.status === 400) {
+                // Si el backend sigue dando error 400 (insuficiente), intentamos dar una explicación más clara
+                const detail = res.error || 'Faltan ingredientes en el inventario.';
+                alert(`⚠️ ¡Inventario insuficiente!\n\n${detail}\n\nSi crees que tienes el ingrediente, asegúrate de que el nombre coincida exactamente con el de la receta.`);
             } else {
-                const errorMessage = res.error || 'No se pudo cocinar la receta (posiblemente falta inventario).';
-                alert(`Hubo un problema:\n\n${errorMessage}`);
+                const errorMessage = res.error || 'No se pudo cocinar la receta.';
+                alert(`❌ Hubo un problema:\n\n${errorMessage}`);
             }
         } catch (e) {
             console.error(e);
@@ -305,18 +344,18 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                         };
 
                         // Load existing lists and add the new one
-                        let existingLists: any[] = [];
+                        let existingLists: { id: string, name: string }[] = [];
                         try {
-                            const saved = localStorage.getItem('biteWise_shoppingLists');
+                            const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
                             if (saved) existingLists = JSON.parse(saved);
                         } catch { }
                         existingLists.push(newList);
-                        localStorage.setItem('biteWise_shoppingLists', JSON.stringify(existingLists));
+                        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(existingLists));
 
                         // Save items directly to the list's storage key
-                        localStorage.setItem(`biteWise_list_items_${listId}`, JSON.stringify(items));
+                        localStorage.setItem(`${STORAGE_KEYS.LIST_ITEMS_PREFIX}${listId}`, JSON.stringify(items));
                         // Also save as pending items (backup — detail view checks this too)
-                        localStorage.setItem('biteWise_pendingItems', JSON.stringify(items));
+                        localStorage.setItem(STORAGE_KEYS.PENDING_ITEMS, JSON.stringify(items));
 
                         alert(`✅ Se creó la lista "${newList.name}" con ${items.length} ingredientes.`);
                         router.push(`/shopping-list-detail?id=${listId}`);
@@ -331,8 +370,17 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                     title={isExternal && !savedLocalId ? "Guarda primero la receta para poder cocinarla" : undefined}
                     className="flex justify-center items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 transition-all shadow-sm shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
                     <span className="flex items-center gap-2">
-                        {cooking ? <Loader2 size={15} className="animate-spin" /> : <PlayCircle size={15} />}
-                        {cooking ? "Cocinando..." : isExternal && !savedLocalId ? "Guarda primero" : "Cocinar Ahora"}
+                        {cooking ? (
+                            <>
+                                <Loader2 size={15} className="animate-spin" />
+                                <span>Cocinando...</span>
+                            </>
+                        ) : (
+                            <>
+                                <PlayCircle size={15} />
+                                <span>{isExternal && !savedLocalId ? "Guarda primero" : "Cocinar Ahora"}</span>
+                            </>
+                        )}
                     </span>
                 </button>
             </div>

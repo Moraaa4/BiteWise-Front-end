@@ -38,8 +38,10 @@ export default function InventoryModal({
     const [name, setName] = useState(initialData?.name || "");
     const [category, setCategory] = useState(initialData?.category || "General");
     const [quantity, setQuantity] = useState(initialData?.quantity?.split(' ')[0] || "1");
-    const [unitType, setUnitType] = useState<'mass' | 'unit'>(initialData?.weightPerUnit && initialData.weightPerUnit > 1 ? 'unit' : 'mass');
-    const [weightPerUnit, setWeightPerUnit] = useState(initialData?.weightPerUnit?.toString() || "100");
+    // Si el peso es 1, probablemente sea un ingrediente que requiere normalización (como los importados de TheMealDB)
+    const initialWPU = initialData?.weightPerUnit || 1;
+    const [unitType, setUnitType] = useState<'mass' | 'unit'>(initialWPU > 1 ? 'unit' : 'mass');
+    const [weightPerUnit, setWeightPerUnit] = useState(initialWPU > 1 ? initialWPU.toString() : "150");
 
     const handleSave = () => {
         if (!name.trim() || !quantity.trim()) return;

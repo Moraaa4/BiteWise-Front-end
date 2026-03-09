@@ -1,4 +1,5 @@
 import { createHttpClient } from './http.client';
+import { API_CONFIG } from '@/config/constants';
 
 export interface UserRegisterRequest {
   name: string;

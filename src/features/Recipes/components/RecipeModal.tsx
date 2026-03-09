@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Clock, PenTool, Plus, Trash2, Search, Info } from "lucide-react";
 import type { AvailableRecipe } from "@/features/Recipes/recetasData";
 import { catalogService, type Ingredient } from "@/services/catalog.service";
+import { STORAGE_KEYS } from "@/config/constants";
 
 interface RecipeModalProps {
     initialData?: AvailableRecipe;
@@ -33,7 +34,7 @@ export default function RecipeModal({
     useEffect(() => {
         const fetchCatalog = async () => {
             setLoadingIngredients(true);
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) return;
             const res = await catalogService.getIngredients(token);
             if (res.ok && res.data) {

@@ -7,6 +7,7 @@ import StepCard from "@/features/step-by-step-kitchen/components/StepCard";
 import type { CookingGuide, CookingStep } from "@/features/step-by-step-kitchen/pasoAPasoTypes";
 import { catalogService } from "@/services/catalog.service";
 import { useSearchParams, useRouter } from "next/navigation";
+import { STORAGE_KEYS } from "@/config/constants";
 
 function parseInstructions(instructions: string): CookingStep[] {
     if (!instructions || !instructions.trim()) return [];
@@ -39,14 +40,14 @@ interface CookingSession {
 function getSessions(): Record<string, CookingSession> {
     if (typeof window === 'undefined') return {};
     try {
-        return JSON.parse(localStorage.getItem('biteWise_cookingSessions') || '{}');
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.COOKING_SESSIONS) || '{}');
     } catch { return {}; }
 }
 
 function saveSession(session: CookingSession) {
     const sessions = getSessions();
     sessions[session.recipeId] = session;
-    localStorage.setItem('biteWise_cookingSessions', JSON.stringify(sessions));
+    localStorage.setItem(STORAGE_KEYS.COOKING_SESSIONS, JSON.stringify(sessions));
 }
 
 export default function StepByStepView() {
@@ -72,7 +73,7 @@ export default function StepByStepView() {
     useEffect(() => {
         const loadRecipeData = async () => {
             // 1. Try localStorage (set by RecipeDetail)
-            const stored = localStorage.getItem("biteWise_stepByStep");
+            const stored = localStorage.getItem(STORAGE_KEYS.STEP_BY_STEP);
             if (stored) {
                 try {
                     const data = JSON.parse(stored);
@@ -103,7 +104,7 @@ export default function StepByStepView() {
                             instructions: data.instructions,
                         });
 
-                        localStorage.removeItem("biteWise_stepByStep");
+                        localStorage.removeItem(STORAGE_KEYS.STEP_BY_STEP);
                         setLoading(false);
                         return;
                     }
@@ -130,7 +131,7 @@ export default function StepByStepView() {
 
             // 3. Fallback: API
             if (!recipeId) { setLoading(false); return; }
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) { setLoading(false); return; }
 
             try {

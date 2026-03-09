@@ -1,7 +1,7 @@
 export interface RecipeIngredient {
     id: string;
     name: string;
-    quantity: string;
+    quantity: string; // Se mantiene obligatoria para coincidir con el componente
     inInventory: boolean;
 }
 
@@ -11,13 +11,13 @@ export interface RecipeDetail {
     tag: string;
     portions: number;
     timeMinutes: number;
-    imageUrl?: string; // connected when backend is ready
+    imageUrl?: string;
     ingredients: RecipeIngredient[];
-    inventoryCount: number; // how many items are already in inventory
+    inventoryCount: number;
     totalCount: number;
 }
 
-// Datos mock de estructura — los ingredientes serán provistos por el backend
+// Datos mock actualizados para asegurar que cada objeto cumpla con la interfaz
 export const MOCK_RECIPE_DETAIL: RecipeDetail = {
     id: "r1",
     name: "Pollo en salsa jitomate",

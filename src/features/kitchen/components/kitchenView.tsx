@@ -10,6 +10,7 @@ import RecipeDetail from "./RecipeDetail";
 import { catalogService } from "@/services/catalog.service";
 import { inventoryService } from "@/services/inventory.service";
 import { useSearchParams, useRouter } from "next/navigation";
+import { API_CONFIG, STORAGE_KEYS } from "@/config/constants";
 
 interface CookingSession {
     recipeId: string;
@@ -36,7 +37,7 @@ export default function CocinaView() {
     // Cargamos las sesiones de cocina que guardamos en el navegador
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('biteWise_cookingSessions');
+            const raw = localStorage.getItem(STORAGE_KEYS.COOKING_SESSIONS);
             if (raw) {
                 const sessions: Record<string, CookingSession> = JSON.parse(raw);
                 const list = Object.values(sessions)
@@ -48,7 +49,7 @@ export default function CocinaView() {
 
     useEffect(() => {
         const fetchMatchingRecipes = async () => {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) {
                 setLoading(false);
                 return;
@@ -61,10 +62,23 @@ export default function CocinaView() {
 
             let finalRecipes: Recipe[] = [];
             const inventory = (invRes.ok && Array.isArray((invRes.data as any)?.items)) ? (invRes.data as any).items : [];
+
+            // Mapa por ID
             const inventoryMap = new Map<number, number>(inventory.map((item: any) => [
                 Number(item.ingredient_id || item.ingredients?.id),
                 Number(item.current_quantity || item.quantity || 0)
             ]));
+
+            // Mapa por Nombre (Normalizado) como respaldo
+            const inventoryByNameMap = new Map<string, number>();
+            inventory.forEach((item: any) => {
+                const name = (item.ingredients?.name || item.name || '').toLowerCase().trim();
+                const qty = Number(item.current_quantity || item.quantity || 0);
+                if (name) {
+                    const current = inventoryByNameMap.get(name) || 0;
+                    inventoryByNameMap.set(name, current + qty);
+                }
+            });
 
             if (res.ok && res.data && Array.isArray(res.data.data)) {
                 // Mapeamos las recetas que coinciden
@@ -81,8 +95,15 @@ export default function CocinaView() {
                     imageUrl: r.image_url,
                     ingredients: r.ingredients?.map((i: any) => {
                         const ingId = Number(i.ingredient_id);
+                        const ingName = (i.name || i.Ingredient?.name || '').toLowerCase().trim();
                         const requiredQty = Number(i.required_quantity || i.quantity || 1);
-                        const availableQty = Number(inventoryMap.get(ingId) || 0);
+
+                        // Buscamos por ID, y si no, por nombre (respaldo)
+                        let availableQty = Number(inventoryMap.get(ingId) || 0);
+                        if (availableQty < requiredQty && ingName) {
+                            availableQty = Math.max(availableQty, inventoryByNameMap.get(ingName) || 0);
+                        }
+
                         return {
                             id: `i-${ingId}`,
                             name: i.name || i.Ingredient?.name || 'Desconocido',
@@ -104,7 +125,7 @@ export default function CocinaView() {
                     try {
                         if (recipeIdParam.startsWith('ext-')) {
                             const realId = recipeIdParam.replace('ext-', '');
-                            const extRes = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${realId}`);
+                            const extRes = await fetch(`${API_CONFIG.EXTERNAL_RECIPES_URL}/lookup.php?i=${realId}`);
                             const data = await extRes.json();
                             if (data.meals && data.meals[0]) {
                                 const m = data.meals[0];
@@ -162,8 +183,15 @@ export default function CocinaView() {
                                     imageUrl: r.image_url,
                                     ingredients: rawIngredients.map((i: any) => {
                                         const ingId = Number(i.ingredient_id || i.id);
+                                        const ingName = (i.name || i.Ingredient?.name || i.ingredient?.name || '').toLowerCase().trim();
                                         const requiredQty = Number(i.required_quantity || i.quantity || 1);
-                                        const availableQty = Number(inventoryMap.get(ingId) || 0);
+
+                                        // Buscamos por ID, y si no, por nombre (respaldo)
+                                        let availableQty = Number(inventoryMap.get(ingId) || 0);
+                                        if (availableQty < requiredQty && ingName) {
+                                            availableQty = Math.max(availableQty, inventoryByNameMap.get(ingName) || 0);
+                                        }
+
                                         return {
                                             id: `i-${ingId}`,
                                             name: i.name || i.Ingredient?.name || i.ingredient?.name || 'Desconocido',
@@ -195,14 +223,14 @@ export default function CocinaView() {
     const filteredRecipes = recipes.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen bg-background-light dark:bg-background-dark">
+        <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark">
             <Sidebar activeTab="cocina" />
 
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Tu Cocina" />
 
                 {/* Contenido principal */}
-                <div className="flex-1 p-6 overflow-hidden flex flex-col md:flex-row gap-6">
+                <div className="flex-1 p-6 overflow-y-auto flex flex-col md:flex-row gap-6">
                     {loading ? (
                         <div className="w-full flex justify-center items-center">
                             <span className="text-gray-500">Buscando qué puedes cocinar...</span>
@@ -219,7 +247,7 @@ export default function CocinaView() {
                         </div>
                     ) : (
                         <>
-                            <div className="w-full md:w-1/3 flex flex-col gap-4 overflow-y-auto">
+                            <div className="w-full md:w-1/3 flex flex-col gap-4 overflow-y-auto pr-2">
                                 {/* Sesiones de cocina activas */}
                                 {cookingSessions.length > 0 && (
                                     <div className="space-y-2">
@@ -290,7 +318,7 @@ export default function CocinaView() {
                                     />
                                 ))}
                             </div>
-                            <div className="w-full md:w-2/3 h-full overflow-hidden bg-white dark:bg-transparent rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm">
+                            <div className="w-full md:w-2/3 h-full overflow-y-auto bg-white dark:bg-transparent rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm">
                                 {selectedRecipe ? (
                                     <RecipeDetail recipe={selectedRecipe} />
                                 ) : (

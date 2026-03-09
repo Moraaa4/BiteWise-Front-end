@@ -6,22 +6,42 @@ import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import IngredientRow from "@/features/recipes-details/components/IngredientRow";
 import { catalogService } from "@/services/catalog.service";
+import { API_CONFIG, STORAGE_KEYS } from "@/config/constants";
 import { useSearchParams, useRouter } from "next/navigation";
+
+interface RecipeIngredient {
+    id: string;
+    name: string;
+    amount: string;
+    inInventory: boolean;
+}
+
+interface DetailedRecipe {
+    id: string;
+    name: string;
+    tag: string;
+    portions: number;
+    timeMinutes: number;
+    inventoryCount: number;
+    totalCount: number;
+    imageUrl?: string;
+    ingredients: RecipeIngredient[];
+}
 
 export default function RecipeDetailView() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const recipeId = searchParams.get('id');
-    const [recipe, setRecipe] = useState<any>(null);
+    const [recipe, setRecipe] = useState<DetailedRecipe | null>(null);
 
     useEffect(() => {
         const fetchRecipe = async () => {
             if (!recipeId) return;
 
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
 
             // Fetch inventory once to check ingredient availability
-            let inventoryItems: any[] = [];
+            let inventoryItems: { name?: string, ingredients?: { name: string } }[] = [];
             try {
                 const invRes = await fetch(`${process.env.NEXT_PUBLIC_API_INVENTARIO || 'http://localhost:3003'}/api/inventory`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -34,7 +54,7 @@ export default function RecipeDetailView() {
                 console.warn("Could not fetch inventory for availability check", e);
             }
 
-            const inventoryNames = new Set(inventoryItems.map((item: any) =>
+            const inventoryNames = new Set(inventoryItems.map((item) =>
                 (item.ingredients?.name || item.name || '').toLowerCase().trim()
             ));
 
@@ -42,7 +62,7 @@ export default function RecipeDetailView() {
             if (recipeId.toString().startsWith('ext-')) {
                 const realId = recipeId.toString().replace('ext-', '');
                 try {
-                    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${realId}`);
+                    const res = await fetch(`${API_CONFIG.EXTERNAL_RECIPES_URL}/lookup.php?i=${realId}`);
                     const data = await res.json();
                     if (data.meals && data.meals[0]) {
                         const m = data.meals[0];
@@ -85,7 +105,7 @@ export default function RecipeDetailView() {
             if (res.ok && res.data && res.data.recipe) {
                 const r = res.data.recipe;
                 const rawIngredients = r.ingredients || [];
-                const mappedIngredients = rawIngredients.map((ing: any) => {
+                const mappedIngredients: RecipeIngredient[] = rawIngredients.map((ing: any) => {
                     const name = ing.ingredient?.name || ing.name || '';
                     const inInventory = inventoryNames.has(name.toLowerCase().trim());
                     return {
@@ -102,7 +122,7 @@ export default function RecipeDetailView() {
                     tag: "RECETA LOCAL",
                     portions: 2,
                     timeMinutes: 30,
-                    inventoryCount: mappedIngredients.filter((i: any) => i.inInventory).length,
+                    inventoryCount: mappedIngredients.filter((i) => i.inInventory).length,
                     totalCount: mappedIngredients.length,
                     imageUrl: r.image_url,
                     ingredients: mappedIngredients
@@ -113,16 +133,17 @@ export default function RecipeDetailView() {
     }, [recipeId]);
 
     const handleBuyIngredients = () => {
-        const saved = localStorage.getItem("biteWise_shoppingLists");
+        if (!recipe) return;
+        const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
         let lists = [];
         if (saved) {
-            lists = JSON.parse(saved);
+            try { lists = JSON.parse(saved); } catch (e) { }
         }
 
-        const missingIngredients = recipe.ingredients.filter((i: any) => !i.inInventory);
+        const missingIngredients = recipe.ingredients.filter((i) => !i.inInventory);
         const toBuy = missingIngredients.length > 0 ? missingIngredients : recipe.ingredients;
 
-        const items = toBuy.map((ing: any, idx: number) => ({
+        const items = toBuy.map((ing, idx: number) => ({
             id: `ing-${Date.now()}-${idx}`,
             name: ing.name,
             quantity: ing.quantity || '1',
@@ -139,12 +160,12 @@ export default function RecipeDetailView() {
             total: items.length
         };
         lists.push(newList);
-        localStorage.setItem("biteWise_shoppingLists", JSON.stringify(lists));
+        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(lists));
 
         // Save items to the list's storage key
-        localStorage.setItem(`biteWise_list_items_${listId}`, JSON.stringify(items));
+        localStorage.setItem(`${STORAGE_KEYS.LIST_ITEMS_PREFIX}${listId}`, JSON.stringify(items));
         // Also save as pending items (backup)
-        localStorage.setItem('biteWise_pendingItems', JSON.stringify(items));
+        localStorage.setItem(STORAGE_KEYS.PENDING_ITEMS, JSON.stringify(items));
 
         alert(`✅ Se creó la lista "${newList.name}" con ${items.length} ingredientes.`);
         router.push(`/shopping-list-detail?id=${listId}`);
@@ -154,7 +175,7 @@ export default function RecipeDetailView() {
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="recetas" />
 
-            <div className="flex-1 flex flex-col overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Detalles de la Receta" />
 
                 {!recipe ? (
@@ -229,7 +250,7 @@ export default function RecipeDetailView() {
                                                 Cargando ingredientes...
                                             </p>
                                         ) : (
-                                            recipe.ingredients.map((ingredient: any) => (
+                                            recipe.ingredients.map((ingredient) => (
                                                 <IngredientRow key={ingredient.id} ingredient={ingredient} />
                                             ))
                                         )}

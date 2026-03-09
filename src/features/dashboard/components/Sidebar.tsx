@@ -20,16 +20,9 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleLogout = () => {
-        // Clear all session and application-specific data
-        const keysToRemove = Object.keys(localStorage).filter(key =>
-            key.startsWith('biteWise_') ||
-            ['token', 'userId', 'user'].includes(key)
-        );
-
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-
-        // Final fallback: clear everything if needed or just redirect
-        // localStorage.clear(); // Uncomment if we want nuclear option
+        // Nuclear option: Clear everything for maximum security on logout
+        localStorage.clear();
+        console.log("[Sidebar] Sesión cerrada y datos locales eliminados por seguridad.");
     };
 
     return (
@@ -50,17 +43,21 @@ export function Sidebar({ activeTab = 'inicio' }: SidebarProps) {
                 />
             )}
 
+            {/* Espaciador para escritorio (mantiene el hueco en el flex layout) */}
+            <div className="hidden md:block w-64 shrink-0" />
+
             {/* Sidebar principal */}
             <aside className={`
-                fixed md:static inset-y-0 left-0 z-50
+                fixed inset-y-0 left-0 z-50
                 w-64 bg-white dark:bg-background-dark border-r border-[#f1f3f1] dark:border-white/10 flex flex-col justify-between p-6
                 transform transition-transform duration-300 ease-in-out
+                overflow-y-auto
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 <div className="flex flex-col gap-8">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
                                 <Image src="/icon.svg" alt="BiteWise" width={40} height={40} priority unoptimized />
                             </div>
                             <div className="flex flex-col">

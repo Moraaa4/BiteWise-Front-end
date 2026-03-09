@@ -1,4 +1,5 @@
 import { createHttpClient } from './http.client';
+import { API_CONFIG } from '@/config/constants';
 
 export interface Ingredient {
   id: number;
@@ -42,6 +43,7 @@ export interface Recipe {
   id: number;
   title: string;
   instructions: string;
+  category?: string;
   image_url?: string;
   author_id: string;
   created_at: string;
@@ -82,7 +84,7 @@ export interface ExternalRecipe {
   }>;
 }
 
-const catalogClient = createHttpClient(process.env.NEXT_PUBLIC_API_CATALOGO || 'http://localhost:3002');
+const catalogClient = createHttpClient(process.env.NEXT_PUBLIC_CATALOG_API_URL || 'http://localhost:3002');
 
 export const catalogService = {
   async getIngredients(token: string) {
@@ -149,7 +151,7 @@ export const catalogService = {
   },
 
   async getMatchingRecipes(token: string) {
-    const response = await catalogClient.get<{ message: string; data: any[] }>('/api/recipes/match', {
+    const response = await catalogClient.get<{ message: string; data: Recipe[] }>('/api/recipes/match', {
       Authorization: `Bearer ${token}`,
     });
     return response;

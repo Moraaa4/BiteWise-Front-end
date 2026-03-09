@@ -7,6 +7,7 @@ import { Header } from "@/features/dashboard/components/Header";
 import ShoppingItemRow from "@/features/shopping-list-detail/components/ShoppingItemRow";
 import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 import { useSearchParams } from "next/navigation";
+import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
 
 export default function ListaDetalleView() {
     const searchParams = useSearchParams();
@@ -23,8 +24,8 @@ export default function ListaDetalleView() {
         let activeId: string = urlListId ?? "";
 
         // Find best active ID
-        const savedLists = localStorage.getItem('biteWise_shoppingLists');
-        let parsedLists: any[] = [];
+        const savedLists = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
+        let parsedLists: { id: string, name: string }[] = [];
         if (savedLists) {
             try { parsedLists = JSON.parse(savedLists); } catch (e) { }
         }
@@ -37,7 +38,7 @@ export default function ListaDetalleView() {
                 activeId = "default";
             }
         } else {
-            const found = parsedLists.find((l: any) => l.id === activeId);
+            const found = parsedLists.find((l) => l.id === activeId);
             if (found) {
                 setListName(found.name);
             }
@@ -48,7 +49,7 @@ export default function ListaDetalleView() {
         let currentItems: ShoppingItem[] = [];
 
         // 1. Try to load existing active list items
-        const storageKey = `biteWise_list_items_${activeId}`;
+        const storageKey = `${STORAGE_KEYS.LIST_ITEMS_PREFIX}${activeId}`;
         const savedList = localStorage.getItem(storageKey);
 
         if (savedList) {
@@ -63,7 +64,7 @@ export default function ListaDetalleView() {
         }
 
         // 2. Try to load pending items to append
-        const pending = localStorage.getItem('biteWise_pendingItems');
+        const pending = localStorage.getItem(STORAGE_KEYS.PENDING_ITEMS);
         if (pending) {
             try {
                 const parsed = JSON.parse(pending) as ShoppingItem[];
@@ -78,7 +79,7 @@ export default function ListaDetalleView() {
             } catch (e) {
                 console.error("Error parsing pending items", e);
             }
-            localStorage.removeItem('biteWise_pendingItems');
+            localStorage.removeItem(STORAGE_KEYS.PENDING_ITEMS);
         }
 
         // Save items immediately if we loaded any
@@ -93,7 +94,7 @@ export default function ListaDetalleView() {
     // Save changes to localStorage whenever items change — only AFTER initialization
     React.useEffect(() => {
         if (hasInitialized.current) {
-            localStorage.setItem(`biteWise_list_items_${activeListId}`, JSON.stringify(items));
+            localStorage.setItem(`${STORAGE_KEYS.LIST_ITEMS_PREFIX}${activeListId}`, JSON.stringify(items));
         }
     }, [items, activeListId]);
 
@@ -132,7 +133,7 @@ export default function ListaDetalleView() {
         const allCheckedItems = items.map(item => ({ ...item, checked: true }));
         setItems(allCheckedItems);
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) {
             alert("Necesitas iniciar sesión para transferir al inventario.");
             return;
@@ -223,10 +224,10 @@ export default function ListaDetalleView() {
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="lista" />
 
-            <div className="flex-1 flex flex-col overflow-y-auto">
-                <Header title="Detalles de Lista" />
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <Header title="Detalles de la Lista" />
 
-                <main className="flex-1 flex items-start justify-center pt-12 px-4 sm:px-8 pb-8">
+                <main className="flex-1 overflow-y-auto flex flex-col items-center pt-12 px-4 sm:px-8 pb-8">
                     <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg">
                         {/* List card */}
                         <div className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
@@ -291,7 +292,7 @@ export default function ListaDetalleView() {
                 {/* Footer */}
                 <footer className="py-4 text-center">
                     <p className="text-xs text-gray-400">
-                        © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.
+                        {BRAND_TEXT.FOOTER_COPYRIGHT} <span className="font-semibold">{BRAND_TEXT.APP_NAME}</span>. {BRAND_TEXT.TAGLINE}.
                     </p>
                 </footer>
             </div>

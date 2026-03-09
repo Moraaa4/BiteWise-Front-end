@@ -15,6 +15,7 @@ import RecipeModal from "@/features/Recipes/components/RecipeModal";
 import RepeatRecipeModal from "@/features/Recipes/components/RepeatRecipeModal";
 
 import { useRouter } from "next/navigation";
+import { STORAGE_KEYS, BRAND_TEXT, LIMITS } from "@/config/constants";
 
 export default function RecetasView() {
     const router = useRouter();
@@ -28,7 +29,7 @@ export default function RecetasView() {
 
     useEffect(() => {
         const fetchRecipes = async () => {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) return;
 
             let currentRecipes: AvailableRecipe[] = [];
@@ -39,7 +40,7 @@ export default function RecetasView() {
                 const mappedLocal = resLocal.data.recipes.map((r: any) => ({
                     id: r.id.toString(),
                     name: r.title,
-                    description: r.instructions?.substring(0, 100) + "...",
+                    description: r.instructions?.substring(0, LIMITS.RECIPE_DESCRIPTION) + "...",
                     timeMinutes: 30,
                     ingredientsBadge: "LOCAL",
                     imageUrl: r.image_url
@@ -57,7 +58,19 @@ export default function RecetasView() {
                         catalogService.getRandomExternalRecipes(token!),
                     ]);
 
-                    let allExternal: any[] = [];
+                    interface RawExternalRecipe {
+                        id?: string;
+                        idMeal?: string;
+                        title?: string;
+                        strMeal?: string;
+                        category?: string;
+                        strCategory?: string;
+                        region?: string;
+                        image_url?: string;
+                        strMealThumb?: string;
+                    }
+
+                    let allExternal: RawExternalRecipe[] = [];
                     if (resRegional.status === 'fulfilled') {
                         if (resRegional.value.ok && resRegional.value.data) {
                             allExternal.push(...(resRegional.value.data.recipes || []));
@@ -75,17 +88,17 @@ export default function RecetasView() {
 
                     // Quitamos las repetidas por ID
                     const seen = new Set<string>();
-                    const deduped = allExternal.filter((r: any) => {
-                        const key = r.id || r.idMeal;
+                    const deduped = allExternal.filter((r) => {
+                        const key = r.id || r.idMeal || "";
                         if (seen.has(key)) return false;
                         seen.add(key);
                         return true;
                     });
 
                     if (deduped.length > 0) {
-                        const mappedExternal = deduped.map((r: any) => ({
+                        const mappedExternal = deduped.map((r) => ({
                             id: `ext-${r.id || r.idMeal}`,
-                            name: r.title || r.strMeal,
+                            name: r.title || r.strMeal || "Receta desconocida",
                             description: r.category ? `${r.category} | ${r.region || 'Global'}` : (r.strCategory || 'Platillo'),
                             timeMinutes: 45,
                             ingredientsBadge: "THEMEALDB",
@@ -93,7 +106,7 @@ export default function RecetasView() {
                         }));
                         setRecipes(prev => {
                             const existingIds = new Set(prev.map(p => p.id));
-                            const uniqueNew = mappedExternal.filter((m: any) => !existingIds.has(m.id));
+                            const uniqueNew = mappedExternal.filter((m) => !existingIds.has(m.id));
                             return [...prev, ...uniqueNew];
                         });
                     }
@@ -109,7 +122,7 @@ export default function RecetasView() {
 
         // Cargamos el historial de lo que ya se cocinó
         try {
-            const saved = localStorage.getItem('biteWise_cookHistory');
+            const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
             if (saved) setCookHistory(JSON.parse(saved));
         } catch (e) { console.error('Error loading cook history:', e); }
     }, []);
@@ -135,7 +148,7 @@ export default function RecetasView() {
         }
 
         if (confirm(`¿Estás seguro de que quieres eliminar la receta "${recipeToDelete.name}"?`)) {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) return;
 
             try {
@@ -153,7 +166,7 @@ export default function RecetasView() {
     };
 
     const handleSaveRecipe = async (savedRecipe: AvailableRecipe) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
 
         try {
@@ -192,7 +205,7 @@ export default function RecetasView() {
                         const mappedLocal = resLocal.data.recipes.map((r: any) => ({
                             id: r.id.toString(),
                             name: r.title,
-                            description: r.instructions?.substring(0, 100) + "...",
+                            description: r.instructions?.substring(0, LIMITS.RECIPE_DESCRIPTION) + "...",
                             timeMinutes: 30,
                             ingredientsBadge: "LOCAL",
                             imageUrl: r.image_url,
@@ -229,67 +242,69 @@ export default function RecetasView() {
         <div className="flex h-screen overflow-hidden bg-white dark:bg-background-dark">
             <Sidebar activeTab="recetas" />
 
-            <div className="flex-1 flex flex-col overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Recetas Disponibles" />
 
                 {/* Contenido principal */}
-                <main className="flex-1 px-3 sm:px-4 md:px-8 py-7 flex flex-col gap-8 w-full max-w-7xl mx-auto">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto">
 
-                    {/* Recetas Disponibles */}
-                    <section>
-                        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-2 sm:mb-1 gap-2 sm:gap-0">
-                            <h2 className="text-base font-bold text-gray-900 dark:text-white">Recetas Disponibles</h2>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleCreate}
-                                    className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-md transition-colors"
-                                >
-                                    + Agregar Receta
-                                </button>
-                                <button
-                                    onClick={() => setShowAll(!showAll)}
-                                    className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
-                                >
-                                    {showAll ? 'Ver menos ←' : 'Ver todos →'}
-                                </button>
+                        {/* Recetas Disponibles */}
+                        <section>
+                            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-2 sm:mb-1 gap-2 sm:gap-0">
+                                <h2 className="text-base font-bold text-gray-900 dark:text-white">Recetas Disponibles</h2>
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={handleCreate}
+                                        className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-md transition-colors"
+                                    >
+                                        + Agregar Receta
+                                    </button>
+                                    <button
+                                        onClick={() => setShowAll(!showAll)}
+                                        className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-500 font-semibold hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                                    >
+                                        {showAll ? 'Ver menos ←' : 'Ver todos →'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-                            Basado en lo que tienes en tu despensa ahora mismo.
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {recipes.length === 0 && !loadingExternal ? (
-                                <div className="col-span-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-                                    No hay recetas disponibles. ¡Agrega la primera!
-                                </div>
-                            ) : (
-                                (showAll ? recipes : recipes.slice(0, 4)).map((recipe: AvailableRecipe) => (
-                                    <AvailableRecipeCard
-                                        key={recipe.id}
-                                        recipe={recipe}
-                                        onClick={handleRecipeClick}
-                                        onEdit={handleEdit}
-                                        onDelete={handleDelete}
-                                    />
-                                ))
-                            )}
-                            {loadingExternal && (
-                                <div className="col-span-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-2">
-                                    <span className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
-                                    Cargando recetas externas...
-                                </div>
-                            )}
-                        </div>
-                    </section>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+                                Basado en lo que tienes en tu despensa ahora mismo.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {recipes.length === 0 && !loadingExternal ? (
+                                    <div className="col-span-4 py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                                        No hay recetas disponibles. ¡Agrega la primera!
+                                    </div>
+                                ) : (
+                                    (showAll ? recipes : recipes.slice(0, 4)).map((recipe: AvailableRecipe) => (
+                                        <AvailableRecipeCard
+                                            key={recipe.id}
+                                            recipe={recipe}
+                                            onClick={handleRecipeClick}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))
+                                )}
+                                {loadingExternal && (
+                                    <div className="col-span-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-2">
+                                        <span className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
+                                        Cargando recetas externas...
+                                    </div>
+                                )}
+                            </div>
+                        </section>
 
-                    {/* Historial de Cocina */}
-                    <section>
-                        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">Historial de Cocina</h2>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-                            Tus creaciones recientes. ¿Quieres repetir alguna?
-                        </p>
-                        <HistoryTable recipes={cookHistory} onRepeat={handleRepeat} />
-                    </section>
+                        {/* Historial de Cocina */}
+                        <section>
+                            <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">Historial de Cocina</h2>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+                                Tus creaciones recientes. ¿Quieres repetir alguna?
+                            </p>
+                            <HistoryTable recipes={cookHistory} onRepeat={handleRepeat} />
+                        </section>
+                    </div>
                 </main>
 
                 {/* Modal de Receta */}
@@ -312,7 +327,7 @@ export default function RecetasView() {
                 {/* Pie de página */}
                 <footer className="py-4 text-center">
                     <p className="text-xs text-gray-400">
-                        © 2024 <span className="font-semibold">BiteWise</span>. Come mejor, desperdicia menos.
+                        {BRAND_TEXT.FOOTER_COPYRIGHT} <span className="font-semibold">{BRAND_TEXT.APP_NAME}</span>. {BRAND_TEXT.TAGLINE}.
                     </p>
                 </footer>
             </div>

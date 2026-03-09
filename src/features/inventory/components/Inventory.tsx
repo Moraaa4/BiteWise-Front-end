@@ -2,32 +2,42 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/features/dashboard/components/Sidebar';
-import InventoryModal, { type InventoryItem } from '@/features/inventory/components/InventoryModal';
-import { inventoryService } from '@/services/inventory.service';
+import InventoryModal from '@/features/inventory/components/InventoryModal';
+import { inventoryService, type InventoryItem as ServiceItem } from "@/services/inventory.service";
+import { STORAGE_KEYS } from "@/config/constants";
 import { catalogService } from '@/services/catalog.service';
 
+// Interfaz local para la visualización que coincida con lo que el componente usa
+interface DisplayItem {
+    id: string; // ID interno de la lista (puede ser el mismo que ingredientId)
+    ingredientId: string;
+    name: string;
+    category: string;
+    quantity: string;
+    weightPerUnit: number;
+}
+
 export default function Inventory() {
-    const [ingredients, setIngredients] = useState<InventoryItem[]>([]);
+    const [ingredients, setIngredients] = useState<DisplayItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<InventoryItem | undefined>();
+    const [editingItem, setEditingItem] = useState<any | undefined>();
     const [searchQuery, setSearchQuery] = useState('');
 
     const loadInventory = async () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
         try {
             const res = await inventoryService.getInventory(token);
             if (res.ok && res.data && Array.isArray(res.data.items)) {
-                // Mapeamos los datos, asegurándonos de que coincidan con lo que el backend espera
                 const weightPerUnit = (i: any) => Number(i.ingredients?.weight_per_unit ?? 1) || 1;
-                const mapped = res.data.items.map((item: any) => {
+                const mapped: DisplayItem[] = res.data.items.map((item: any) => {
                     const rawQty = Number(item.current_quantity ?? item.quantity ?? 0);
                     const wpu = weightPerUnit(item);
                     const unitQty = wpu > 1 ? rawQty / wpu : rawQty;
                     const unitLabel = wpu > 1 ? 'unidades' : (item.ingredients?.unit_default || 'g');
                     return {
-                        id: item.id?.toString() || item.ingredient_id?.toString() || Math.random().toString(),
-                        ingredientId: item.ingredient_id?.toString(),
+                        id: (item.ingredient_id || item.id || Math.random()).toString(),
+                        ingredientId: (item.ingredient_id || item.id).toString(),
                         name: item.ingredients?.name || item.name || 'Desconocido',
                         category: item.ingredients?.category || item.category || 'General',
                         quantity: `${unitQty % 1 === 0 ? unitQty : unitQty.toFixed(1)} ${unitLabel}`,
@@ -51,14 +61,21 @@ export default function Inventory() {
     const handleEdit = (id: string, currentName: string) => {
         const itemToEdit = ingredients.find(ing => ing.id === id);
         if (itemToEdit) {
-            setEditingItem(itemToEdit);
+            // Mapeamos al formato que espera el modal
+            setEditingItem({
+                id: itemToEdit.id,
+                name: itemToEdit.name,
+                category: itemToEdit.category,
+                quantity: itemToEdit.quantity,
+                weightPerUnit: itemToEdit.weightPerUnit
+            });
             setIsModalOpen(true);
         }
     };
 
     const handleDelete = async (id: string) => {
         if (confirm("¿Estás seguro de que quieres eliminar este ingrediente?")) {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
             if (!token) return;
             try {
                 const itemToRemove = ingredients.find(ing => ing.id === id);
@@ -67,7 +84,6 @@ export default function Inventory() {
                 const catalogId = Number(itemToRemove.ingredientId);
                 const numericQuantity = parseFloat(itemToRemove.quantity) || 0;
 
-                // Si la cantidad es cero o el ID no es válido, lo quitamos de la vista directamente
                 if (numericQuantity <= 0 || isNaN(catalogId) || catalogId <= 0) {
                     setIngredients(prev => prev.filter(ing => ing.id !== id));
                     return;
@@ -86,101 +102,91 @@ export default function Inventory() {
         }
     };
 
-    const handleSaveItem = async (savedItem: InventoryItem) => {
-        const token = localStorage.getItem('token');
+    const handleSaveItem = async (savedItem: any) => {
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
 
         try {
             const numericQuantity = parseFloat(savedItem.quantity) || 1;
             const wpu = savedItem.weightPerUnit || 1;
-            let ingredientId = Number(savedItem.id);
+            let ingredientId = -1;
 
-            // 1. Primero resolvemos o creamos el ingrediente en el catálogo
-            if (editingItem && savedItem.ingredientId) {
-                ingredientId = Number(savedItem.ingredientId);
-
-                // ¡Ojo aquí! Si cambiamos el peso, hay que borrarlo del inventario PRIMERO.
-                // Esto es porque el servidor calcula cuánto quitar basándose en el peso actual.
-                // Si lo actualizamos antes de borrar, las cuentas no van a cuadrar.
-                if (wpu !== editingItem.weightPerUnit) {
-                    const currentQty = parseFloat(editingItem.quantity) || 0;
-                    if (currentQty > 0) {
-                        try {
-                            await inventoryService.deleteInventoryItem(ingredientId, currentQty, token);
-                        } catch (e) {
-                            console.warn("No se pudo limpiar el inventario anterior (quizás por el cálculo del peso), seguimos adelante con la actualización.");
-                            // Si falla, es probable que ya esté en un estado extraño; forzaremos la nueva cantidad después.
-                        }
-                    }
-
-                    // Ahora actualizamos el catálogo con toda la información
-                    const allIngredientsRes = await catalogService.getIngredients(token);
-                    if (allIngredientsRes.ok && Array.isArray(allIngredientsRes.data)) {
-                        const currentIng = allIngredientsRes.data.find((i: any) => i.id === ingredientId);
-                        if (currentIng) {
-                            await catalogService.updateIngredient(ingredientId, {
-                                name: currentIng.name,
-                                category: currentIng.category,
-                                purchase_price: Number(currentIng.purchase_price) || 0.01,
-                                purchase_quantity: Number(currentIng.purchase_quantity) || 1,
-                                unit_default: currentIng.unit_default || 'g',
-                                weight_per_unit: wpu
-                            }, token);
-                        }
-                    }
-                }
-            } else if (!editingItem || isNaN(ingredientId) || savedItem.id.toString().length > 10) {
-                // ... misma lógica para crear ingredientes nuevos ...
-                const catRes = await catalogService.createIngredient({
+            if (editingItem && editingItem.id) {
+                ingredientId = Number(editingItem.id);
+                const upRes = await catalogService.updateIngredient(ingredientId, {
                     name: savedItem.name,
                     category: savedItem.category,
-                    purchase_price: 0.05,
+                    purchase_price: 0.01,
                     purchase_quantity: 1,
                     unit_default: 'g',
                     weight_per_unit: wpu
                 }, token);
 
-                if (catRes.ok && catRes.data && catRes.data.ingredient) {
-                    ingredientId = catRes.data.ingredient.id;
-                } else {
-                    const allRes = await catalogService.getIngredients(token);
-                    if (allRes.ok && allRes.data && Array.isArray(allRes.data)) {
-                        const found = allRes.data.find((i: any) => i.name.toLowerCase() === savedItem.name.toLowerCase());
-                        if (found) {
-                            ingredientId = found.id;
-                            await catalogService.updateIngredient(ingredientId, {
-                                name: found.name,
-                                category: found.category,
-                                purchase_price: Number(found.purchase_price) || 0.01,
-                                purchase_quantity: Number(found.purchase_quantity) || 1,
-                                unit_default: found.unit_default || 'g',
-                                weight_per_unit: wpu
-                            }, token);
-                        } else {
-                            throw new Error(`No se pudo acceder al catálogo (Error ${allRes.status}). Esto suele ser un problema de permisos (JWT_SECRET) en el servidor.`);
-                        }
+                if (!upRes.ok) {
+                    const errorMsg = upRes.error || "";
+                    if (errorMsg.includes("nombre ya está siendo usado")) {
+                        alert("⚠️ Ya existe otro ingrediente con ese nombre. Intenta con uno distinto para evitar confusiones.");
+                    } else if (upRes.status === 403 || errorMsg.includes("permiso")) {
+                        alert("🚫 No tienes permiso para editar este ingrediente (es un ingrediente global). Solo puedes cambiar su cantidad.");
                     } else {
-                        throw new Error(`El servicio de catálogo no respondió correctamente (Error ${catRes.status}).`);
+                        alert(`❌ Error al actualizar catálogo (${upRes.status}). Verifica que todos los campos sean válidos.`);
+                    }
+                    return;
+                }
+
+                const oldQty = parseFloat(editingItem.quantity) || 0;
+                if (oldQty > 0) {
+                    try {
+                        await inventoryService.deleteInventoryItem(ingredientId, oldQty, token);
+                    } catch (e) {
+                        console.warn("No se pudo restar la cantidad previa.");
+                    }
+                }
+            } else {
+                // Modo creación: Buscamos si ya existe por nombre
+                const allIngredientsRes = await catalogService.getIngredients(token);
+                let found: { id: number, name: string, purchase_price?: number, purchase_quantity?: number } | null = null;
+                if (allIngredientsRes.ok && Array.isArray(allIngredientsRes.data)) {
+                    // Buscamos coincidencia exacta primero, luego parcial
+                    found = allIngredientsRes.data.find((i) => i.name === savedItem.name)
+                        || allIngredientsRes.data.find((i) => i.name.toLowerCase() === savedItem.name.toLowerCase()) as any;
+                }
+
+                if (found) {
+                    ingredientId = found.id;
+                } else {
+                    const catRes = await catalogService.createIngredient({
+                        name: savedItem.name,
+                        category: savedItem.category,
+                        purchase_price: 0.01,
+                        purchase_quantity: 1,
+                        unit_default: 'g',
+                        weight_per_unit: wpu
+                    }, token);
+
+                    if (catRes.ok && catRes.data?.ingredient) {
+                        ingredientId = catRes.data.ingredient.id;
+                    } else {
+                        alert("❌ No se pudo crear el ingrediente en el catálogo. " + (catRes.error || ""));
+                        return;
                     }
                 }
             }
 
-            // 2. Por último, guardamos la nueva cantidad en el inventario.
-            // Como ya limpiamos lo anterior si cambió el peso, ahora se guardará con los gramos correctos.
             const res = await inventoryService.createInventoryItem({
                 ingredient_id: ingredientId,
-                quantity: numericQuantity
+                quantity: numericQuantity * wpu
             }, token);
 
             if (res.ok) {
                 await loadInventory();
                 setIsModalOpen(false);
             } else {
-                alert("Hubo un error al guardar el ingrediente en el inventario.");
+                alert("❌ Error al actualizar el inventario.");
             }
         } catch (error) {
             console.error("Error saving inventory item:", error);
-            alert("No se pudo guardar el ingrediente");
+            alert("No se pudo procesar la solicitud.");
         }
     };
 
