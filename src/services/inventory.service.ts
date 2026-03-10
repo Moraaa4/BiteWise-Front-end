@@ -27,7 +27,7 @@ export interface LowStockAlert {
   shortage: number;
 }
 
-const inventoryClient = createHttpClient(API_CONFIG.INVENTORY_URL);
+const inventoryClient = createHttpClient(process.env.NEXT_PUBLIC_API_INVENTARIO || 'http://localhost:3003');
 
 export const inventoryService = {
   async getHealth() {

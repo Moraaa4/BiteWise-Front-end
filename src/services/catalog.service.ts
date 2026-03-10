@@ -84,7 +84,7 @@ export interface ExternalRecipe {
   }>;
 }
 
-const catalogClient = createHttpClient(API_CONFIG.CATALOG_URL);
+const catalogClient = createHttpClient(process.env.NEXT_PUBLIC_CATALOG_API_URL || 'http://localhost:3002');
 
 export const catalogService = {
   async getIngredients(token: string) {

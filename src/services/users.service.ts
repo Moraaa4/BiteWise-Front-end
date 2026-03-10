@@ -39,7 +39,7 @@ export interface UpdateProfileRequest {
   weekly_budget?: number;
 }
 
-const userClient = createHttpClient(API_CONFIG.USERS_URL);
+const userClient = createHttpClient(process.env.NEXT_PUBLIC_API_USUARIOS || 'http://localhost:3001');
 
 export const usersService = {
   async register(userData: UserRegisterRequest) {
