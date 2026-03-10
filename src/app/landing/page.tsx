@@ -34,18 +34,18 @@ export default function LandingPage() {
           <article className="space-y-8 -mt-4 lg:-mt-6">
             <header className="space-y-4">
               <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                Para estudiantes, independientes y encargados de hogar
+                Herramienta de apoyo para encargados de la cocina
               </span>
               <h1 className="text-5xl lg:text-7xl font-black leading-tight tracking-tight">
                 Cocina con <span className="text-emerald-500">BiteWise</span>
               </h1>
               <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-lg">
-                Cocina fácil sin pensar. Ahorra tiempo, organiza costos y reduce el desperdicio de comida con nuestro asistente culinario.
+                Cocina fácil sin pensar mucho. Ahorra tiempo, organiza tu inventario digital y gestiona tus listas de compras.
               </p>
             </header>
 
             <ul className="space-y-3" role="list">
-              {['Inventario en 30 segundos', '3 recetas listas de inmediato', 'Nunca olvides lo que compraste'].map((item) => (
+              {['Inventario con tus ingredientes', 'Recetas listas para que cocines', 'Nunca olvides lo que compraste'].map((item) => (
                 <li key={item} className="flex items-center gap-3 font-medium text-zinc-700 dark:text-zinc-300">
                   <span translate="no" className="material-symbols-outlined notranslate text-emerald-500 font-bold bg-emerald-100 rounded-full p-1 text-sm">check</span>
                   {item}
@@ -76,7 +76,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gasto Semanal</p>
-                <p className="text-xl font-black">$135.00</p>
+                <p className="text-xl font-black">$ aprox 135.00</p>
               </div>
             </figcaption>
           </figure>
@@ -86,7 +86,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-20">
             <header className="text-center mb-16 space-y-4">
               <h2 className="text-4xl font-black">Tu cocina bajo control</h2>
-              <p className="text-zinc-500 text-lg">Todo lo que necesitas para optimizar tu despensa en un solo lugar.</p>
+              <p className="text-zinc-500 text-lg">Todo lo que necesitas para organizar tu despensa en un solo lugar.</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -96,8 +96,8 @@ export default function LandingPage() {
                   <span translate="no" className="material-symbols-outlined notranslate text-emerald-500 text-3xl">inventory_2</span>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-bold text-2xl">Gestión de Inventario</h3>
-                  <p className="text-zinc-500">Visualiza tus ingredientes actuales de forma instantánea.</p>
+                  <h3 className="font-bold text-2xl">Gestión de Inventario Digital</h3>
+                  <p className="text-zinc-500">Visualiza tus ingredientes actuales.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-2">
                   {['Tomate', 'Pollo', 'Cebolla', 'Ajo', 'Pimentón', '+4 más'].map(tag => (
@@ -115,7 +115,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-bold text-2xl">Sugerencias de recetas</h3>
-                  <p className="text-zinc-500">Recetas personalizadas basadas en lo que tienes hoy.</p>
+                  <p className="text-zinc-500">Recetas personalizadas basadas en lo que tienes en tu inventario digital.</p>
                 </div>
                 <div className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-4 border border-zinc-100 dark:border-zinc-700 shadow-sm">
                   <div className="size-16 rounded-xl bg-emerald-100 flex items-center justify-center overflow-hidden">
@@ -135,9 +135,9 @@ export default function LandingPage() {
           <h2 className="text-4xl font-black mb-16 tracking-tight">En 3 simples pasos</h2>
           <div className="grid md:grid-cols-3 gap-12">
             {[
-              { n: 1, t: "Registra", d: "Registra rápidamente lo que hay en tu nevera." },
+              { n: 1, t: "Registra", d: "Registra rápidamente lo que hay en tu despensa." },
               { n: 2, t: "Descubre", d: "Te mostramos qué puedes cocinar ahora mismo sin salir de casa." },
-              { n: 3, t: "Disfruta", d: "Sigue instrucciones y disfruta de tu comida saludable." }
+              { n: 3, t: "Disfruta", d: "Sigue instrucciones y disfruta de la comida de tu preferencia." }
             ].map(step => (
               <div key={step.n} className="space-y-6 group">
                 <div className="size-20 mx-auto bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center text-3xl font-black text-emerald-500 shadow-xl border border-zinc-100 dark:border-zinc-800 group-hover:scale-110 transition-transform">
@@ -149,7 +149,7 @@ export default function LandingPage() {
             ))}
           </div>
           <Link href="/register" className="mt-20 group inline-flex items-center gap-4 text-emerald-600 font-black text-2xl hover:gap-6 transition-all underline decoration-4 underline-offset-8 decoration-emerald-200">
-            DEJA DE DESPERDICIAR COMIDA AHORA
+            Usa la herramienta ahora
             <span translate="no" className="material-symbols-outlined notranslate">arrow_forward</span>
           </Link>
         </section>
@@ -182,7 +182,7 @@ export default function LandingPage() {
             </div>
             <span className="text-lg font-bold text-emerald-600">BiteWise</span>
           </div>
-          <p className="text-sm text-zinc-500 font-medium">© 2025 BiteWise. Salvando tu despensa y el planeta.</p>
+          <p className="text-sm text-zinc-500 font-medium">© 2025 BiteWise. Salvando tu despensa.</p>
           <div className="flex gap-6">
             <span translate="no" className="material-symbols-outlined notranslate text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">share</span>
             <span translate="no" className="material-symbols-outlined notranslate text-zinc-400 hover:text-emerald-500 cursor-pointer transition-colors">mail</span>
