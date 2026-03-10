@@ -14,7 +14,9 @@ interface DisplayItem {
     name: string;
     category: string;
     quantity: string;
-    weightPerUnit: number;
+    purchasePrice?: number;
+    purchaseQuantity?: number;
+    unitType?: 'g' | 'ml' | 'unidad';
 }
 
 export default function Inventory() {
@@ -29,19 +31,18 @@ export default function Inventory() {
         try {
             const res = await inventoryService.getInventory(token);
             if (res.ok && res.data && Array.isArray(res.data.items)) {
-                const weightPerUnit = (i: any) => Number(i.ingredients?.weight_per_unit ?? 1) || 1;
                 const mapped: DisplayItem[] = res.data.items.map((item: any) => {
                     const rawQty = Number(item.current_quantity ?? item.quantity ?? 0);
-                    const wpu = weightPerUnit(item);
-                    const unitQty = wpu > 1 ? rawQty / wpu : rawQty;
-                    const unitLabel = wpu > 1 ? 'unidades' : (item.ingredients?.unit_default || 'g');
+                    const unitLabel = item.ingredients?.unit_default || 'g';
                     return {
                         id: (item.ingredient_id || item.id || Math.random()).toString(),
                         ingredientId: (item.ingredient_id || item.id).toString(),
                         name: item.ingredients?.name || item.name || 'Desconocido',
                         category: item.ingredients?.category || item.category || 'General',
-                        quantity: `${unitQty % 1 === 0 ? unitQty : unitQty.toFixed(1)} ${unitLabel}`,
-                        weightPerUnit: wpu
+                        quantity: `${rawQty % 1 === 0 ? rawQty : rawQty.toFixed(1)} ${unitLabel}`,
+                        unitType: unitLabel as 'g' | 'ml' | 'unidad',
+                        purchasePrice: item.ingredients?.purchase_price ?? 0,
+                        purchaseQuantity: item.ingredients?.purchase_quantity ?? 1
                     };
                 });
                 setIngredients(mapped);
@@ -67,7 +68,9 @@ export default function Inventory() {
                 name: itemToEdit.name,
                 category: itemToEdit.category,
                 quantity: itemToEdit.quantity,
-                weightPerUnit: itemToEdit.weightPerUnit
+                purchasePrice: itemToEdit.purchasePrice,
+                purchaseQuantity: itemToEdit.purchaseQuantity,
+                unitType: itemToEdit.unitType
             });
             setIsModalOpen(true);
         }
@@ -108,7 +111,8 @@ export default function Inventory() {
 
         try {
             const numericQuantity = parseFloat(savedItem.quantity) || 1;
-            const wpu = savedItem.weightPerUnit || 1;
+            const purePurchasePrice = savedItem.purchasePrice || 0;
+            const purePurchaseQuantity = savedItem.purchaseQuantity || 1;
             let ingredientId = -1;
 
             if (editingItem && editingItem.id) {
@@ -116,10 +120,10 @@ export default function Inventory() {
                 const upRes = await catalogService.updateIngredient(ingredientId, {
                     name: savedItem.name,
                     category: savedItem.category,
-                    purchase_price: 0.01,
-                    purchase_quantity: 1,
-                    unit_default: 'g',
-                    weight_per_unit: wpu
+                    purchase_price: purePurchasePrice,
+                    purchase_quantity: purePurchaseQuantity,
+                    unit_default: savedItem.unitType || 'g',
+                    weight_per_unit: 1
                 }, token);
 
                 if (!upRes.ok) {
@@ -158,10 +162,10 @@ export default function Inventory() {
                     const catRes = await catalogService.createIngredient({
                         name: savedItem.name,
                         category: savedItem.category,
-                        purchase_price: 0.01,
-                        purchase_quantity: 1,
-                        unit_default: 'g',
-                        weight_per_unit: wpu
+                        purchase_price: purePurchasePrice,
+                        purchase_quantity: purePurchaseQuantity,
+                        unit_default: savedItem.unitType || 'g',
+                        weight_per_unit: 1
                     }, token);
 
                     if (catRes.ok && catRes.data?.ingredient) {
@@ -175,7 +179,7 @@ export default function Inventory() {
 
             const res = await inventoryService.createInventoryItem({
                 ingredient_id: ingredientId,
-                quantity: numericQuantity * wpu
+                quantity: numericQuantity
             }, token);
 
             if (res.ok) {
