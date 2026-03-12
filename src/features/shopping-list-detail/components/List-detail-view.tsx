@@ -8,6 +8,8 @@ import ShoppingItemRow from "@/features/shopping-list-detail/components/Shopping
 import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 import { useSearchParams } from "next/navigation";
 import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
+import { shoppingService, type PurchaseItem } from "@/services/shopping.service";
+import { PartyPopper } from "lucide-react";
 
 export default function ListaDetalleView() {
     const searchParams = useSearchParams();
@@ -17,6 +19,9 @@ export default function ListaDetalleView() {
     const [newItemName, setNewItemName] = useState("");
     const [listName, setListName] = useState("Mi Lista de Compras");
     const [activeListId, setActiveListId] = useState<string>("default");
+    const [isCompleting, setIsCompleting] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [reportData, setReportData] = useState<any>(null);
     const hasInitialized = useRef(false);
 
     // Initialize list and merge any pending items sent from Recipe Detail
@@ -129,38 +134,30 @@ export default function ListaDetalleView() {
     };
 
     const handleComplete = async () => {
-        // Mark all checked first (visual feedback)
+        if (items.length === 0) return;
+
+        // Visual feedback first
         const allCheckedItems = items.map(item => ({ ...item, checked: true }));
         setItems(allCheckedItems);
 
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) {
-            alert("Necesitas iniciar sesión para transferir al inventario.");
+            alert("Necesitas iniciar sesión para completar la compra.");
             return;
         }
 
-        // Use services instead of manual fetch
-        const { catalogService } = await import("@/services/catalog.service");
-        const { inventoryService } = await import("@/services/inventory.service");
+        setIsCompleting(true);
 
-        let successCount = 0;
-        let errorCount = 0;
+        try {
+            const { catalogService } = await import("@/services/catalog.service");
 
-        for (const item of allCheckedItems) {
-            try {
-                // Parse quantity and check for units
-                const qtyStr = item.quantity.toLowerCase();
-                const numericMatch = qtyStr.match(/(\d+(\.\d+)?)/);
-                const numericQty = numericMatch ? parseFloat(numericMatch[0]) : 1;
+            // Preparar items para la compra simulando datos o pidiendo datos
+            const purchaseItems: PurchaseItem[] = [];
 
-                // If it doesn't mention 'g', 'ml', 'kg', 'l', assume it's 'units'
-                const isMass = qtyStr.includes('g') || qtyStr.includes('ml') || qtyStr.includes('kg') || qtyStr.includes('l');
-                const defaultWPU = isMass ? 1 : 250; // Use 250g as a better guess for a "unit" of something if not specified
-
-                // 1. Find or create ingredient in catalog
+            for (const item of allCheckedItems) {
+                // Buscamos el ingrediente para obtener su ID real
                 const ingredientsRes = await catalogService.getIngredients(token);
                 let ingredient_id: number | null = null;
-                let weight_per_unit = defaultWPU;
 
                 if (ingredientsRes.ok && Array.isArray(ingredientsRes.data)) {
                     const found = ingredientsRes.data.find(
@@ -168,19 +165,20 @@ export default function ListaDetalleView() {
                     );
                     if (found) {
                         ingredient_id = found.id;
-                        weight_per_unit = Number(found.weight_per_unit) || 1;
                     }
                 }
 
-                // 2. If not found, create it with guessed weight
+                // Si no existe, lo creamos de forma silenciosa para añadirlo
                 if (!ingredient_id) {
+                    const qtyStr = item.quantity.toLowerCase();
+                    const isMass = qtyStr.includes('g') || qtyStr.includes('ml') || qtyStr.includes('kg') || qtyStr.includes('l');
                     const createRes = await catalogService.createIngredient({
                         name: item.name,
-                        category: 'Importado',
-                        purchase_price: 0.05,
-                        purchase_quantity: 1,
-                        unit_default: isMass && qtyStr.includes('ml') ? 'ml' : 'g',
-                        weight_per_unit: defaultWPU
+                        category: 'General',
+                        purchase_price: 15, // valor default para la simulación
+                        purchase_quantity: 1, // valor default
+                        unit_default: isMass && qtyStr.includes('ml') ? 'ml' : isMass ? 'g' : 'unidad',
+                        weight_per_unit: 1
                     }, token);
 
                     if (createRes.ok && createRes.data?.ingredient) {
@@ -188,35 +186,49 @@ export default function ListaDetalleView() {
                     }
                 }
 
-                if (!ingredient_id) {
-                    errorCount++;
-                    continue;
-                }
+                if (ingredient_id) {
+                    const numericMatch = item.quantity.match(/(\d+(\.\d+)?)/);
+                    const qty = numericMatch ? parseFloat(numericMatch[0]) : 1;
 
-                // 3. Add to user inventory with correctly parsed quantity
-                // If the user bought 500g, and wpu is 1, we add 500 units.
-                // If the user bought 2 pieces, and wpu is 250, we add 2 units.
-                const invRes = await inventoryService.createInventoryItem({
-                    ingredient_id,
-                    quantity: numericQty
-                }, token);
-
-                if (invRes.ok) {
-                    successCount++;
-                } else {
-                    console.error(`Failed to add ${item.name} to inventory:`, invRes.error);
-                    errorCount++;
+                    purchaseItems.push({
+                        ingredient_id,
+                        purchase_price: 25.50, // Ejemplo para el modal de exito simulado
+                        purchase_quantity: qty
+                    });
                 }
-            } catch (e) {
-                console.error(`Error processing ${item.name}:`, e);
-                errorCount++;
             }
-        }
 
-        if (successCount > 0) {
-            alert(`✅ ${successCount} ingrediente(s) añadidos a tu inventario.${errorCount > 0 ? ` (${errorCount} no se pudieron procesar.)` : ''}`);
-        } else if (errorCount > 0) {
-            alert(`❌ No se pudieron añadir los ingredientes al inventario. Por favor, revisa la consola para más detalles.`);
+            if (purchaseItems.length === 0) {
+                alert("No se pudo procesar ningún artículo.");
+                setIsCompleting(false);
+                return;
+            }
+
+            // Llamada al backend
+            const purchaseRes = await shoppingService.completePurchase(purchaseItems, token);
+
+            if (purchaseRes.ok && purchaseRes.data) {
+                setReportData(purchaseRes.data.reporte_hipotesis);
+                setShowSuccessModal(true);
+
+                // Update List Status locally
+                const savedLists = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
+                if (savedLists) {
+                    try {
+                        let parsed = JSON.parse(savedLists);
+                        parsed = parsed.map((l: any) => l.id === activeListId ? { ...l, status: "complete" } : l);
+                        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(parsed));
+                    } catch (e) { }
+                }
+            } else {
+                alert(`Hubo un error al procesar la compra: ${purchaseRes.error}`);
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al completar la lista.");
+        } finally {
+            setIsCompleting(false);
         }
     };
 
@@ -272,14 +284,20 @@ export default function ListaDetalleView() {
                             <div className="px-4 sm:px-6 pb-4">
                                 <button
                                     onClick={allChecked ? undefined : handleComplete}
-                                    disabled={allChecked}
+                                    disabled={allChecked || isCompleting}
                                     className={`w-full py-3 rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 transition-all duration-200 ${allChecked
                                         ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 cursor-default"
                                         : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                                         }`}
                                 >
-                                    <CheckCircle2 size={16} />
-                                    {allChecked ? "¡Todo completado!" : "TODO COMPRADO"}
+                                    {isCompleting ? (
+                                        <span className="w-5 h-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={16} />
+                                            {allChecked ? "¡Todo completado!" : "TODO COMPRADO"}
+                                        </>
+                                    )}
                                 </button>
                                 <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-2">
                                     LOS ARTÍCULOS MARCADOS SE TRANSFERIRÁN A TU INVENTARIO
@@ -296,6 +314,46 @@ export default function ListaDetalleView() {
                     </p>
                 </footer>
             </div>
+
+            {/* Modal de Éxito de Compra */}
+            {showSuccessModal && reportData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="bg-emerald-500/10 p-6 flex flex-col items-center justify-center border-b border-emerald-500/20">
+                            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                                <PartyPopper size={32} className="text-emerald-500" />
+                            </div>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white text-center">¡Compra completada!</h3>
+                            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium text-center mt-1">
+                                Tus ingredientes ya están en el inventario.
+                            </p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-800">
+                                <span className="text-sm font-medium text-gray-500">Gasto Total Estimado</span>
+                                <span className="text-lg font-bold text-gray-900 dark:text-white">${reportData.gasto_total_estimado?.toFixed(2) || "0.00"}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-zinc-800">
+                                <span className="text-sm font-medium text-gray-500">Ingredientes Comprados</span>
+                                <span className="text-base font-bold text-gray-900 dark:text-white">{reportData.ingredientes_analizados || items.length}</span>
+                            </div>
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 flex flex-col items-center justify-center">
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Ahorro Estimado del Mes</span>
+                                <span className="text-2xl font-black text-emerald-500">{reportData.ahorro_estimado_porcentaje}%</span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    window.location.href = "/inventory";
+                                }}
+                                className="w-full mt-2 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/20"
+                            >
+                                Ir a mi inventario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -171,21 +171,26 @@ export default function RecipeModal({
                                     <div className="flex-1">
                                         <p className="text-sm font-bold text-gray-800 dark:text-white">{ing.name}</p>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            value={ing.required_quantity}
-                                            onChange={(e) => handleUpdateQuantity(ing.ingredient_id, Number(e.target.value))}
-                                            className="w-16 px-2 py-1 bg-white dark:bg-zinc-800 border border-emerald-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-center dark:text-white outline-none focus:border-emerald-500"
-                                        />
-                                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold w-8">{ing.unit}</span>
-                                        <button
-                                            onClick={() => handleRemoveIngredient(ing.ingredient_id)}
-                                            className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-gray-500 font-bold mb-1 uppercase text-center">
+                                            {ing.unit === 'unidad' ? 'Uds' : ing.unit === 'ml' ? 'Mililitros' : 'Gramos'}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                value={ing.required_quantity}
+                                                onChange={(e) => handleUpdateQuantity(ing.ingredient_id, Number(e.target.value))}
+                                                className="w-16 px-2 py-1 bg-white dark:bg-zinc-800 border border-emerald-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-center dark:text-white outline-none focus:border-emerald-500"
+                                            />
+                                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold w-12">{ing.unit}</span>
+                                        </div>
                                     </div>
+                                    <button
+                                        onClick={() => handleRemoveIngredient(ing.ingredient_id)}
+                                        className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors ml-2 self-end"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             ))}
                         </div>

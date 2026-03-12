@@ -8,9 +8,10 @@ export interface InventoryItem {
     ingredientId?: string;
     name: string;
     category: string;
-    quantity: string;
-    weightPerUnit?: number;
-    unitType?: 'mass' | 'unit';
+    quantity: string; // Used strictly for frontend display/quantity in inventory
+    purchasePrice?: number;
+    purchaseQuantity?: number;
+    unitType?: 'g' | 'ml' | 'unidad';
 }
 
 interface InventoryModalProps {
@@ -38,13 +39,12 @@ export default function InventoryModal({
     const [name, setName] = useState(initialData?.name || "");
     const [category, setCategory] = useState(initialData?.category || "General");
     const [quantity, setQuantity] = useState(initialData?.quantity?.split(' ')[0] || "1");
-    // Si el peso es 1, probablemente sea un ingrediente que requiere normalización (como los importados de TheMealDB)
-    const initialWPU = initialData?.weightPerUnit || 1;
-    const [unitType, setUnitType] = useState<'mass' | 'unit'>(initialWPU > 1 ? 'unit' : 'mass');
-    const [weightPerUnit, setWeightPerUnit] = useState(initialWPU > 1 ? initialWPU.toString() : "150");
+    const [unitType, setUnitType] = useState<'g' | 'ml' | 'unidad'>(initialData?.unitType || 'g');
+    const [purchasePrice, setPurchasePrice] = useState(initialData?.purchasePrice?.toString() || "0");
+    const [purchaseQuantity, setPurchaseQuantity] = useState(initialData?.purchaseQuantity?.toString() || "1");
 
     const handleSave = () => {
-        if (!name.trim() || !quantity.trim()) return;
+        if (!name.trim() || !quantity.trim() || !purchasePrice.trim() || !purchaseQuantity.trim()) return;
 
         const inventoryData: InventoryItem = {
             id: initialData?.id || Date.now().toString(),
@@ -52,7 +52,8 @@ export default function InventoryModal({
             name,
             category,
             quantity: quantity,
-            weightPerUnit: unitType === 'unit' ? parseFloat(weightPerUnit) : 1,
+            purchasePrice: parseFloat(purchasePrice) || 0,
+            purchaseQuantity: parseFloat(purchaseQuantity) || 1,
             unitType,
         };
 
@@ -96,59 +97,87 @@ export default function InventoryModal({
                         </div>
                     </div>
 
-                    {/* Selector de tipo de unidad (Gramos o Unidades) */}
+                    {/* Selector de tipo de unidad estricto */}
                     <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
                         <button
-                            onClick={() => setUnitType('mass')}
-                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'mass' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                            onClick={() => setUnitType('g')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'g' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                         >
-                            Gramos / ML
+                            Gramos (g)
                         </button>
                         <button
-                            onClick={() => setUnitType('unit')}
-                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'unit' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                            onClick={() => setUnitType('ml')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'ml' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                         >
-                            Unidades / Piezas
+                            Mililitros (ml)
+                        </button>
+                        <button
+                            onClick={() => setUnitType('unidad')}
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${unitType === 'unidad' ? 'bg-white dark:bg-zinc-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                        >
+                            Unidades
                         </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Cantidad */}
+                        {/* Costo Total */}
                         <div>
                             <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
-                                {unitType === 'unit' ? 'Cuántas unidades' : 'Cantidad total'}
+                                ¿Cuánto pagaste en total?
+                            </label>
+                            <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
+                                <span className="px-3 text-xs text-gray-400 dark:text-gray-500 font-bold">
+                                    $
+                                </span>
+                                <input
+                                    type="number"
+                                    value={purchasePrice}
+                                    onChange={(e) => setPurchasePrice(e.target.value)}
+                                    className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Cantidad Total */}
+                        <div>
+                            <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
+                                ¿Qué cantidad exacta compraste?
                             </label>
                             <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
                                 <input
                                     type="number"
-                                    value={quantity}
-                                    onChange={(e) => setQuantity(e.target.value)}
+                                    value={purchaseQuantity}
+                                    onChange={(e) => setPurchaseQuantity(e.target.value)}
                                     className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent"
-                                    placeholder="0"
+                                    placeholder="1"
                                 />
-                                <span className="px-3 text-xs text-gray-400 dark:text-gray-500 font-bold">
-                                    {unitType === 'unit' ? 'uds' : 'g/ml'}
+                                <span className="px-3 text-xs text-gray-400 dark:text-gray-500 font-bold uppercase">
+                                    {unitType}
                                 </span>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Peso por unidad (solo si se selecciona 'unidades') */}
-                        {unitType === 'unit' && (
-                            <div>
-                                <label className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1.5 block uppercase tracking-wide">
-                                    Peso x Unidad (g)
-                                </label>
-                                <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all">
-                                    <input
-                                        type="number"
-                                        value={weightPerUnit}
-                                        onChange={(e) => setWeightPerUnit(e.target.value)}
-                                        className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-white dark:bg-transparent"
-                                        placeholder="100"
-                                    />
-                                </div>
+                    <div className="mb-4">
+                        {/* Cantidad para ingresar al inventario */}
+                        <div>
+                            <label className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1.5 block uppercase tracking-wide">
+                                ¿Qué cantidad deseas meter a tu inventario?
+                            </label>
+                            <div className="flex items-center border border-emerald-200 dark:border-emerald-500/30 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-400 focus-within:border-transparent transition-all bg-emerald-50/30 dark:bg-emerald-500/5">
+                                <input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(e.target.value)}
+                                    className="flex-1 px-3 py-2.5 text-sm text-gray-800 dark:text-white outline-none bg-transparent"
+                                    placeholder="Debe ser igual o menor a lo comprado"
+                                />
+                                <span className="px-3 text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                    {unitType}
+                                </span>
                             </div>
-                        )}
+                        </div>
                     </div>
 
                     {/* Categoría */}
@@ -182,7 +211,7 @@ export default function InventoryModal({
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={!name.trim() || !quantity.trim()}
+                        disabled={!name.trim() || !quantity.trim() || !purchasePrice.trim() || !purchaseQuantity.trim()}
                         className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 dark:disabled:bg-emerald-800 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-colors shadow-sm shadow-emerald-200 dark:shadow-none"
                     >
                         {isEditing ? "Guardar Cambios" : "Agregar Ingrediente"}
