@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, ShoppingCart, CheckCircle2 } from "lucide-react";
 import type { HistoryRecipe } from "@/features/Recipes/recetasData";
-import { STORAGE_KEYS, LIMITS } from "@/config/constants";
+import { STORAGE_KEYS, LIMITS, generateSafeId } from "@/config/constants";
 
 interface RepeatRecipeModalProps {
     recipe: HistoryRecipe;
@@ -21,7 +21,7 @@ export default function RepeatRecipeModal({ recipe, onClose }: RepeatRecipeModal
         }
 
         const newList = {
-            id: `list-${Date.now()}`,
+            id: generateSafeId(),
             name: `Ingredientes: ${recipe.name}`,
             status: "incomplete",
             createdLabel: "Justo ahora",

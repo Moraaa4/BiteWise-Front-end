@@ -6,7 +6,7 @@ import type { Recipe } from "@/types/global";
 import { inventoryService } from "@/services/inventory.service";
 import { catalogService, type ExternalRecipe } from "@/services/catalog.service";
 import { useRouter } from "next/navigation";
-import { STORAGE_KEYS } from "@/config/constants";
+import { STORAGE_KEYS, generateSafeId } from "@/config/constants";
 
 interface RecipeDetailProps {
     recipe: Recipe;
@@ -205,12 +205,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
             </div>
 
             {/* Estadísticas */}
-            <div className="grid grid-cols-3 gap-4 p-5 border-b border-gray-100 dark:border-white/10">
-                <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-1">
-                    <Clock size={20} className="text-gray-400 mb-1" />
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Tiempo</span>
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">{recipe.time || '30'} min</span>
-                </div>
+            <div className="grid grid-cols-2 gap-4 p-5 border-b border-gray-100 dark:border-white/10">
                 <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col items-center justify-center gap-1">
                     <BarChart2 size={20} className="text-gray-400 mb-1" />
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Dificultad</span>
@@ -305,7 +300,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                         }));
 
                         // Create a proper shopping list entry
-                        const listId = Date.now().toString();
+                        const listId = generateSafeId();
                         const newList = {
                             id: listId,
                             name: `Faltantes: ${recipe.name}`,

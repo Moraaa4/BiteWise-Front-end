@@ -8,7 +8,7 @@ import { Header } from "@/features/dashboard/components/Header";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
 import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
-import { BRAND_TEXT, STORAGE_KEYS, LIMITS } from "@/config/constants";
+import { BRAND_TEXT, STORAGE_KEYS, LIMITS, generateSafeId } from "@/config/constants";
 
 export default function ListaDeComprasView() {
     const [lists, setLists] = useState<ShoppingList[]>([]);
@@ -52,7 +52,7 @@ export default function ListaDeComprasView() {
         const newListName = prompt("Nombre de la nueva lista:");
         if (newListName) {
             const newList: ShoppingList = {
-                id: Date.now().toString(),
+                id: generateSafeId(),
                 name: newListName,
                 status: "incomplete",
                 createdLabel: "Justo ahora",

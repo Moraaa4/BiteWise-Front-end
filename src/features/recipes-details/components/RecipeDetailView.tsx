@@ -6,7 +6,7 @@ import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import IngredientRow from "@/features/recipes-details/components/IngredientRow";
 import { catalogService } from "@/services/catalog.service";
-import { API_CONFIG, STORAGE_KEYS } from "@/config/constants";
+import { API_CONFIG, STORAGE_KEYS, generateSafeId } from "@/config/constants";
 import { useSearchParams, useRouter } from "next/navigation";
 
 interface RecipeIngredient {
@@ -150,7 +150,7 @@ export default function RecipeDetailView() {
             checked: false
         }));
 
-        const listId = Date.now().toString();
+        const listId = generateSafeId();
         const newList = {
             id: listId,
             name: `Faltantes: ${recipe.name}`,

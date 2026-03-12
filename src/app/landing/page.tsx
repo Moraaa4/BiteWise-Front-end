@@ -4,11 +4,14 @@ import Link from 'next/link';
 const Navbar = () => (
   <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800">
     <div className="max-w-7xl mx-auto px-6 lg:px-20 h-20 flex items-center justify-between">
-      <Link href="/" className="flex items-center gap-2 group">
-        <div className="size-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-          <span translate="no" className="material-symbols-outlined notranslate">restaurant</span>
+      <Link href="/" className="flex items-center gap-3 group">
+        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+          <Image src="/icon.svg" alt="BiteWise" width={40} height={40} className="dark:invert dark:brightness-200" />
         </div>
-        <span className="text-xl font-bold tracking-tight text-emerald-600">BiteWise</span>
+        <div className="flex flex-col">
+          <span className="text-lg font-bold leading-none text-zinc-900 dark:text-white">BiteWise</span>
+          <span className="text-xs text-zinc-500 dark:text-gray-400">Cocina Inteligente</span>
+        </div>
       </Link>
 
       <nav aria-label="Navegación principal" className="hidden md:flex items-center gap-10">
@@ -71,8 +74,8 @@ export default function LandingPage() {
               />
             </div>
             <figcaption className="absolute -bottom-6 -left-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 flex items-center gap-4">
-              <div className="size-12 bg-emerald-500 rounded-full flex items-center justify-center text-white">
-                <span translate="no" className="material-symbols-outlined notranslate">restaurant</span>
+              <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+                <Image src="/icon.svg" alt="BiteWise" width={48} height={48} className="dark:invert dark:brightness-200" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gasto Semanal</p>
@@ -176,11 +179,14 @@ export default function LandingPage() {
 
       <footer className="border-t border-zinc-100 dark:border-zinc-800 py-16 bg-white dark:bg-zinc-950">
         <div className="max-w-7xl mx-auto px-6 lg:px-20 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2">
-            <div className="size-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-              <span translate="no" className="material-symbols-outlined notranslate text-sm">restaurant</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+              <Image src="/icon.svg" alt="BiteWise" width={40} height={40} className="dark:invert dark:brightness-200" />
             </div>
-            <span className="text-lg font-bold text-emerald-600">BiteWise</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold leading-none text-zinc-900 dark:text-white">BiteWise</span>
+              <span className="text-xs text-zinc-500 dark:text-gray-400">Cocina Inteligente</span>
+            </div>
           </div>
           <p className="text-sm text-zinc-500 font-medium">© 2025 BiteWise. Salvando tu despensa.</p>
           <div className="flex gap-6">

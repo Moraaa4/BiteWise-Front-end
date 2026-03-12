@@ -40,8 +40,8 @@ export const shoppingService = {
         });
     },
 
-    async completePurchase(items: PurchaseItem[], token: string) {
-        return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { items }, {
+    async completePurchase(listId: string, items: PurchaseItem[], token: string) {
+        return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId, items }, {
             Authorization: `Bearer ${token}`
         });
     }

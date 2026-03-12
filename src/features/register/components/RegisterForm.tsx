@@ -47,10 +47,13 @@ export default function RegisterForm() {
   return (
     <div className="w-full max-w-[520px] mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-emerald-500 rounded-lg text-white flex items-center justify-center overflow-hidden w-10 h-10">
-          <Image src="/icon.svg" alt="BiteWise" width={28} height={28} priority unoptimized />
+        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+          <Image src="/icon.svg" alt="BiteWise" width={40} height={40} priority unoptimized className="dark:invert dark:brightness-200" />
         </div>
-        <h2 className="text-2xl font-bold text-[#111811]">BiteWise</h2>
+        <div className="flex flex-col">
+          <h2 className="text-lg font-bold leading-none text-[#111811] dark:text-white">BiteWise</h2>
+          <p className="text-xs text-[#6c7f6d] dark:text-gray-400">Cocina Inteligente</p>
+        </div>
       </div>
 
       <h1 className="text-3xl font-extrabold mb-2 text-[#111811] dark:text-white">{UI_TEXT.REGISTER.TITLE}</h1>

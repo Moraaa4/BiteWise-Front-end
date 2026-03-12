@@ -29,6 +29,19 @@ export const LIMITS = {
     RECIPE_DESCRIPTION: 100,
 } as const;
 
+/**
+ * Generates a safe integer ID that fits within PostgreSQL INT4 (32-bit signed integer).
+ * Max INT4 = 2,147,483,647. Uses epoch offset + random suffix to stay unique.
+ */
+export function generateSafeId(): string {
+    // Use time since 2024-01-01 to keep number small, plus random suffix
+    const epoch2024 = 1704067200000;
+    const timePart = Math.floor((Date.now() - epoch2024) / 1000); // seconds since 2024
+    const randomPart = Math.floor(Math.random() * 1000); // 0-999
+    const id = (timePart * 1000 + randomPart) % 2147483647;
+    return id.toString();
+}
+
 export const APP_VERSION = '1.2.0';
 
 export const EXTERNAL_URLS = {

@@ -8,7 +8,6 @@ import ShoppingItemRow from "@/features/shopping-list-detail/components/Shopping
 import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 import { useSearchParams } from "next/navigation";
 import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
-import { shoppingService, type PurchaseItem } from "@/services/shopping.service";
 import { PartyPopper } from "lucide-react";
 
 export default function ListaDetalleView() {
@@ -150,78 +149,88 @@ export default function ListaDetalleView() {
 
         try {
             const { catalogService } = await import("@/services/catalog.service");
+            const { inventoryService } = await import("@/services/inventory.service");
 
-            // Preparar items para la compra simulando datos o pidiendo datos
-            const purchaseItems: PurchaseItem[] = [];
+            // 1. Obtener todos los ingredientes del catálogo UNA sola vez
+            let allIngredients: { id: number; name: string }[] = [];
+            const ingredientsRes = await catalogService.getIngredients(token);
+            if (ingredientsRes.ok && Array.isArray(ingredientsRes.data)) {
+                allIngredients = ingredientsRes.data;
+            }
+
+            let addedCount = 0;
+            let totalEstimado = 0;
 
             for (const item of allCheckedItems) {
-                // Buscamos el ingrediente para obtener su ID real
-                const ingredientsRes = await catalogService.getIngredients(token);
                 let ingredient_id: number | null = null;
 
-                if (ingredientsRes.ok && Array.isArray(ingredientsRes.data)) {
-                    const found = ingredientsRes.data.find(
-                        (ing: any) => ing.name?.toLowerCase().trim() === item.name.toLowerCase().trim()
-                    );
-                    if (found) {
-                        ingredient_id = found.id;
-                    }
+                // Buscar ingrediente existente por nombre
+                const found = allIngredients.find(
+                    (ing) => ing.name?.toLowerCase().trim() === item.name.toLowerCase().trim()
+                );
+                if (found) {
+                    ingredient_id = found.id;
                 }
 
-                // Si no existe, lo creamos de forma silenciosa para añadirlo
+                // Si no existe en el catálogo, crearlo
                 if (!ingredient_id) {
                     const qtyStr = item.quantity.toLowerCase();
                     const isMass = qtyStr.includes('g') || qtyStr.includes('ml') || qtyStr.includes('kg') || qtyStr.includes('l');
                     const createRes = await catalogService.createIngredient({
                         name: item.name,
                         category: 'General',
-                        purchase_price: 15, // valor default para la simulación
-                        purchase_quantity: 1, // valor default
+                        purchase_price: 15,
+                        purchase_quantity: 1,
                         unit_default: isMass && qtyStr.includes('ml') ? 'ml' : isMass ? 'g' : 'unidad',
                         weight_per_unit: 1
                     }, token);
 
                     if (createRes.ok && createRes.data?.ingredient) {
                         ingredient_id = createRes.data.ingredient.id;
+                        // Actualizar la lista local de ingredientes
+                        allIngredients.push(createRes.data.ingredient);
                     }
                 }
 
+                // Agregar directamente al inventario
                 if (ingredient_id) {
                     const numericMatch = item.quantity.match(/(\d+(\.\d+)?)/);
                     const qty = numericMatch ? parseFloat(numericMatch[0]) : 1;
 
-                    purchaseItems.push({
+                    const addRes = await inventoryService.createInventoryItem({
                         ingredient_id,
-                        purchase_price: 25.50, // Ejemplo para el modal de exito simulado
-                        purchase_quantity: qty
-                    });
+                        quantity: qty
+                    }, token);
+
+                    if (addRes.ok) {
+                        addedCount++;
+                        totalEstimado += qty * 25.50;
+                    }
                 }
             }
 
-            if (purchaseItems.length === 0) {
-                alert("No se pudo procesar ningún artículo.");
+            if (addedCount === 0) {
+                alert("No se pudo agregar ningún artículo al inventario.");
                 setIsCompleting(false);
                 return;
             }
 
-            // Llamada al backend
-            const purchaseRes = await shoppingService.completePurchase(purchaseItems, token);
+            // Mostrar modal de éxito con datos simulados
+            setReportData({
+                gasto_total_estimado: totalEstimado,
+                ingredientes_analizados: addedCount,
+                ahorro_estimado_porcentaje: 15
+            });
+            setShowSuccessModal(true);
 
-            if (purchaseRes.ok && purchaseRes.data) {
-                setReportData(purchaseRes.data.reporte_hipotesis);
-                setShowSuccessModal(true);
-
-                // Update List Status locally
-                const savedLists = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
-                if (savedLists) {
-                    try {
-                        let parsed = JSON.parse(savedLists);
-                        parsed = parsed.map((l: any) => l.id === activeListId ? { ...l, status: "complete" } : l);
-                        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(parsed));
-                    } catch (e) { }
-                }
-            } else {
-                alert(`Hubo un error al procesar la compra: ${purchaseRes.error}`);
+            // Actualizar estado de la lista localmente
+            const savedLists = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
+            if (savedLists) {
+                try {
+                    let parsed = JSON.parse(savedLists);
+                    parsed = parsed.map((l: any) => l.id === activeListId ? { ...l, status: "complete" } : l);
+                    localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(parsed));
+                } catch (e) { }
             }
 
         } catch (error) {
