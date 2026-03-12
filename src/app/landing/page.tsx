@@ -167,7 +167,7 @@ export default function LandingPage() {
               backgroundSize: 'cover',
             }}
           >
-            <h2 className="text-4xl lg:text-6xl font-black leading-tight">
+            <h2 className="text-4xl lg:text-6xl font-black text-white">
               <span className="text-emerald-500">60%</span> del desperdicio de comida ocurre en casa
             </h2>
             <p className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em]">
