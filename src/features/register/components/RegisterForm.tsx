@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usersService } from '@/services/users.service';
 import { APP_ROUTES, VALIDATION_MESSAGES, UI_TEXT } from '@/config/constants';
+import TermsModal from './TermsModal';
 
 export default function RegisterForm() {
   const [name, setName] = useState('');
@@ -14,6 +15,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,21 +27,33 @@ export default function RegisterForm() {
       return;
     }
 
+    // Show terms modal instead of proceeding directly
+    setShowTermsModal(true);
+  };
+
+  const handleTermsAccepted = async () => {
     setLoading(true);
+    setError('');
 
     const budgetNum = weeklyBudget ? parseFloat(weeklyBudget) : undefined;
 
-    const response = await usersService.register({
-      name,
-      email,
-      password,
-      weekly_budget: budgetNum
-    });
+    try {
+      const response = await usersService.register({
+        name,
+        email,
+        password,
+        weekly_budget: budgetNum
+      });
 
-    if (response.ok && response.data) {
-      window.location.href = APP_ROUTES.LOGIN;
-    } else {
-      setError(response.error || VALIDATION_MESSAGES.GENERIC_ERROR);
+      if (response.ok && response.data) {
+        window.location.href = APP_ROUTES.LOGIN;
+      } else {
+        setError(response.error || VALIDATION_MESSAGES.GENERIC_ERROR);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error en registro:', error);
+      setError('Error al procesar el registro. Por favor intenta nuevamente.');
       setLoading(false);
     }
   };
@@ -140,6 +154,15 @@ export default function RegisterForm() {
       <p className="mt-6 text-center text-sm text-gray-500">
         {UI_TEXT.REGISTER.LOGIN_LINK}<Link href={APP_ROUTES.LOGIN} className="text-primary font-bold">{UI_TEXT.REGISTER.LOGIN_ACTION}</Link>
       </p>
+
+      {/* Terms and Conditions Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onAccept={handleTermsAccepted}
+        onClose={() => setShowTermsModal(false)}
+        error={error}
+        loading={loading}
+      />
     </div>
   );
 }
