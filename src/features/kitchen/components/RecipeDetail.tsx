@@ -38,7 +38,30 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
 
         setSaving(true);
         try {
-            const externalMeal: ExternalRecipe = recipe.externalMealData as ExternalRecipe;
+            const rawData = recipe.externalMealData as any;
+            const mappedIngredients = [];
+
+            for (let i = 1; i <= 20; i++) {
+                const ingName = rawData[`strIngredient${i}`];
+                const ingMeasure = rawData[`strMeasure${i}`];
+                if (ingName && ingName.trim() !== '') {
+                    mappedIngredients.push({
+                        name: ingName.trim(),
+                        measure: ingMeasure ? ingMeasure.trim() : ''
+                    });
+                }
+            }
+
+            const externalMeal: ExternalRecipe = {
+                idMeal: rawData.idMeal,
+                strMeal: rawData.strMeal,
+                strCategory: rawData.strCategory,
+                strArea: rawData.strArea,
+                strInstructions: rawData.strInstructions,
+                strMealThumb: rawData.strMealThumb,
+                ingredients: mappedIngredients
+            };
+
             const res = await catalogService.importExternalRecipe(externalMeal, token);
             if (res.ok && res.data?.recipe?.id) {
                 const newId = res.data.recipe.id;
