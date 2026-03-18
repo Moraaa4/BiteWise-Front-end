@@ -26,10 +26,7 @@ export default function RecipeCard({ recipe, isSelected, onSelect }: RecipeCardP
                         {recipe.name}
                     </p>
                     <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
-                            <Clock size={12} />
-                            {recipe.time} min
-                        </span>
+
                         {recipe.hasAllIngredients ? (
                             <span className="flex items-center gap-1 text-[11px] text-green-600 font-medium">
                                 <CheckCircle2 size={12} />
