@@ -24,11 +24,9 @@ export default function ListaDetalleView() {
     const [reportData, setReportData] = useState<any>(null);
     const hasInitialized = useRef(false);
 
-    // Initialize list and merge any pending items sent from Recipe Detail
     React.useEffect(() => {
         let activeId: string = urlListId ?? "";
 
-        // Find best active ID
         const savedLists = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
         let parsedLists: { id: string, name: string }[] = [];
         if (savedLists) {
@@ -53,7 +51,6 @@ export default function ListaDetalleView() {
 
         let currentItems: ShoppingItem[] = [];
 
-        // 1. Try to load existing active list items
         const storageKey = `${STORAGE_KEYS.LIST_ITEMS_PREFIX}${activeId}`;
         const savedList = localStorage.getItem(storageKey);
 
@@ -68,7 +65,6 @@ export default function ListaDetalleView() {
             }
         }
 
-        // 2. Try to load pending items to append
         const pending = localStorage.getItem(STORAGE_KEYS.PENDING_ITEMS);
         if (pending) {
             try {
@@ -87,16 +83,13 @@ export default function ListaDetalleView() {
             localStorage.removeItem(STORAGE_KEYS.PENDING_ITEMS);
         }
 
-        // Save items immediately if we loaded any
         localStorage.setItem(storageKey, JSON.stringify(currentItems));
 
         setItems(currentItems);
 
-        // Mark as initialized AFTER React commits the state
         setTimeout(() => { hasInitialized.current = true; }, 0);
     }, [urlListId]);
 
-    // Save changes to localStorage whenever items change — only AFTER initialization
     React.useEffect(() => {
         if (hasInitialized.current) {
             localStorage.setItem(`${STORAGE_KEYS.LIST_ITEMS_PREFIX}${activeListId}`, JSON.stringify(items));
@@ -136,7 +129,6 @@ export default function ListaDetalleView() {
     const handleComplete = async () => {
         if (items.length === 0) return;
 
-        // Visual feedback first
         const allCheckedItems = items.map(item => ({ ...item, checked: true }));
         setItems(allCheckedItems);
 
@@ -200,6 +192,15 @@ export default function ListaDetalleView() {
                 });
                 totalEstimado += qty * purchasePrice;
                 addedCount += 1;
+
+                // Sincronizar cada item con el backend
+                const listIdNum = Number(activeListId);
+                if (!isNaN(listIdNum)) {
+                    const addItemRes = await shoppingService.addItemToList(listIdNum, ingredient_id, qty, token);
+                    if (!addItemRes.ok) {
+                        console.warn(`No se pudo sincronizar el item ${item.name} con el backend`);
+                    }
+                }
             }
 
             if (itemsToPurchase.length === 0) {
