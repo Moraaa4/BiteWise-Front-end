@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import ShoppingListCard from "@/features/shopping-list/components/ShoppingListCard";
 import CreateListCard from "@/features/shopping-list/components/CreateListCard";
-import { SHOPPING_LISTS, type ShoppingList } from "../listaData";
-import { BRAND_TEXT, STORAGE_KEYS, LIMITS, generateSafeId } from "@/config/constants";
+import { type ShoppingList } from "../listaData";
+import { BRAND_TEXT, STORAGE_KEYS, generateSafeId } from "@/config/constants";
+import { shoppingService } from "@/services/shopping.service";
 
 export default function ListaDeComprasView() {
     const [lists, setLists] = useState<ShoppingList[]>([]);
@@ -48,27 +48,42 @@ export default function ListaDeComprasView() {
 
     const router = useRouter();
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         const newListName = prompt("Nombre de la nueva lista:");
-        if (newListName) {
-            const newList: ShoppingList = {
-                id: generateSafeId(),
-                name: newListName,
-                status: "incomplete",
-                createdLabel: "Justo ahora",
-                progress: 0,
-                total: 0
-            };
-            const updatedLists = [...lists, newList];
-            setLists(updatedLists);
-            localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(updatedLists));
+        if (!newListName) return;
 
-            // Nos aseguramos de que la nueva lista empiece vacía
-            localStorage.setItem(`biteWise_list_items_${newList.id}`, JSON.stringify([]));
-            localStorage.setItem(STORAGE_KEYS.CURRENT_LIST, JSON.stringify([])); // limpiamos cualquier dato anterior
+        let newList: ShoppingList = {
+            id: generateSafeId(),
+            name: newListName,
+            status: "incomplete",
+            createdLabel: "Justo ahora",
+            progress: 0,
+            total: 0
+        };
 
-            router.push(`/shopping-list-detail?id=${newList.id}`);
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (token) {
+            try {
+                const response = await shoppingService.createShoppingList({ name: newListName }, token);
+                if (response.ok && response.data?.list) {
+                    const listData = response.data.list;
+                    newList = {
+                        ...newList,
+                        id: String(listData.id ?? newList.id),
+                        name: String(listData.name ?? newList.name),
+                        status: String(listData.status ?? "incomplete"),
+                        createdLabel: String(listData.createdLabel ?? listData.created_at ?? newList.createdLabel)
+                    };
+                }
+            } catch (e) { }
         }
+
+        const updatedLists = [...lists, newList];
+        setLists(updatedLists);
+        localStorage.setItem(STORAGE_KEYS.SHOPPING_LISTS, JSON.stringify(updatedLists));
+        localStorage.setItem(`${STORAGE_KEYS.LIST_ITEMS_PREFIX}${newList.id}`, JSON.stringify([]));
+        localStorage.setItem(STORAGE_KEYS.CURRENT_LIST, JSON.stringify([]));
+        router.push(`/shopping-list-detail?id=${newList.id}`);
     };
 
     const handleViewDetails = (list: ShoppingList) => {

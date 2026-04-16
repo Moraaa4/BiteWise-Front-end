@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Search, CheckCircle2, Trash2 } from "lucide-react";
+import { Search, CheckCircle2, Trash2, PartyPopper } from "lucide-react";
 import { Sidebar } from "@/features/dashboard/components/Sidebar";
 import { Header } from "@/features/dashboard/components/Header";
 import ShoppingItemRow from "@/features/shopping-list-detail/components/ShoppingItemRow";
 import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 import { useSearchParams } from "next/navigation";
 import { STORAGE_KEYS, BRAND_TEXT } from "@/config/constants";
-import { PartyPopper } from "lucide-react";
+import { shoppingService } from "@/services/shopping.service";
+import { catalogService } from "@/services/catalog.service";
 
 export default function ListaDetalleView() {
     const searchParams = useSearchParams();
@@ -148,31 +149,26 @@ export default function ListaDetalleView() {
         setIsCompleting(true);
 
         try {
-            const { catalogService } = await import("@/services/catalog.service");
-            const { inventoryService } = await import("@/services/inventory.service");
-
-            // 1. Obtener todos los ingredientes del catálogo UNA sola vez
-            let allIngredients: { id: number; name: string }[] = [];
             const ingredientsRes = await catalogService.getIngredients(token);
+            let allIngredients: Array<{ id: number; name: string; purchase_price?: number }> = [];
             if (ingredientsRes.ok && Array.isArray(ingredientsRes.data)) {
                 allIngredients = ingredientsRes.data;
             }
 
-            let addedCount = 0;
+            const itemsToPurchase: Array<{ ingredient_id: number; purchase_price: number; purchase_quantity: number }> = [];
             let totalEstimado = 0;
+            let addedCount = 0;
 
             for (const item of allCheckedItems) {
                 let ingredient_id: number | null = null;
-
-                // Buscar ingrediente existente por nombre
                 const found = allIngredients.find(
                     (ing) => ing.name?.toLowerCase().trim() === item.name.toLowerCase().trim()
                 );
+
                 if (found) {
                     ingredient_id = found.id;
                 }
 
-                // Si no existe en el catálogo, crearlo
                 if (!ingredient_id) {
                     const qtyStr = item.quantity.toLowerCase();
                     const isMass = qtyStr.includes('g') || qtyStr.includes('ml') || qtyStr.includes('kg') || qtyStr.includes('l');
@@ -187,35 +183,38 @@ export default function ListaDetalleView() {
 
                     if (createRes.ok && createRes.data?.ingredient) {
                         ingredient_id = createRes.data.ingredient.id;
-                        // Actualizar la lista local de ingredientes
                         allIngredients.push(createRes.data.ingredient);
                     }
                 }
 
-                // Agregar directamente al inventario
-                if (ingredient_id) {
-                    const numericMatch = item.quantity.match(/(\d+(\.\d+)?)/);
-                    const qty = numericMatch ? parseFloat(numericMatch[0]) : 1;
+                if (!ingredient_id) continue;
 
-                    const addRes = await inventoryService.createInventoryItem({
-                        ingredient_id,
-                        quantity: qty
-                    }, token);
+                const numericMatch = item.quantity.match(/(\d+(\.\d+)?)/);
+                const qty = numericMatch ? parseFloat(numericMatch[0]) : 1;
+                const purchasePrice = found?.purchase_price ?? 15;
 
-                    if (addRes.ok) {
-                        addedCount++;
-                        totalEstimado += qty * 25.50;
-                    }
-                }
+                itemsToPurchase.push({
+                    ingredient_id,
+                    purchase_price: purchasePrice,
+                    purchase_quantity: qty
+                });
+                totalEstimado += qty * purchasePrice;
+                addedCount += 1;
             }
 
-            if (addedCount === 0) {
+            if (itemsToPurchase.length === 0) {
                 alert("No se pudo agregar ningún artículo al inventario.");
                 setIsCompleting(false);
                 return;
             }
 
-            // Mostrar modal de éxito con datos simulados
+            const purchaseRes = await shoppingService.completePurchase(activeListId, itemsToPurchase, token);
+            if (!purchaseRes.ok) {
+                alert("No se pudo completar la compra.");
+                setIsCompleting(false);
+                return;
+            }
+
             setReportData({
                 gasto_total_estimado: totalEstimado,
                 ingredientes_analizados: addedCount,

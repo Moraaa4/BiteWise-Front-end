@@ -40,6 +40,12 @@ export const shoppingService = {
         });
     },
 
+    async createShoppingList(payload: { name: string }, token: string) {
+        return await shoppingClient.post<any>('/api/shopping-lists', payload, {
+            Authorization: `Bearer ${token}`
+        });
+    },
+
     async completePurchase(listId: string, items: PurchaseItem[], token: string) {
         return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId, items }, {
             Authorization: `Bearer ${token}`
