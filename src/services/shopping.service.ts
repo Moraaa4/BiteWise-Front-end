@@ -41,7 +41,7 @@ export const shoppingService = {
     },
 
     async createShoppingList(payload: { name: string }, token: string) {
-        return await shoppingClient.post<any>('/api/shopping-lists', payload, {
+        return await shoppingClient.post<any>('/api/shopping-lists/manual', payload, {
             Authorization: `Bearer ${token}`
         });
     },
@@ -50,5 +50,12 @@ export const shoppingService = {
         return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId }, {
             Authorization: `Bearer ${token}`
         });
+    },
+
+    async addItemToList(listId: number, ingredientId: number, quantity: number, token: string) {
+        return await shoppingClient.post<any>('/api/shopping-lists/manual/item', 
+            { list_id: listId, ingredient_id: ingredientId, quantity }, 
+            { Authorization: `Bearer ${token}` }
+        );
     }
 };

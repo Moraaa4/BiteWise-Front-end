@@ -3,10 +3,9 @@ export const DEFAULT_API_ENDPOINTS = {
 } as const;
 
 export const API_CONFIG = {
-    // Estas variables siempre deben venir de .env en producción. (ej. Render, Vercel, etc.)
-    USERS_URL: process.env.NEXT_PUBLIC_API_USUARIOS || '',
-    CATALOG_URL: process.env.NEXT_PUBLIC_API_CATALOGO || '',
-    INVENTORY_URL: process.env.NEXT_PUBLIC_API_INVENTARIO || '',
+    USERS_URL: process.env.NEXT_PUBLIC_API_USUARIOS || 'http://localhost:3001',
+    CATALOG_URL: process.env.NEXT_PUBLIC_API_CATALOGO || 'http://localhost:3002',
+    INVENTORY_URL: process.env.NEXT_PUBLIC_API_INVENTARIO || 'http://localhost:3003',
     EXTERNAL_RECIPES_URL: process.env.NEXT_PUBLIC_RECIPES_API_URL || DEFAULT_API_ENDPOINTS.RECIPES_API,
 };
 
@@ -29,12 +28,8 @@ export const LIMITS = {
     RECIPE_DESCRIPTION: 100,
 } as const;
 
-/**
- * Generates a safe integer ID that fits within PostgreSQL INT4 (32-bit signed integer).
- * Max INT4 = 2,147,483,647. Uses epoch offset + random suffix to stay unique.
- */
+
 export function generateSafeId(): string {
-    // Use time since 2024-01-01 to keep number small, plus random suffix
     const epoch2024 = 1704067200000;
     const timePart = Math.floor((Date.now() - epoch2024) / 1000); // seconds since 2024
     const randomPart = Math.floor(Math.random() * 1000); // 0-999

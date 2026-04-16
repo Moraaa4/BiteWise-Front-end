@@ -74,13 +74,6 @@ export default function LandingPage() {
               />
             </div>
             <figcaption className="absolute -bottom-6 -left-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
-                <Image src="/icon.svg" alt="BiteWise" width={48} height={48} className="dark:invert dark:brightness-200" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gasto Semanal</p>
-                <p className="text-xl font-black">$ aprox 135.00</p>
-              </div>
             </figcaption>
           </figure>
         </section>
