@@ -65,13 +65,14 @@ export default function ListaDeComprasView() {
         if (token) {
             try {
                 const response = await shoppingService.createShoppingList({ name: newListName }, token);
-                if (response.ok && response.data?.list) {
-                    const listData = response.data.list;
+                if (response.ok && response.data) {
+                    const listData = response.data.list || response.data;
+                    const savedId = response.data.id ?? listData.id;
                     newList = {
                         ...newList,
-                        id: String(listData.id ?? newList.id),
+                        id: String(savedId ?? newList.id),
                         name: String(listData.name ?? newList.name),
-                        status: String(listData.status ?? "incomplete"),
+                        status: (listData.status ?? newList.status ?? "incomplete") as ShoppingList["status"],
                         createdLabel: String(listData.createdLabel ?? listData.created_at ?? newList.createdLabel)
                     };
                 }

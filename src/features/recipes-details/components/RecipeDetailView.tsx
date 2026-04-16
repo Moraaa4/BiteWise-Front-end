@@ -8,6 +8,7 @@ import IngredientRow from "@/features/recipes-details/components/IngredientRow";
 import { catalogService } from "@/services/catalog.service";
 import { API_CONFIG, STORAGE_KEYS, generateSafeId } from "@/config/constants";
 import { useSearchParams, useRouter } from "next/navigation";
+import { shoppingService } from "@/services/shopping.service";
 
 interface RecipeIngredient {
     id: string;
@@ -134,7 +135,7 @@ export default function RecipeDetailView() {
         fetchRecipe();
     }, [recipeId]);
 
-    const handleBuyIngredients = () => {
+    const handleBuyIngredients = async () => {
         if (!recipe) return;
         const saved = localStorage.getItem(STORAGE_KEYS.SHOPPING_LISTS);
         let lists = [];
@@ -152,10 +153,27 @@ export default function RecipeDetailView() {
             checked: false
         }));
 
-        const listId = generateSafeId();
+        let listId = generateSafeId();
+        const listName = `Faltantes: ${recipe.name}`;
+        
+        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (token) {
+            try {
+                const res = await shoppingService.createShoppingList({ name: listName }, token);
+                if (res.ok && res.data) {
+                    const savedId = res.data.id ?? res.data.list?.id;
+                    if (savedId) {
+                        listId = String(savedId);
+                    }
+                }
+            } catch (e) {
+                console.error("Error creating shopping list in backend:", e);
+            }
+        }
+
         const newList = {
             id: listId,
-            name: `Faltantes: ${recipe.name}`,
+            name: listName,
             status: "incomplete",
             createdLabel: "Justo ahora",
             progress: 0,

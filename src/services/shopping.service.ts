@@ -31,7 +31,7 @@ export interface PurchaseReport {
     reporte_hipotesis: Record<string, any>;
 }
 
-const shoppingClient = createHttpClient(API_CONFIG.INVENTORY_URL);
+const shoppingClient = createHttpClient(API_CONFIG.USERS_URL);
 
 export const shoppingService = {
     async getShoppingLists(token: string) {
