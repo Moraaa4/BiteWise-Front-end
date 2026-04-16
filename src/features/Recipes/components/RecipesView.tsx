@@ -96,10 +96,14 @@ export default function RecetasView() {
                     });
 
                     if (deduped.length > 0) {
-                        const mappedExternal = deduped.map((r) => ({
-                            id: `ext-${r.id || r.idMeal}`,
+                        const mappedExternal = deduped.map((r, index) => ({
+                            id: r.id || r.idMeal
+                                ? `ext-${r.id || r.idMeal}`
+                                : `ext-fallback-${index}-${Date.now()}`,
                             name: r.title || r.strMeal || "Receta desconocida",
-                            description: r.category ? `${r.category} | ${r.region || 'Global'}` : (r.strCategory || 'Platillo'),
+                            description: r.category
+                                ? `${r.category} | ${r.region || 'Global'}`
+                                : (r.strCategory || 'Platillo'),
                             timeMinutes: 45,
                             ingredientsBadge: "THEMEALDB",
                             imageUrl: r.image_url || r.strMealThumb
@@ -128,6 +132,10 @@ export default function RecetasView() {
     }, []);
 
     const handleRecipeClick = (recipe: AvailableRecipe) => {
+        if (!recipe?.id) return;
+
+        localStorage.setItem(STORAGE_KEYS.SELECTED_RECIPE_ID, String(recipe.id));
+
         router.push(`/recipes-details?id=${recipe.id}`);
     };
 

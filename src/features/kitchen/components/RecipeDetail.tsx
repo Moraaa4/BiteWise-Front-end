@@ -5,14 +5,17 @@ import { Clock, BarChart2, Users, Bookmark, ShoppingBag, PlayCircle, Check, Load
 import type { Recipe } from "@/types/global";
 import { inventoryService } from "@/services/inventory.service";
 import { catalogService, type ExternalRecipe } from "@/services/catalog.service";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { STORAGE_KEYS, generateSafeId } from "@/config/constants";
+import { shoppingService } from "@/services/shopping.service";
 
 interface RecipeDetailProps {
     recipe: Recipe;
 }
 
 export default function RecipeDetail({ recipe }: RecipeDetailProps) {
+    const searchParams = useSearchParams();
+    const recipeId = searchParams.get('recipeId');
     const [cooking, setCooking] = useState(false);
     const [saving, setSaving] = useState(false);
     const [savedLocalId, setSavedLocalId] = useState<number | null>(() => {
@@ -39,7 +42,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
         setSaving(true);
         try {
             const rawData = recipe.externalMealData as any;
-            
+
             const externalMeal: ExternalRecipe = {
                 idMeal: rawData.idMeal,
                 strMeal: rawData.strMeal,
@@ -306,7 +309,7 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                 </button>
                 <div className="flex-1" />
                 <button
-                    onClick={() => {
+                    onClick={async () => {
                         let toBuy = recipe.ingredients.filter(i => !i.available);
                         if (toBuy.length === 0 && recipe.ingredients.length > 0) {
                             toBuy = recipe.ingredients;
@@ -319,8 +322,26 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                             checked: false
                         }));
 
+                        let listId = "";
+                        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+                        const storedRecipeId = localStorage.getItem(STORAGE_KEYS.SELECTED_RECIPE_ID);
+
+                        if (token) {
+                            try {
+                                const res = await shoppingService.createShoppingList({ recipe_id: recipeId! ?? storedRecipeId }, token);
+
+                                if (res.ok && res.data) {
+                                    const savedId = res.data.id ?? res.data.list?.id;
+                                    if (savedId) {
+                                        listId = String(savedId);
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Error creating shopping list in backend:", e);
+                            }
+                        }
+
                         // Create a proper shopping list entry
-                        const listId = generateSafeId();
                         const newList = {
                             id: listId,
                             name: `Faltantes: ${recipe.name}`,
@@ -345,6 +366,8 @@ export default function RecipeDetail({ recipe }: RecipeDetailProps) {
                         localStorage.setItem(STORAGE_KEYS.PENDING_ITEMS, JSON.stringify(items));
 
                         alert(`✅ Se creó la lista "${newList.name}" con ${items.length} ingredientes.`);
+
+                        console.log("HERE", listId)
                         router.push(`/shopping-list-detail?id=${listId}`);
                     }}
                     className="flex items-center gap-2 bg-white dark:bg-transparent border-2 border-green-500 text-green-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-50 dark:hover:bg-green-900/20 transition-all">

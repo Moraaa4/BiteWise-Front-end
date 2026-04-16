@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
     STEP_BY_STEP: 'biteWise_stepByStep',
     LIST_ITEMS_PREFIX: 'biteWise_list_items_',
     CURRENT_LIST: 'biteWise_currentList',
+    SELECTED_RECIPE_ID: "selected_recipe_id"
 };
 
 export const LIMITS = {
