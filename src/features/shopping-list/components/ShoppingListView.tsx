@@ -67,7 +67,20 @@ export default function ListaDeComprasView() {
                 const response = await shoppingService.createListWithoutRecipe({ name: newListName }, token);
                 if (response.ok && response.data) {
                     const listData = response.data.list || response.data;
-                    const savedId = response.data.id ?? listData.id;
+                    const possibleIds = [
+                        response.data.id, 
+                        listData.id, 
+                        response.data.list_id, 
+                        response.data.shoppingListId, 
+                        response.data.shopping_list_id,
+                        response.data.listId
+                    ];
+                    const savedId = possibleIds.find(id => id !== undefined && id !== null);
+                    
+                    if (savedId === undefined) {
+                        alert("ERROR LEYENDO EL ID: " + JSON.stringify(response.data));
+                    }
+
                     newList = {
                         ...newList,
                         id: String(savedId ?? newList.id),
@@ -75,8 +88,14 @@ export default function ListaDeComprasView() {
                         status: (listData.status ?? newList.status ?? "incomplete") as ShoppingList["status"],
                         createdLabel: String(listData.createdLabel ?? listData.created_at ?? newList.createdLabel)
                     };
+                } else {
+                    alert(`El servidor devolvió un error al crear la lista: ${response.status}. Revisa la consola para más detalles.`);
+                    console.error("Detalles de falla CREATE LIST:", response);
                 }
-            } catch (e) { }
+            } catch (e) {
+                alert(`Error de red al intentar crear la lista: ${e}`);
+                console.error("Exception CREATE LIST:", e);
+            }
         }
 
         const updatedLists = [...lists, newList];
