@@ -67,7 +67,20 @@ export default function ListaDeComprasView() {
                 const response = await shoppingService.createShoppingList({ name: newListName }, token);
                 if (response.ok && response.data) {
                     const listData = response.data.list || response.data;
-                    const savedId = response.data.id ?? listData.id;
+                    const possibleIds = [
+                        response.data.id, 
+                        listData.id, 
+                        response.data.list_id, 
+                        response.data.shoppingListId, 
+                        response.data.shopping_list_id,
+                        response.data.listId
+                    ];
+                    const savedId = possibleIds.find(id => id !== undefined && id !== null);
+                    
+                    if (savedId === undefined) {
+                        alert("ERROR LEYENDO EL ID: " + JSON.stringify(response.data));
+                    }
+
                     newList = {
                         ...newList,
                         id: String(savedId ?? newList.id),
