@@ -64,7 +64,7 @@ export default function ListaDeComprasView() {
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (token) {
             try {
-                const response = await shoppingService.createShoppingList({ name: newListName }, token);
+                const response = await shoppingService.createListWithoutRecipe({ name: newListName }, token);
                 if (response.ok && response.data) {
                     const listData = response.data.list || response.data;
                     const savedId = response.data.id ?? listData.id;

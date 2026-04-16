@@ -46,6 +46,12 @@ export const shoppingService = {
         });
     },
 
+    async createListWithoutRecipe(payload: { name: string }, token: string) {
+        return await shoppingClient.post<any>('/api/shopping-lists/manual', payload, {
+            Authorization: `Bearer ${token}`
+        });
+    },
+
     async completePurchase(listId: number, token: string) {
         return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId }, {
             Authorization: `Bearer ${token}`
