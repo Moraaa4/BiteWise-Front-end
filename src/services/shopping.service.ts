@@ -31,24 +31,23 @@ export interface PurchaseReport {
     reporte_hipotesis: Record<string, any>;
 }
 
-const usersClient = createHttpClient(API_CONFIG.USERS_URL);
-const inventoryClient = createHttpClient(API_CONFIG.INVENTORY_URL);
+const shoppingClient = createHttpClient(API_CONFIG.INVENTORY_URL);
 
 export const shoppingService = {
     async getShoppingLists(token: string) {
-        return await usersClient.get<ShoppingListResponse>('/api/shopping-lists', {
+        return await shoppingClient.get<ShoppingListResponse>('/api/shopping-lists', {
             Authorization: `Bearer ${token}`
         });
     },
 
     async createShoppingList(payload: { name: string }, token: string) {
-        return await usersClient.post<any>('/api/shopping-lists', payload, {
+        return await shoppingClient.post<any>('/api/shopping-lists', payload, {
             Authorization: `Bearer ${token}`
         });
     },
 
     async completePurchase(listId: number, token: string) {
-        return await inventoryClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId }, {
+        return await shoppingClient.post<PurchaseReport>('/api/shopping-lists/purchase', { list_id: listId }, {
             Authorization: `Bearer ${token}`
         });
     }
