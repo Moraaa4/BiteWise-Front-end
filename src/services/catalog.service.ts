@@ -82,6 +82,7 @@ export interface ExternalRecipe {
     name: string;
     measure: string;
   }>;
+  [key: string]: any;
 }
 
 const catalogClient = createHttpClient(API_CONFIG.CATALOG_URL);

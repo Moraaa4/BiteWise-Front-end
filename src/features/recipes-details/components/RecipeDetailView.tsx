@@ -33,6 +33,7 @@ export default function RecipeDetailView() {
     const router = useRouter();
     const recipeId = searchParams.get('id');
     const [recipe, setRecipe] = useState<DetailedRecipe | null>(null);
+    const [loadingIngredients, setLoadingIngredients] = useState(true);
 
     useEffect(() => {
         const fetchRecipe = async () => {
@@ -128,6 +129,7 @@ export default function RecipeDetailView() {
                     ingredients: mappedIngredients
                 });
             }
+            setLoadingIngredients(false);
         };
         fetchRecipe();
     }, [recipeId]);
@@ -245,9 +247,13 @@ export default function RecipeDetailView() {
                                         </span>
                                     </div>
                                     <div className="px-5 py-1">
-                                        {recipe.ingredients.length === 0 ? (
+                                        {loadingIngredients ? (
                                             <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
                                                 Cargando ingredientes...
+                                            </p>
+                                        ) : recipe.ingredients.length === 0 ? (
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+                                                No se encontraron ingredientes para esta receta.
                                             </p>
                                         ) : (
                                             recipe.ingredients.map((ingredient) => (

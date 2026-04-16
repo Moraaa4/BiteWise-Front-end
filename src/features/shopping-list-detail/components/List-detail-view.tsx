@@ -345,10 +345,7 @@ export default function ListaDetalleView() {
                                 <span className="text-sm font-medium text-gray-500">Ingredientes Comprados</span>
                                 <span className="text-base font-bold text-gray-900 dark:text-white">{reportData.ingredientes_analizados || items.length}</span>
                             </div>
-                            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 flex flex-col items-center justify-center">
-                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Ahorro Estimado del Mes</span>
-                                <span className="text-2xl font-black text-emerald-500">{reportData.ahorro_estimado_porcentaje}%</span>
-                            </div>
+
                             <button
                                 onClick={() => {
                                     setShowSuccessModal(false);
