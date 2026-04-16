@@ -198,7 +198,16 @@ export default function ListaDetalleView() {
                     purchase_price: purchasePrice,
                     purchase_quantity: qty
                 });
-                totalEstimado += qty * purchasePrice;
+                
+                // CORRECCIÓN APLICADA: Validar si existe total_price de la DB
+                if ((item as any).total_price) {
+                    totalEstimado += Number((item as any).total_price);
+                } else {
+                    const qtyStr = item.quantity.toLowerCase();
+                    const isGramsOrMl = qtyStr.includes('g') || qtyStr.includes('ml');
+                    totalEstimado += isGramsOrMl ? purchasePrice : (qty * purchasePrice);
+                }
+                
                 addedCount += 1;
             }
 

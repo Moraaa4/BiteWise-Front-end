@@ -1,69 +1,58 @@
 "use client";
 
 import React from "react";
-import { Trash2 } from "lucide-react";
-import type { ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
+import { Check, Trash2 } from "lucide-react";
+import { type ShoppingItem } from "@/features/shopping-list-detail/listaDetalleData";
 
 interface ShoppingItemRowProps {
     item: ShoppingItem;
     onToggle: (id: string) => void;
-    onDelete?: (id: string) => void;
+    onDelete: (id: string) => void;
 }
 
 export default function ShoppingItemRow({ item, onToggle, onDelete }: ShoppingItemRowProps) {
     return (
-        <div
-            className={`flex items-center justify-between py-3 px-1 border-b border-gray-100 dark:border-white/10 last:border-0 group transition-colors duration-150 ${item.checked ? "opacity-50" : ""
-                }`}
-        >
-            <label className="flex flex-1 items-center gap-3 cursor-pointer">
-                <div className="relative">
-                    <input
-                        type="checkbox"
-                        checked={item.checked}
-                        onChange={() => onToggle(item.id)}
-                        className="peer sr-only"
-                    />
-                    <div
-                        className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150 ${item.checked
+        <div className="group flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent hover:border-gray-100 dark:hover:border-white/10 rounded-xl transition-all">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 overflow-hidden">
+                <button
+                    onClick={() => onToggle(item.id)}
+                    className={`shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        item.checked
                             ? "bg-emerald-500 border-emerald-500"
-                            : "border-gray-300 dark:border-gray-500 group-hover:border-emerald-400"
-                            }`}
-                    >
-                        {item.checked && (
-                            <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                                <path
-                                    d="M1 3.5L3.5 6L8 1"
-                                    stroke="white"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        )}
-                    </div>
-                </div>
-                <span
-                    className={`text-sm text-gray-800 dark:text-gray-200 transition-all duration-150 ${item.checked ? "line-through text-gray-400 dark:text-gray-500" : ""
-                        }`}
+                            : "border-gray-300 dark:border-gray-600"
+                    }`}
                 >
-                    {item.name}
-                </span>
-            </label>
-
-            <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{item.quantity}</span>
-                {onDelete && (
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            onDelete(item.id);
-                        }}
-                        className="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                    {item.checked && <Check size={14} className="text-white" />}
+                </button>
+                <div className="flex flex-col flex-1 min-w-0">
+                    <span
+                        className={`text-sm sm:text-base font-semibold truncate transition-colors ${
+                            item.checked
+                                ? "text-gray-400 dark:text-gray-500 line-through"
+                                : "text-gray-900 dark:text-gray-100"
+                        }`}
                     >
-                        <Trash2 size={14} />
-                    </button>
-                )}
+                        {item.name}
+                    </span>
+                    <span className="text-[11px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 truncate">
+                        {item.quantity}
+                    </span>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-4 ml-4">
+                {/* CORRECCIÓN APLICADA AQUÍ: Usa el total_price de la DB si existe */}
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    ${(item as any).total_price ? Number((item as any).total_price).toFixed(2) : "0.00"}
+                </span>
+                
+                <button
+                    onClick={() => onDelete(item.id)}
+                    className="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    title="Eliminar producto"
+                >
+                    <Trash2 size={16} />
+                </button>
             </div>
         </div>
     );
