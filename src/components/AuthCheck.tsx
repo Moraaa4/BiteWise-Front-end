@@ -61,8 +61,8 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
 
     if (isChecking && ![APP_ROUTES.LOGIN, APP_ROUTES.REGISTER, APP_ROUTES.LANDING, '/'].includes(pathname as any)) {
         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-zinc-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div suppressHydrationWarning className="h-screen w-screen flex items-center justify-center bg-white dark:bg-zinc-950">
+                <div suppressHydrationWarning className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
             </div>
         );
     }

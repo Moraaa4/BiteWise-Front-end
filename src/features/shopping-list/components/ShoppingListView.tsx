@@ -75,8 +75,14 @@ export default function ListaDeComprasView() {
                         status: (listData.status ?? newList.status ?? "incomplete") as ShoppingList["status"],
                         createdLabel: String(listData.createdLabel ?? listData.created_at ?? newList.createdLabel)
                     };
+                } else {
+                    alert(`El servidor devolvió un error al crear la lista: ${response.status}. Revisa la consola para más detalles.`);
+                    console.error("Detalles de falla CREATE LIST:", response);
                 }
-            } catch (e) { }
+            } catch (e) {
+                alert(`Error de red al intentar crear la lista: ${e}`);
+                console.error("Exception CREATE LIST:", e);
+            }
         }
 
         const updatedLists = [...lists, newList];
