@@ -157,9 +157,11 @@ export default function RecipeDetailView() {
         const listName = `Faltantes: ${recipe.name}`;
         
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+
         if (token) {
             try {
-                const res = await shoppingService.createShoppingList({ name: listName }, token);
+                const res = await shoppingService.createShoppingList({ recipe_id: recipeId! }, token);
+
                 if (res.ok && res.data) {
                     const savedId = res.data.id ?? res.data.list?.id;
                     if (savedId) {
