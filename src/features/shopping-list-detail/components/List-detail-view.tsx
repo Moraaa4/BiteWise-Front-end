@@ -208,7 +208,7 @@ export default function ListaDetalleView() {
                 return;
             }
 
-            const purchaseRes = await shoppingService.completePurchase(activeListId, itemsToPurchase, token);
+            const purchaseRes = await shoppingService.completePurchase(Number(activeListId), token);
             if (!purchaseRes.ok) {
                 alert("No se pudo completar la compra.");
                 setIsCompleting(false);
